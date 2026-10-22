@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function init() {
         populateSolidSelect();
         setupEventListeners();
-        setupMobileSwitcher();
+        setupMobileNavigation();
         setupStudioUI();
         setupSupportGuide();
         switchSolid('cube');
@@ -434,8 +434,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Alternador de Abas de Modo
     function switchMode(mode) {
         currentMode = mode;
+        document.body.className = 'mode-' + mode;
+
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+
+        document.querySelectorAll('.mobile-mode-chip').forEach(chip => {
+            const isActive = chip.dataset.mode === mode;
+            chip.classList.toggle('active', isActive);
+            if (isActive) {
+                chip.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
         });
 
         document.querySelectorAll('.mode-subpanel').forEach(p => p.classList.add('hidden'));
@@ -525,29 +535,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('playerLevel').textContent = `Nv. ${gameMgr.level}`;
     }
 
-    // Chaveador de Painéis no Mobile
-    function setupMobileSwitcher() {
-        const leftPanel = document.querySelector('aside.panel.left-panel');
-        const rightPanel = document.querySelector('aside.panel.right-panel');
-        const buttons = document.querySelectorAll('.mobile-tab-btn');
-
-        buttons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                buttons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                const target = btn.dataset.target;
-                if (target === 'left') {
-                    leftPanel.classList.remove('mobile-inactive');
-                    leftPanel.classList.add('mobile-active');
-                    rightPanel.classList.remove('mobile-active');
-                    rightPanel.classList.add('mobile-inactive');
-                } else {
-                    rightPanel.classList.remove('mobile-inactive');
-                    rightPanel.classList.add('mobile-active');
-                    leftPanel.classList.remove('mobile-active');
-                    leftPanel.classList.add('mobile-inactive');
-                }
+    // Navegação Otimizada para Mobile
+    function setupMobileNavigation() {
+        const chips = document.querySelectorAll('.mobile-mode-chip');
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                switchMode(chip.dataset.mode);
                 if (window.sounds) window.sounds.playClick();
             });
         });

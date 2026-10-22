@@ -75,17 +75,22 @@
         </div>
     </header>
 
-    <!-- CHAVEADOR DE PAINÉIS PARA DISPOSITIVOS MÓVEIS -->
-    <div class="mobile-panel-switcher">
-        <button class="mobile-tab-btn" data-target="left">⚙️ Controles & Medidas</button>
-        <button class="mobile-tab-btn active" data-target="right">📐 Fórmulas & Projetos</button>
+    <!-- BARRA DE MODOS PARA DISPOSITIVOS MÓVEIS (NAVEGAÇÃO TOUCH 1-TOQUE) -->
+    <div class="mobile-mode-bar" id="mobileModeBar">
+        <button class="mobile-mode-chip active" data-mode="lab">🔬 Laboratório</button>
+        <button class="mobile-mode-chip" data-mode="studio">👥 Equipes</button>
+        <button class="mobile-mode-chip" data-mode="elements">🧩 Euler (V, F, A)</button>
+        <button class="mobile-mode-chip" data-mode="unfold">📦 Planificar</button>
+        <button class="mobile-mode-chip" data-mode="cross_section">✂️ Cortes</button>
+        <button class="mobile-mode-chip" data-mode="liquid">💧 Água</button>
+        <button class="mobile-mode-chip" data-mode="game">🎮 Quiz</button>
     </div>
 
     <!-- LAYOUT PRINCIPAL -->
     <main class="app-layout">
 
         <!-- PAINEL ESQUERDO: CONTROLES E CONFIGURAÇÕES -->
-        <aside class="panel left-panel mobile-inactive">
+        <aside class="panel left-panel">
 
             <!-- SELETOR DE SÓLIDO -->
             <div class="selector-box">
@@ -213,6 +218,7 @@
 
         <!-- VIEWPORT CENTRAL: CANVAS 3D -->
         <section id="canvas-container">
+            <div class="canvas-hint">👆 Toque e arraste para girar · 2 dedos para zoom</div>
             <div class="canvas-toolbar">
                 <button class="toolbar-btn active" id="btnToggleDimensions">📏 Cotas (Medidas)</button>
                 <button class="toolbar-btn" id="btnResetCamera">🎯 Centralizar</button>
@@ -221,7 +227,7 @@
         </section>
 
         <!-- PAINEL DIREITO: FÓRMULAS, ÁREA TOTAL, VOLUME E ESTÚDIO DE PROJETOS -->
-        <aside class="panel right-panel mobile-active">
+        <aside class="panel right-panel">
 
             <!-- TÍTULO DO SÓLIDO SELECIONADO -->
             <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
@@ -288,7 +294,7 @@
 
                 <div style="margin-top:10px;">
                     <div class="section-title">Trocar de Equipe / Desafio</div>
-                    <div class="view-modes-group" style="grid-template-columns:1fr 1fr; gap:6px;" id="teamProjectsSelectorGrid"></div>
+                    <div class="view-modes-group team-selector-grid" id="teamProjectsSelectorGrid"></div>
                 </div>
             </div>
 
