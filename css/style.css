@@ -828,6 +828,275 @@ input:checked + .switch-track:before {
 }
 
 /* ==========================================================================
+   BANNER DO DESAFIO NO LADO ESQUERDO & BOTÃO PULSANTE
+   ========================================================================== */
+@keyframes challengeGentlePulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+        border-color: rgba(245, 158, 11, 0.6);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 16px 5px rgba(245, 158, 11, 0.4);
+        border-color: rgba(251, 191, 36, 1);
+        transform: scale(1.02);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+        border-color: rgba(245, 158, 11, 0.6);
+        transform: scale(1);
+    }
+}
+
+.career-challenge-banner {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.challenge-banner-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.challenge-phase-pill {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.5);
+    color: var(--accent-amber);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.challenge-status-pill, .challenge-status-chip {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: #4ade80;
+    padding: 2px 6px;
+    border-radius: 8px;
+}
+
+.challenge-banner-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.3;
+}
+
+.challenge-banner-desc {
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* BOTÃO NO LADO ESQUERDO PULSANDO LEVEMENTE */
+.btn-pulsing-challenge {
+    width: 100%;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #ffffff;
+    border: 2px solid #fde047;
+    border-radius: var(--radius-md);
+    padding: 11px 14px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    animation: challengeGentlePulse 2.2s infinite ease-in-out;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+
+.btn-pulsing-challenge:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+}
+
+/* BOTÃO FLUTUANTE NO CANVAS (LADO ESQUERDO) */
+.btn-float-challenge-pulsing {
+    position: absolute;
+    left: 16px;
+    bottom: 24px;
+    z-index: 45;
+    background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+    color: #ffffff;
+    border: 2px solid #fde047;
+    border-radius: 30px;
+    padding: 10px 18px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: challengeGentlePulse 2.2s infinite ease-in-out;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+}
+
+.btn-float-challenge-pulsing:hover {
+    transform: translateY(-2px) scale(1.04);
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+}
+
+/* TRILHA DE FASES DO JOGO (ONDE O JOGADOR ESTÁ) */
+.career-phase-tracker-card {
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tracker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tracker-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.tracker-subtitle {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.tracker-badge {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    background: rgba(0, 242, 254, 0.12);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    padding: 2px 7px;
+    border-radius: 10px;
+}
+
+.phase-progress-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.phase-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f59e0b, #00f2fe);
+    border-radius: 6px;
+    transition: width 0.4s ease;
+}
+
+.career-stages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: 180px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.career-stage-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.career-stage-row:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.career-stage-row.active {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.2), rgba(99, 102, 241, 0.15));
+    border-color: var(--accent-amber);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+}
+
+.career-stage-row.completed {
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.stage-row-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stage-num-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.career-stage-row.active .stage-num-badge {
+    background: var(--accent-amber);
+    color: #000;
+}
+
+.career-stage-row.completed .stage-num-badge {
+    background: var(--accent-emerald);
+    color: #000;
+}
+
+.stage-name-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.stage-status-indicator {
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.challenge-story-card {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+}
+
+/* ==========================================================================
    MODO CARREIRA BNCC & MISSÕES
    ========================================================================== */
 .career-mission-card {
@@ -1551,10 +1820,8 @@ input:checked + .switch-track:before {
         display: flex;
     }
 
-    /* Oculta controles do painel esquerdo quando em modos de missão dedicada */
-    body.mode-career aside.panel.left-panel,
-    body.mode-studio aside.panel.left-panel,
-    body.mode-building aside.panel.left-panel {
+    /* Oculta controles do painel esquerdo quando em modos específicos de equipe */
+    body.mode-studio aside.panel.left-panel {
         display: none;
     }
 

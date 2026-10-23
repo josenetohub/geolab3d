@@ -5,11 +5,15 @@ class CareerMode {
         this.onApplySolid = onApplySolid;
         this.onOpenBuildingStudio = onOpenBuildingStudio;
         this.currentStageIndex = 0;
+        this.completedStages = new Set();
+        this.loadProgress();
 
         this.stages = [
             {
                 id: 'stage_cube',
                 level: 1,
+                icon: '📦',
+                shortName: 'Caixa d\'Água',
                 title: 'Fase 1: Fundação & Caixa d\'Água Cúbica',
                 subtitle: 'Poliedros Regulares, Arestas, Área Total e Volume em Litros',
                 solidId: 'cube',
@@ -27,6 +31,8 @@ class CareerMode {
             {
                 id: 'stage_prism',
                 level: 2,
+                icon: '🚢',
+                shortName: 'Contêiner Marítimo',
                 title: 'Fase 2: Contêiner Marítimo de Carga',
                 subtitle: 'Prisma Retangular (Paralelepípedo): Comprimento, Largura e Altura',
                 solidId: 'rectangular_prism',
@@ -44,6 +50,8 @@ class CareerMode {
             {
                 id: 'stage_cylinder',
                 level: 3,
+                icon: '🌾',
+                shortName: 'Silo de Grãos',
                 title: 'Fase 3: Silo Cilíndrico de Grãos',
                 subtitle: 'Corpos Redondos, Comprimento 2πr e Planificação Lateral',
                 solidId: 'cylinder',
@@ -61,6 +69,8 @@ class CareerMode {
             {
                 id: 'stage_pyramid',
                 level: 4,
+                icon: '🏛️',
+                shortName: 'Claraboia Envidraçada',
                 title: 'Fase 4: Claraboia Piramidal Envidraçada',
                 subtitle: 'Teorema de Pitágoras para Apótema da Pirâmide',
                 solidId: 'square_pyramid',
@@ -78,6 +88,8 @@ class CareerMode {
             {
                 id: 'stage_sphere',
                 level: 5,
+                icon: '🌐',
+                shortName: 'Tanque Horton (Gás)',
                 title: 'Fase 5: Tanque Esférico de Gás (Tanque Horton)',
                 subtitle: 'A Esfera: Máximo Volume com Mínima Área Superficial',
                 solidId: 'sphere',
@@ -95,6 +107,8 @@ class CareerMode {
             {
                 id: 'stage_building',
                 level: 6,
+                icon: '🏢',
+                shortName: 'Edifício Residencial',
                 title: 'Fase 6: O Grande Projeto Arquitetônico (Edifício 3D)',
                 subtitle: 'Construção Completa: Andares, Janelas, Portas, Alvenaria e Climatização',
                 solidId: 'rectangular_prism',
@@ -111,6 +125,36 @@ class CareerMode {
                 trophy: '🏆 Grande Arquiteto e Urbanista Espacial'
             }
         ];
+    }
+
+    loadProgress() {
+        try {
+            const raw = localStorage.getItem('geolab_career_completed');
+            if (raw) {
+                const arr = JSON.parse(raw);
+                this.completedStages = new Set(arr);
+            }
+        } catch (e) {}
+    }
+
+    saveProgress() {
+        try {
+            localStorage.setItem('geolab_career_completed', JSON.stringify([...this.completedStages]));
+        } catch (e) {}
+    }
+
+    markCompleted(stageIndex) {
+        this.completedStages.add(stageIndex);
+        this.saveProgress();
+    }
+
+    isStageCompleted(stageIndex) {
+        return this.completedStages.has(stageIndex);
+    }
+
+    getProgressPercent() {
+        const completedCount = this.completedStages.size;
+        return Math.min(100, Math.round((completedCount / this.stages.length) * 100));
     }
 
     getCurrentStage() {
@@ -151,6 +195,10 @@ class CareerMode {
                 hint: inp.hint
             });
         });
+
+        if (allCorrect) {
+            this.markCompleted(this.currentStageIndex);
+        }
 
         return {
             success: allCorrect,

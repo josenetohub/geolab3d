@@ -302,6 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 switch (action) {
                     case 'career':
                         switchMode('career');
+                        openCareerChallengeModal();
                         break;
                     case 'lab':
                         switchMode('lab');
@@ -599,20 +600,79 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================================
-    // MODO CARREIRA BNCC
+    // MODO CARREIRA BNCC & DESAFIOS PEDAGÓGICOS
     // ==========================================================================
     function renderCareerPhaseNav() {
-        const nav = document.getElementById('careerPhaseNav');
-        if (!nav) return;
-        nav.innerHTML = careerMode.stages.map((stg, idx) => `
-            <button class="career-nav-pill ${idx === careerMode.currentStageIndex ? 'active' : ''}" data-stage-idx="${idx}">
-                Fase ${stg.level}
-            </button>
-        `).join('');
+        const navs = [document.getElementById('careerPhaseNav'), document.getElementById('modalCareerPhaseNav')];
+        navs.forEach(nav => {
+            if (!nav) return;
+            nav.innerHTML = careerMode.stages.map((stg, idx) => `
+                <button class="career-nav-pill ${idx === careerMode.currentStageIndex ? 'active' : ''}" data-stage-idx="${idx}">
+                    ${stg.icon || ''} Fase ${stg.level}
+                </button>
+            `).join('');
 
-        nav.querySelectorAll('.career-nav-pill').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const idx = parseInt(btn.dataset.stageIdx);
+            nav.querySelectorAll('.career-nav-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.stageIdx);
+                    careerMode.selectStage(idx);
+                    renderCareerStage();
+                    if (window.sounds) window.sounds.playClick();
+                });
+            });
+        });
+    }
+
+    function updateCareerLeftBanner() {
+        const stage = careerMode.getCurrentStage();
+        const pill = document.getElementById('leftBannerPhasePill');
+        if (pill) pill.textContent = `⚡ FASE ${stage.level} DE 6`;
+
+        const title = document.getElementById('leftBannerTitle');
+        if (title) title.textContent = stage.title;
+
+        const desc = document.getElementById('leftBannerDesc');
+        if (desc) desc.textContent = stage.subtitle;
+    }
+
+    function renderGamePhasesMap() {
+        const stage = careerMode.getCurrentStage();
+        const badge = document.getElementById('trackerProgressBadge');
+        if (badge) badge.textContent = `Fase ${stage.level}/6 (${careerMode.getProgressPercent()}% Concluído)`;
+
+        const fill = document.getElementById('phaseProgressBarFill');
+        if (fill) fill.style.width = `${Math.max(16, (stage.level / 6) * 100)}%`;
+
+        const list = document.getElementById('careerStagesList');
+        if (!list) return;
+
+        list.innerHTML = careerMode.stages.map((stg, idx) => {
+            const isCurrent = idx === careerMode.currentStageIndex;
+            const isCompleted = careerMode.isStageCompleted(idx);
+            let statusText = 'Pendente';
+            let statusStyle = 'color:var(--text-secondary);';
+            if (isCurrent) {
+                statusText = '⚡ Você está aqui';
+                statusStyle = 'color:var(--accent-amber); font-weight:700;';
+            } else if (isCompleted) {
+                statusText = '✓ Concluído';
+                statusStyle = 'color:var(--accent-emerald); font-weight:700;';
+            }
+
+            return `
+                <div class="career-stage-row ${isCurrent ? 'active' : ''} ${isCompleted ? 'completed' : ''}" data-stage-idx="${idx}">
+                    <div class="stage-row-left">
+                        <span class="stage-num-badge">${isCompleted ? '✓' : stg.level}</span>
+                        <span class="stage-name-text">${stg.icon} ${stg.shortName || stg.title}</span>
+                    </div>
+                    <span class="stage-status-indicator" style="${statusStyle}">${statusText}</span>
+                </div>
+            `;
+        }).join('');
+
+        list.querySelectorAll('.career-stage-row').forEach(row => {
+            row.addEventListener('click', () => {
+                const idx = parseInt(row.dataset.stageIdx);
                 careerMode.selectStage(idx);
                 renderCareerStage();
                 if (window.sounds) window.sounds.playClick();
@@ -620,54 +680,170 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function setupCareerUI() {
-        renderCareerStage();
+    function openCareerChallengeModal() {
+        if (currentMode !== 'career') {
+            switchMode('career');
+        }
+        const modal = document.getElementById('modalCareerChallenge');
+        if (!modal) return;
+        renderModalCareerContent();
+        modal.classList.remove('hidden');
+        if (window.sounds) window.sounds.playClick();
+    }
 
-        const btnValidate = document.getElementById('btnValidateCareer');
-        if (btnValidate) {
-            btnValidate.addEventListener('click', () => {
-                const stage = careerMode.getCurrentStage();
-                const inputValues = {};
-                stage.inputs.forEach(inp => {
-                    const el = document.getElementById(`career_input_${inp.id}`);
-                    inputValues[inp.id] = el ? el.value : '';
+    function closeCareerChallengeModal() {
+        const modal = document.getElementById('modalCareerChallenge');
+        if (modal) modal.classList.add('hidden');
+        if (window.sounds) window.sounds.playClick();
+    }
+
+    function renderModalCareerContent() {
+        const stage = careerMode.getCurrentStage();
+        const modalBadge = document.getElementById('modalCareerStageBadge');
+        if (modalBadge) modalBadge.textContent = `Fase ${stage.level} de 6 · BNCC`;
+
+        const modalTitle = document.getElementById('modalCareerStageTitle');
+        if (modalTitle) modalTitle.textContent = stage.title;
+
+        const modalStory = document.getElementById('modalCareerStoryText');
+        if (modalStory) modalStory.textContent = stage.story;
+
+        const modalConcept = document.getElementById('modalCareerConceptBox');
+        if (modalConcept) modalConcept.innerHTML = stage.conceptText;
+
+        const modalAction = document.getElementById('modalCareerActionBox');
+        if (modalAction) modalAction.innerHTML = stage.actionPrompt;
+
+        const container = document.getElementById('modalCareerInputsContainer');
+        if (container) {
+            container.innerHTML = '';
+            stage.inputs.forEach(inp => {
+                const group = document.createElement('div');
+                group.className = 'mission-input-group';
+                group.innerHTML = `
+                    <label style="font-size:0.8rem; font-weight:600; color:#fff;">${inp.label}</label>
+                    <input type="number" step="0.01" class="mission-input" id="modal_input_${inp.id}" placeholder="Digite sua resposta">
+                `;
+                container.appendChild(group);
+
+                const inputEl = group.querySelector('input');
+                const rightInput = document.getElementById(`career_input_${inp.id}`);
+                if (rightInput && rightInput.value) inputEl.value = rightInput.value;
+                inputEl.addEventListener('input', () => {
+                    if (rightInput) rightInput.value = inputEl.value;
                 });
-
-                const res = careerMode.validateAnswers(inputValues);
-                const feedbackBox = document.getElementById('careerFeedbackBox');
-                const btnNext = document.getElementById('btnCareerNext');
-
-                if (res.success) {
-                    gameMgr.addXp(res.xpReward);
-                    updateGameStatsUI();
-                    feedbackBox.className = 'career-feedback-box success';
-                    feedbackBox.innerHTML = `
-                        🎉 <b>Parabéns! Cálculos Perfeitos!</b><br>
-                        Você conquistou <b>+${res.xpReward} XP</b> e o troféu <b>${res.trophy}</b>!<br>
-                        💡 Agora, registre esta vitória clicando em <b>Salvar Conquista no Álbum</b>!
-                    `;
-                    feedbackBox.classList.remove('hidden');
-                    if (btnNext) btnNext.style.display = 'block';
-                    if (window.sounds) window.sounds.playSuccess();
-                } else {
-                    feedbackBox.className = 'career-feedback-box error';
-                    feedbackBox.innerHTML = `
-                        ❌ <b>Quase lá! Revise os cálculos:</b><br>
-                        ${res.results.map(r => r.isOk ? `✓ ${r.label} correto!` : `• ${r.label} incorreto. Dica: ${r.hint}`).join('<br>')}
-                    `;
-                    feedbackBox.classList.remove('hidden');
-                    if (window.sounds) window.sounds.playError();
-                }
             });
         }
 
+        const feedbackBox = document.getElementById('modalCareerFeedbackBox');
+        if (feedbackBox) feedbackBox.classList.add('hidden');
+
+        const btnNext = document.getElementById('btnModalCareerNext');
+        if (btnNext) btnNext.style.display = 'none';
+    }
+
+    function executeCareerValidation(source) {
+        const stage = careerMode.getCurrentStage();
+        const inputValues = {};
+        stage.inputs.forEach(inp => {
+            const elId = source === 'modal' ? `modal_input_${inp.id}` : `career_input_${inp.id}`;
+            const el = document.getElementById(elId);
+            inputValues[inp.id] = el ? el.value : '';
+        });
+
+        const res = careerMode.validateAnswers(inputValues);
+        const feedbackBoxes = [
+            document.getElementById('careerFeedbackBox'),
+            document.getElementById('modalCareerFeedbackBox')
+        ];
+        const nextBtns = [
+            document.getElementById('btnCareerNext'),
+            document.getElementById('btnModalCareerNext')
+        ];
+
+        if (res.success) {
+            gameMgr.addXp(res.xpReward);
+            updateGameStatsUI();
+            renderGamePhasesMap();
+
+            feedbackBoxes.forEach(fb => {
+                if (!fb) return;
+                fb.className = 'career-feedback-box success';
+                fb.innerHTML = `
+                    🎉 <b>Parabéns! Cálculos Perfeitos!</b><br>
+                    Você conquistou <b>+${res.xpReward} XP</b> e o troféu <b>${res.trophy}</b>!<br>
+                    💡 Agora, registre esta vitória clicando em <b>Salvar Conquista no Álbum</b> ou avance de fase!
+                `;
+                fb.classList.remove('hidden');
+            });
+            nextBtns.forEach(b => { if (b) b.style.display = 'block'; });
+            if (window.sounds) window.sounds.playSuccess();
+        } else {
+            feedbackBoxes.forEach(fb => {
+                if (!fb) return;
+                fb.className = 'career-feedback-box error';
+                fb.innerHTML = `
+                    ❌ <b>Quase lá! Revise os cálculos:</b><br>
+                    ${res.results.map(r => r.isOk ? `✓ ${r.label} correto!` : `• ${r.label} incorreto. Dica: ${r.hint}`).join('<br>')}
+                `;
+                fb.classList.remove('hidden');
+            });
+            if (window.sounds) window.sounds.playError();
+        }
+    }
+
+    function setupCareerUI() {
+        renderCareerStage();
+
+        // Botões para abrir o Desafio no lado esquerdo
+        const btnLeftView = document.getElementById('btnLeftViewChallenge');
+        if (btnLeftView) btnLeftView.addEventListener('click', openCareerChallengeModal);
+
+        const btnFloatView = document.getElementById('btnFloatChallenge');
+        if (btnFloatView) btnFloatView.addEventListener('click', openCareerChallengeModal);
+
+        const btnCloseModal = document.getElementById('btnCloseCareerModal');
+        if (btnCloseModal) btnCloseModal.addEventListener('click', closeCareerChallengeModal);
+
+        const btnBackTo3D = document.getElementById('btnModalCloseBackTo3D');
+        if (btnBackTo3D) btnBackTo3D.addEventListener('click', closeCareerChallengeModal);
+
+        // Validação no painel lateral direito
+        const btnValidate = document.getElementById('btnValidateCareer');
+        if (btnValidate) {
+            btnValidate.addEventListener('click', () => executeCareerValidation('panel'));
+        }
+
+        // Validação dentro do Modal do Desafio
+        const btnModalValidate = document.getElementById('btnModalValidateCareer');
+        if (btnModalValidate) {
+            btnModalValidate.addEventListener('click', () => executeCareerValidation('modal'));
+        }
+
+        // Próxima fase
+        const onNextStage = () => {
+            careerMode.nextStage();
+            renderCareerStage();
+            renderModalCareerContent();
+            const btn1 = document.getElementById('btnCareerNext');
+            const btn2 = document.getElementById('btnModalCareerNext');
+            if (btn1) btn1.style.display = 'none';
+            if (btn2) btn2.style.display = 'none';
+            if (window.sounds) window.sounds.playClick();
+        };
+
         const btnNext = document.getElementById('btnCareerNext');
-        if (btnNext) {
-            btnNext.addEventListener('click', () => {
-                careerMode.nextStage();
-                renderCareerStage();
-                btnNext.style.display = 'none';
-                if (window.sounds) window.sounds.playClick();
+        if (btnNext) btnNext.addEventListener('click', onNextStage);
+
+        const btnModalNext = document.getElementById('btnModalCareerNext');
+        if (btnModalNext) btnModalNext.addEventListener('click', onNextStage);
+
+        // Salvar foto a partir do modal
+        const btnModalPhoto = document.getElementById('btnModalCareerPhoto');
+        if (btnModalPhoto) {
+            btnModalPhoto.addEventListener('click', () => {
+                closeCareerChallengeModal();
+                triggerSnapshot(careerMode.getCurrentStage().title);
             });
         }
     }
@@ -675,6 +851,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderCareerStage() {
         const stage = careerMode.getCurrentStage();
         renderCareerPhaseNav();
+        updateCareerLeftBanner();
+        renderGamePhasesMap();
 
         const badge = document.getElementById('careerLevelBadge');
         if (badge) badge.textContent = `Fase ${stage.level} · BNCC`;
@@ -702,11 +880,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="number" step="0.01" class="mission-input" id="career_input_${inp.id}" placeholder="Digite sua resposta">
                 `;
                 inputsContainer.appendChild(group);
+
+                const inputEl = group.querySelector('input');
+                const modalInput = document.getElementById(`modal_input_${inp.id}`);
+                inputEl.addEventListener('input', () => {
+                    if (modalInput) modalInput.value = inputEl.value;
+                });
             });
         }
 
         const feedbackBox = document.getElementById('careerFeedbackBox');
         if (feedbackBox) feedbackBox.classList.add('hidden');
+
+        // Sincroniza conteúdo no modal se estiver aberto
+        renderModalCareerContent();
 
         // Aplica o sólido no 3D
         switchSolid(stage.solidId, stage.targetParams);
