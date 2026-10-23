@@ -13,13 +13,13 @@
     <div id="game-notification" class="hidden"></div>
 
     <!-- ==========================================================================
-         MENU INICIAL (HUB CENTRAL COM CARDS DIDÁTICOS E AUTOEXPLICATIVOS)
+         MENU INICIAL (HUB CENTRAL COM ILUSTRAÇÕES VETORIAIS E CARDS DIDÁTICOS)
          ========================================================================== -->
     <div id="mainWelcomeMenu" class="welcome-menu-overlay">
         <div class="welcome-container">
             <header class="welcome-header">
                 <div class="welcome-badge">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                         <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                         <line x1="12" y1="22.08" x2="12" y2="12"></line>
@@ -30,16 +30,40 @@
                     Estúdio Interativo de Geometria Espacial, Engenharia e Design Arquitetônico (BNCC)
                 </p>
                 <div class="welcome-tip-pill">
-                    💡 Dica Didática: <b>1 m³ equivale a exatamente 1.000 Litros de água</b> (1 dm³ = 1 L)
+                    💡 Dica Didática Universal: <b>1 m³ equivale a exatamente 1.000 Litros de água</b> (1 dm³ = 1 L)
                 </div>
             </header>
 
-            <!-- GRID DE CARDS DIDÁTICOS E AUTOEXPLICATIVOS -->
+            <!-- GRID DE CARDS COM ILUSTRAÇÕES VETORIAIS RICAS -->
             <div class="welcome-cards-grid">
                 <!-- CARD 1: MODO CARREIRA -->
                 <div class="menu-action-card featured" data-action="career">
-                    <div class="card-tag-badge">Jornada Guiada</div>
-                    <div class="card-icon-circle">🚀</div>
+                    <div class="card-tag-badge">Jornada BNCC (6 Fases)</div>
+                    <div class="card-illustration-box">
+                        <svg width="100%" height="80" viewBox="0 0 200 90" fill="none">
+                            <defs>
+                                <linearGradient id="gradRocket" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#818cf8"/>
+                                    <stop offset="100%" stop-color="#4f46e5"/>
+                                </linearGradient>
+                                <linearGradient id="gradCube" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#38bdf8"/>
+                                    <stop offset="100%" stop-color="#0284c7"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Cubo Isométrico da Base -->
+                            <polygon points="50,45 80,30 110,45 80,60" fill="url(#gradCube)" opacity="0.9"/>
+                            <polygon points="50,45 80,60 80,85 50,70" fill="#0369a1"/>
+                            <polygon points="80,60 110,45 110,70 80,85" fill="#0284c7"/>
+                            <!-- Foguete da Carreira subindo -->
+                            <path d="M125,25 L145,10 L155,30 Z" fill="#f43f5e"/>
+                            <ellipse cx="140" cy="30" rx="14" ry="24" transform="rotate(40 140 30)" fill="url(#gradRocket)"/>
+                            <circle cx="143" cy="27" r="4" fill="#fff"/>
+                            <!-- Rastro de propulsão -->
+                            <path d="M125,48 Q115,65 105,75" stroke="#f59e0b" stroke-width="3" stroke-dasharray="3,3"/>
+                            <polygon points="120,44 112,58 128,52" fill="#f59e0b"/>
+                        </svg>
+                    </div>
                     <div class="card-content">
                         <h3>Iniciar Modo Carreira</h3>
                         <p>Aprenda geometria espacial do zero: manipule propriedades no 3D, deforme vértices, calcule áreas totais e volumes, e construa um edifício completo.</p>
@@ -50,7 +74,24 @@
                 <!-- CARD 2: LABORATÓRIO 3D LIVRE -->
                 <div class="menu-action-card" data-action="lab">
                     <div class="card-tag-badge">Exploração Aberta</div>
-                    <div class="card-icon-circle">🔬</div>
+                    <div class="card-illustration-box">
+                        <svg width="100%" height="80" viewBox="0 0 200 90" fill="none">
+                            <defs>
+                                <linearGradient id="gradPyramid" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#f59e0b"/>
+                                    <stop offset="100%" stop-color="#d97706"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Pirâmide 3D com eixos e laser de corte -->
+                            <polygon points="100,12 60,65 100,78" fill="url(#gradPyramid)"/>
+                            <polygon points="100,12 100,78 140,65" fill="#b45309"/>
+                            <!-- Plano de corte Laser Rosa -->
+                            <polygon points="40,48 160,35 150,55 30,68" fill="rgba(244,63,94,0.35)" stroke="#f43f5e" stroke-width="1.5"/>
+                            <!-- Eixos cartesianos pontilhados -->
+                            <line x1="30" y1="75" x2="170" y2="75" stroke="#64748b" stroke-width="1.5" stroke-dasharray="2,2"/>
+                            <line x1="100" y1="5" x2="100" y2="85" stroke="#64748b" stroke-width="1.5" stroke-dasharray="2,2"/>
+                        </svg>
+                    </div>
                     <div class="card-content">
                         <h3>Laboratório Livre 3D</h3>
                         <p>Manipule livremente os 8 sólidos, ative o modo raio-X, corte seções com laser, desdobre em planificação completa e teste abastecimento de água.</p>
@@ -61,7 +102,28 @@
                 <!-- CARD 3: CONSTRUTOR DE PRÉDIO -->
                 <div class="menu-action-card" data-action="building">
                     <div class="card-tag-badge">Missão Arquitetônica</div>
-                    <div class="card-icon-circle">🏢</div>
+                    <div class="card-illustration-box">
+                        <svg width="100%" height="80" viewBox="0 0 200 90" fill="none">
+                            <!-- Edifício Moderno com janelas e portas iluminadas -->
+                            <rect x="70" y="15" width="60" height="70" rx="3" fill="#1e293b" stroke="#0ea5e9" stroke-width="2"/>
+                            <!-- Janelas azuis iluminadas -->
+                            <rect x="76" y="22" width="10" height="9" rx="1" fill="#38bdf8"/>
+                            <rect x="95" y="22" width="10" height="9" rx="1" fill="#38bdf8"/>
+                            <rect x="114" y="22" width="10" height="9" rx="1" fill="#38bdf8"/>
+
+                            <rect x="76" y="36" width="10" height="9" rx="1" fill="#38bdf8"/>
+                            <rect x="95" y="36" width="10" height="9" rx="1" fill="#38bdf8"/>
+                            <rect x="114" y="36" width="10" height="9" rx="1" fill="#38bdf8"/>
+
+                            <rect x="76" y="50" width="10" height="9" rx="1" fill="#38bdf8"/>
+                            <rect x="95" y="50" width="10" height="9" rx="1" fill="#38bdf8"/>
+                            <rect x="114" y="50" width="10" height="9" rx="1" fill="#38bdf8"/>
+                            <!-- Porta de entrada térrea -->
+                            <rect x="93" y="66" width="14" height="19" rx="1" fill="#d97706"/>
+                            <!-- Cobertura com jardim suspenso -->
+                            <rect x="67" y="11" width="66" height="5" rx="2" fill="#10b981"/>
+                        </svg>
+                    </div>
                     <div class="card-content">
                         <h3>Estúdio de Arquitetura (Prédio 3D)</h3>
                         <p>Transforme o modelo tridimensional num edifício residencial: adicione andares, janelas e portas. Calcule área de vidro, alvenaria e volume de ar.</p>
@@ -72,7 +134,20 @@
                 <!-- CARD 4: ÁLBUM E GALERIA -->
                 <div class="menu-action-card" data-action="album">
                     <div class="card-tag-badge">Portfólio Estudantil</div>
-                    <div class="card-icon-circle">📸</div>
+                    <div class="card-illustration-box">
+                        <svg width="100%" height="80" viewBox="0 0 200 90" fill="none">
+                            <!-- Foto Polaroid com sólido geométrico -->
+                            <rect x="55" y="10" width="55" height="70" rx="3" fill="#ffffff" transform="rotate(-8 55 10)"/>
+                            <rect x="60" y="16" width="45" height="42" fill="#0f172a" transform="rotate(-8 60 16)"/>
+                            <circle cx="82" cy="38" r="12" fill="#00f2fe" opacity="0.8"/>
+                            <!-- Câmera Fotográfica Moderna -->
+                            <rect x="105" y="25" width="60" height="42" rx="6" fill="#334155" stroke="#94a3b8" stroke-width="1.5"/>
+                            <circle cx="135" cy="46" r="14" fill="#0f172a" stroke="#0ea5e9" stroke-width="2.5"/>
+                            <circle cx="135" cy="46" r="6" fill="#38bdf8"/>
+                            <rect x="112" y="19" width="14" height="6" rx="2" fill="#64748b"/>
+                            <circle cx="155" cy="32" r="3" fill="#f43f5e"/> <!-- Flash -->
+                        </svg>
+                    </div>
                     <div class="card-content">
                         <h3>Álbum & Galeria de Conquistas</h3>
                         <p>Veja todos os seus projetos salvos, fotos capturadas dos sólidos em alta resolução, relatórios matemáticos e anotações das aulas.</p>
@@ -83,7 +158,19 @@
                 <!-- CARD 5: GUIA DE FÓRMULAS & APOIO -->
                 <div class="menu-action-card" data-action="formulas">
                     <div class="card-tag-badge">Material de Consulta</div>
-                    <div class="card-icon-circle">📖</div>
+                    <div class="card-illustration-box">
+                        <svg width="100%" height="80" viewBox="0 0 200 90" fill="none">
+                            <!-- Livro Aberto com Fórmulas e Esquadro -->
+                            <path d="M40,65 C70,55 95,65 100,70 C105,65 130,55 160,65 L160,25 C130,15 105,25 100,30 C95,25 70,15 40,25 Z" fill="#1e293b" stroke="#818cf8" stroke-width="1.5"/>
+                            <!-- Fórmulas escritas nas páginas -->
+                            <text x="50" y="38" font-size="9" fill="#00f2fe" font-family="monospace" font-weight="bold">At = 6·a²</text>
+                            <text x="50" y="52" font-size="9" fill="#94a3b8" font-family="monospace">V = a³</text>
+                            <text x="110" y="38" font-size="9" fill="#f59e0b" font-family="monospace" font-weight="bold">V = π·r²·h</text>
+                            <text x="110" y="52" font-size="8" fill="#34d399" font-family="monospace">1m³ = 1000L</text>
+                            <!-- Esquadro de desenho -->
+                            <polygon points="140,40 170,75 140,75" fill="rgba(245,158,11,0.25)" stroke="#f59e0b" stroke-width="1.5"/>
+                        </svg>
+                    </div>
                     <div class="card-content">
                         <h3>Guia de Fórmulas & Como Calcular</h3>
                         <p>Consulte a qualquer momento o dicionário de símbolos, fórmulas de Área da Base, Lateral, Total e Volume, e o passo a passo resolvido.</p>
@@ -94,7 +181,20 @@
                 <!-- CARD 6: CONFIGURAÇÕES -->
                 <div class="menu-action-card" data-action="settings">
                     <div class="card-tag-badge">Preferências</div>
-                    <div class="card-icon-circle">⚙️</div>
+                    <div class="card-illustration-box">
+                        <svg width="100%" height="80" viewBox="0 0 200 90" fill="none">
+                            <!-- Engrenagens Técnicas e Paleta de Cores -->
+                            <circle cx="85" cy="45" r="22" stroke="#64748b" stroke-width="5" stroke-dasharray="6,4"/>
+                            <circle cx="85" cy="45" r="10" fill="#0ea5e9"/>
+                            <circle cx="125" cy="35" r="16" stroke="#94a3b8" stroke-width="4" stroke-dasharray="5,3"/>
+                            <circle cx="125" cy="35" r="6" fill="#facc15"/>
+                            <!-- Pontos de Cor Neon da personalização -->
+                            <circle cx="130" cy="68" r="5" fill="#00f2fe"/>
+                            <circle cx="145" cy="68" r="5" fill="#facc15"/>
+                            <circle cx="160" cy="68" r="5" fill="#22c55e"/>
+                            <circle cx="175" cy="68" r="5" fill="#f43f5e"/>
+                        </svg>
+                    </div>
                     <div class="card-content">
                         <h3>Configurações & Cores 3D</h3>
                         <p>Personalize os efeitos sonoros, o estilo de iluminação da cena e mude as cores das arestas e vértices para facilitar a visualização.</p>
@@ -131,7 +231,7 @@
         <!-- MODO ATIVO DISPLAY PILL -->
         <div class="current-mode-indicator" id="currentModeIndicator">
             <span class="mode-pulse-dot"></span>
-            <span id="currentModeText">🔬 Laboratório 3D</span>
+            <span id="currentModeText">🚀 Modo Carreira BNCC</span>
         </div>
 
         <!-- STATUS BAR & FERRAMENTAS PRINCIPAIS -->
@@ -258,7 +358,7 @@
                 </div>
             </div>
 
-            <!-- SUBPAINEL: PLANIFICAÇÃO (UNFOLDING) -->
+            <!-- SUBPAINEL: PLANIFICAÇÃO (UNFOLDING) COM CARTELA DE PEÇAS -->
             <div class="mode-subpanel hidden" id="subpanel-unfold">
                 <div class="section-title">Desdobrar Faces (2D / 3D)</div>
                 <div class="sliders-card">
@@ -270,9 +370,12 @@
                         <input type="range" id="unfoldSlider" min="0" max="1" step="0.01" value="0">
                     </div>
                     <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">
-                        Desdobre as faces do sólido para calcular a área de matéria-prima necessária para fabricação. (A silhueta 3D foi completamente ocultada).
+                        Desdobre as faces do sólido para visualizar o molde 2D completo sem silhueta de fundo.
                     </div>
                 </div>
+
+                <!-- CARTELA DE PLANIFICAÇÃO INTERATIVA -->
+                <div id="unfoldingCartelaContainer" style="margin-top:10px;"></div>
             </div>
 
             <!-- SUBPAINEL: FATIADOR / CORTE -->
@@ -324,9 +427,9 @@
                 </div>
             </div>
 
-            <!-- SUBPAINEL: ESTÚDIO DE ARQUITETURA (PRÉDIO 3D) -->
+            <!-- SUBPAINEL: ESTÚDIO DE ARQUITETURA (PERSONALIZADOR DO PRÉDIO 3D) -->
             <div class="mode-subpanel hidden" id="subpanel-building-left">
-                <div class="section-title">Parâmetros do Edifício</div>
+                <div class="section-title">Personalizar Edifício 3D</div>
                 <div class="sliders-card">
                     <div class="slider-unit">
                         <div class="slider-label-row">
@@ -337,13 +440,40 @@
                     </div>
                     <div class="slider-unit">
                         <div class="slider-label-row">
-                            <span>Janelas por Andar</span>
+                            <span>Janelas por Pavimento</span>
                             <span class="slider-badge-val" id="buildingWindowsVal">3</span>
                         </div>
                         <input type="range" id="sliderBuildingWindows" min="1" max="5" step="1" value="3">
                     </div>
-                    <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4; margin-top:4px;">
-                        O modelo 3D atualiza as janelas, portas e frisos entre andares em tempo real.
+
+                    <!-- ESTILO DE JANELAS -->
+                    <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
+                        <span style="font-size:0.75rem; color:var(--text-secondary); font-weight:600; display:block; margin-bottom:4px;">Tipo de Janelas:</span>
+                        <div class="view-modes-group" id="groupBldWin">
+                            <button class="view-btn active" data-bld-win="blue_mirror">Vidro Azul</button>
+                            <button class="view-btn" data-bld-win="white_grid">Gradeada</button>
+                            <button class="view-btn" data-bld-win="black_panoramic">Panorâmica</button>
+                        </div>
+                    </div>
+
+                    <!-- ESTILO DE PORTAS -->
+                    <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
+                        <span style="font-size:0.75rem; color:var(--text-secondary); font-weight:600; display:block; margin-bottom:4px;">Porta de Entrada:</span>
+                        <div class="view-modes-group" id="groupBldDoor">
+                            <button class="view-btn active" data-bld-door="glass_double">Vidro Duplo</button>
+                            <button class="view-btn" data-bld-door="wood_classic">Madeira</button>
+                            <button class="view-btn" data-bld-door="garage_gate">Portão</button>
+                        </div>
+                    </div>
+
+                    <!-- ESTILO DE TELHADO -->
+                    <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
+                        <span style="font-size:0.75rem; color:var(--text-secondary); font-weight:600; display:block; margin-bottom:4px;">Cobertura / Telhado:</span>
+                        <div class="view-modes-group" id="groupBldRoof">
+                            <button class="view-btn active" data-bld-roof="flat_garden">Platibanda</button>
+                            <button class="view-btn" data-bld-roof="pyramid_4waters">4 Águas</button>
+                            <button class="view-btn" data-bld-roof="dome">Cúpula</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -352,12 +482,12 @@
 
         <!-- VIEWPORT CENTRAL: CANVAS 3D -->
         <section id="canvas-container">
-            <div class="canvas-hint">👆 Toque e arraste para girar · 2 dedos para zoom</div>
+            <div class="canvas-hint">👆 Toque e arraste para girar · 2 dedos para zoom · Arraste as esferas amarelas para deformar!</div>
             
             <!-- TOOLBAR MODERNA DO CANVAS -->
             <div class="canvas-toolbar">
                 <button class="toolbar-btn active" id="btnToggleDimensions">📏 Cotas (Medidas)</button>
-                <button class="toolbar-btn" id="btnToggleDeform" title="Permite empurrar ou puxar os vértices para achatar ou ampliar">
+                <button class="toolbar-btn active" id="btnToggleDeform" title="Permite empurrar ou puxar os vértices para achatar ou ampliar">
                     ✋ Deformar Vértices
                 </button>
                 <button class="toolbar-btn" id="btnResetCamera">🎯 Centralizar</button>
@@ -386,7 +516,11 @@
                  ================================================================== -->
             <div class="mode-subpanel" id="subpanel-career">
                 <div class="career-mission-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                    
+                    <!-- NAVEGADOR DE FASES 1 A 6 -->
+                    <div class="career-phase-navigator" id="careerPhaseNav"></div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
                         <span class="team-badge" id="careerLevelBadge">Fase 1 · BNCC</span>
                         <button class="btn-quick-guide" id="btnCareerAuxGuide" title="Ver fórmula desta fase">
                             💡 Ver Fórmula
@@ -394,10 +528,10 @@
                     </div>
 
                     <div id="careerStageTitle" style="font-size:1.05rem; font-weight:700; color:#fff; margin-top:4px;">
-                        Fase 1: O Cubo e a Caixa d'Água Residencial
+                        Fase 1: Fundação & Caixa d'Água Cúbica
                     </div>
                     <div id="careerStageSubtitle" style="font-size:0.76rem; color:var(--accent-cyan); font-weight:600;">
-                        Propriedades dos Poliedros Regulares, Áreas e Volume
+                        Poliedros Regulares, Arestas, Área Total e Volume em Litros
                     </div>
 
                     <div class="career-concept-box" id="careerConceptBox"></div>
@@ -823,6 +957,7 @@
     <script src="js/building-builder.js"></script>
     <script src="js/gallery-album.js"></script>
     <script src="js/career-mode.js"></script>
+    <script src="js/unfolding-cartela.js"></script>
     <script src="js/liquid-simulation.js"></script>
     <script src="js/cross-section.js"></script>
     <script src="js/unfolding.js"></script>

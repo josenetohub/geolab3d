@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const liquidSim = new LiquidSimulation(sceneMgr);
     const crossSection = new CrossSectionAnalyzer(sceneMgr, 'radarCanvas');
     const unfoldSys = new UnfoldingSystem(sceneMgr);
+    const unfoldingCartela = new UnfoldingCartela(unfoldSys, sceneMgr);
     const gameMgr = new GameManager();
 
     // Novos Módulos Pedagógicos
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMathCards(SOLIDS_DATA[currentSolidId]);
         dimensionsHelper.update(currentSolidId, currentParams);
         if (buildingStudio.active) buildingStudio.buildBuilding(currentParams);
+        updateUnfoldingCartela();
     });
 
     const buildingStudio = new BuildingBuilder(sceneMgr);
@@ -123,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMathCards(solidDef);
         updateElementsUI(solidDef);
         renderAuxiliaryDrawerContent();
+        updateUnfoldingCartela();
     }
 
     // Constrói os sliders com medidas legíveis
@@ -166,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 updateMathCards(solidDef);
                 renderAuxiliaryDrawerContent();
+                updateUnfoldingCartela();
             });
 
             row.appendChild(header);
@@ -253,6 +257,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span style="color:var(--text-secondary);">Relação V - A + F:</span>
                 <span style="font-weight:700; color:var(--accent-emerald);">${V} - ${A} + ${F} = ${res} ✓ Poliedro Regular</span>
             `;
+        }
+    }
+
+    // Atualiza a Cartela de Planificação (Pedaços e Área Total)
+    function updateUnfoldingCartela() {
+        const container = document.getElementById('unfoldingCartelaContainer');
+        if (!container) return;
+        if (currentMode === 'unfold') {
+            unfoldingCartela.renderCartelaUI(container, currentSolidId, currentParams, (pieceIdx) => {
+                if (window.sounds) window.sounds.playClick();
+            });
         }
     }
 
@@ -586,6 +601,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
     // MODO CARREIRA BNCC
     // ==========================================================================
+    function renderCareerPhaseNav() {
+        const nav = document.getElementById('careerPhaseNav');
+        if (!nav) return;
+        nav.innerHTML = careerMode.stages.map((stg, idx) => `
+            <button class="career-nav-pill ${idx === careerMode.currentStageIndex ? 'active' : ''}" data-stage-idx="${idx}">
+                Fase ${stg.level}
+            </button>
+        `).join('');
+
+        nav.querySelectorAll('.career-nav-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.dataset.stageIdx);
+                careerMode.selectStage(idx);
+                renderCareerStage();
+                if (window.sounds) window.sounds.playClick();
+            });
+        });
+    }
+
     function setupCareerUI() {
         renderCareerStage();
 
@@ -640,6 +674,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderCareerStage() {
         const stage = careerMode.getCurrentStage();
+        renderCareerPhaseNav();
+
         const badge = document.getElementById('careerLevelBadge');
         if (badge) badge.textContent = `Fase ${stage.level} · BNCC`;
 
@@ -674,6 +710,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Aplica o sólido no 3D
         switchSolid(stage.solidId, stage.targetParams);
+
+        // Se for missão arquitetônica (Fase 6: Edifício), ativa o estúdio de prédios no 3D
+        if (stage.isBuildingMission) {
+            buildingStudio.setActive(true);
+            const rep = buildingStudio.buildBuilding(stage.targetParams);
+            updateBuildingUI(rep);
+        } else {
+            if (currentMode === 'career') {
+                buildingStudio.setActive(false);
+            }
+        }
     }
 
     // ==========================================================================
@@ -772,6 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mode === 'unfold') {
             const unfoldSub = document.getElementById('subpanel-unfold');
             if (unfoldSub) unfoldSub.classList.remove('hidden');
+            updateUnfoldingCartela();
         }
 
         if (mode === 'cross_section') {
@@ -939,6 +987,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateBuildingUI(buildingStudio.getReport());
             });
         }
+
+        // Seletores de Janelas, Portas e Telhados do Edifício 3D
+        document.querySelectorAll('#groupBldWin [data-bld-win]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#groupBldWin [data-bld-win]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                buildingStudio.setWindowStyle(btn.dataset.bldWin);
+                updateBuildingUI(buildingStudio.getReport());
+                if (window.sounds) window.sounds.playClick();
+            });
+        });
+
+        document.querySelectorAll('#groupBldDoor [data-bld-door]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#groupBldDoor [data-bld-door]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                buildingStudio.setDoorStyle(btn.dataset.bldDoor);
+                updateBuildingUI(buildingStudio.getReport());
+                if (window.sounds) window.sounds.playClick();
+            });
+        });
+
+        document.querySelectorAll('#groupBldRoof [data-bld-roof]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#groupBldRoof [data-bld-roof]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                buildingStudio.setRoofStyle(btn.dataset.bldRoof);
+                updateBuildingUI(buildingStudio.getReport());
+                if (window.sounds) window.sounds.playClick();
+            });
+        });
 
         // Líquido
         const btnFaucet = document.getElementById('btnFaucet');
