@@ -26,7 +26,8 @@ const SUPPORT_GUIDE_DATA = {
         { symbol: 'h', name: 'Altura Perpendicular', desc: 'Distância vertical reta entre o chão (base) e o topo do sólido.' },
         { symbol: 'g', name: 'Geratriz', desc: 'Comprimento inclinado da lateral de um cone (g = √(r² + h²)).' },
         { symbol: 'ap', name: 'Apótema da Pirâmide', desc: 'Altura da face triangular inclinada de uma pirâmide.' },
-        { symbol: 'π (Pi)', name: 'Número Pi', desc: 'Constante matemática fundamental (π ≈ 3,14).' }
+        { symbol: 'π (Pi)', name: 'Número Pi', desc: 'Constante matemática fundamental (π ≈ 3,14).' },
+        { symbol: '1 m³', name: 'Metro Cúbico = 1.000 Litros', desc: '1 m³ equivale a exatamente 1.000 Litros. (1 dm³ = 1 L e 1 cm³ = 1 mL).' }
     ],
 
     formulasBySolid: {

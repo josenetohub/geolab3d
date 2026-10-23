@@ -318,6 +318,51 @@ class DimensionsHelper {
 
         this.group.visible = this.visible;
     }
+
+    // Atualiza as cotas 3D quando o sólido sofre um corte transversal
+    updateCutDimensions(solidId, p, cutHeight, sectionInfo) {
+        this.clear();
+        if (!this.visible) return;
+
+        const solidDef = SOLIDS_DATA[solidId];
+        const totalH = solidDef ? solidDef.height(p) : 5;
+        const clampedH = Math.max(0, Math.min(totalH, cutHeight));
+        const remH = clampedH;
+        const remSup = Math.max(0, totalH - clampedH);
+
+        const xOffset = 3.2;
+
+        // 1. Cota da altura restante inferior
+        this.createMeasureLine(
+            new THREE.Vector3(xOffset, 0, 0),
+            new THREE.Vector3(xOffset, remH, 0),
+            `h restante = ${remH.toFixed(2)} m`,
+            0.15,
+            0x00f2fe
+        );
+
+        // 2. Cota da altura cortada/removida superior
+        if (remSup > 0.05) {
+            this.createMeasureLine(
+                new THREE.Vector3(xOffset, remH, 0),
+                new THREE.Vector3(xOffset, totalH, 0),
+                `h cortada = ${remSup.toFixed(2)} m`,
+                0.15,
+                0xf43f5e
+            );
+        }
+
+        // 3. Cota transversal no plano de corte
+        this.createMeasureLine(
+            new THREE.Vector3(-2, remH, 0),
+            new THREE.Vector3(2, remH, 0),
+            `Fatia: ${sectionInfo.estimatedArea}`,
+            0.15,
+            0xf59e0b
+        );
+
+        this.group.visible = this.visible;
+    }
 }
 
 window.DimensionsHelper = DimensionsHelper;

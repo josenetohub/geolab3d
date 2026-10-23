@@ -1,14 +1,35 @@
-// GeoLab 3D - Orquestrador Principal do Aplicativo & Estúdio de Projetos Reais
+// GeoLab 3D - Orquestrador Principal do Aplicativo & Estúdio BNCC
 document.addEventListener('DOMContentLoaded', () => {
     const canvasContainer = document.getElementById('canvas-container');
 
     // 1. Instanciação dos Subsistemas 3D e Lógica
     const sceneMgr = new SceneManager(canvasContainer);
     const dimensionsHelper = new DimensionsHelper(sceneMgr);
+    window.dimensionsHelper = dimensionsHelper;
+
     const liquidSim = new LiquidSimulation(sceneMgr);
     const crossSection = new CrossSectionAnalyzer(sceneMgr, 'radarCanvas');
     const unfoldSys = new UnfoldingSystem(sceneMgr);
     const gameMgr = new GameManager();
+
+    // Novos Módulos Pedagógicos
+    const vertexDeformer = new VertexDeformer(sceneMgr, (newParams) => {
+        currentParams = { ...newParams };
+        updateParamSliderValues(SOLIDS_DATA[currentSolidId]);
+        updateMathCards(SOLIDS_DATA[currentSolidId]);
+        dimensionsHelper.update(currentSolidId, currentParams);
+        if (buildingStudio.active) buildingStudio.buildBuilding(currentParams);
+    });
+
+    const buildingStudio = new BuildingBuilder(sceneMgr);
+    const galleryAlbum = new GalleryAlbum(sceneMgr);
+
+    // Modo Carreira BNCC
+    const careerMode = new CareerMode(
+        sceneMgr,
+        (solidId, params) => switchSolid(solidId, params),
+        () => switchMode('building')
+    );
 
     // Estúdio de Projetos para Aulas em Grupo
     const studio = new GameDesignStudio(sceneMgr, (solidId, params) => {
@@ -18,23 +39,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Estado da Aplicação
     let currentSolidId = 'cube';
     let currentParams = { ...SOLIDS_DATA.cube.defaultParams };
-    let currentMode = 'lab';
+    let currentMode = 'career'; // Inicia no Modo Carreira didático
 
     // 3. Inicialização
     function init() {
         populateSolidSelect();
         setupEventListeners();
         setupMobileNavigation();
+        setupWelcomeMenu();
+        setupAuxiliaryDrawer();
+        setupGalleryAndSnapshot();
+        setupSettingsModal();
         setupStudioUI();
-        setupSupportGuide();
+        setupCareerUI();
+
         switchSolid('cube');
-        switchMode('lab');
+        switchMode('career');
         updateGameStatsUI();
     }
 
     // Preenche o seletor de sólidos
     function populateSolidSelect() {
         const select = document.getElementById('solidSelect');
+        if (!select) return;
         select.innerHTML = '';
 
         const categories = {};
@@ -70,24 +97,38 @@ document.addEventListener('DOMContentLoaded', () => {
         // Atualiza Three.js
         SolidsBuilder.build(sceneMgr, solidId, currentParams);
         dimensionsHelper.buildDimensions(solidId, currentParams);
+        vertexDeformer.setSolid(solidId, currentParams);
         liquidSim.setSolid(solidId, currentParams);
         crossSection.setSolid(solidId, currentParams);
         unfoldSys.setSolid(solidId, currentParams);
 
+        if (buildingStudio.active) {
+            buildingStudio.buildBuilding(currentParams);
+        }
+
         // Atualiza UI
-        document.getElementById('solidSelect').value = solidId;
-        document.getElementById('solidTitle').textContent = solidDef.name;
-        document.getElementById('solidCategoryBadge').textContent = solidDef.category;
-        document.getElementById('gameAssetText').textContent = solidDef.realWorldApplication || 'Aplicações no Cotidiano';
+        const select = document.getElementById('solidSelect');
+        if (select) select.value = solidId;
+
+        const solidTitle = document.getElementById('solidTitle');
+        if (solidTitle) solidTitle.textContent = solidDef.name;
+
+        const categoryBadge = document.getElementById('solidCategoryBadge');
+        if (categoryBadge) categoryBadge.textContent = solidDef.category;
+
+        const gameAssetText = document.getElementById('gameAssetText');
+        if (gameAssetText) gameAssetText.textContent = solidDef.realWorldApplication || 'Aplicações no Cotidiano';
 
         buildParamSliders(solidDef);
         updateMathCards(solidDef);
         updateElementsUI(solidDef);
+        renderAuxiliaryDrawerContent();
     }
 
     // Constrói os sliders com medidas legíveis
     function buildParamSliders(solidDef) {
         const container = document.getElementById('paramSlidersContainer');
+        if (!container) return;
         container.innerHTML = '';
 
         solidDef.paramDefs.forEach(p => {
@@ -108,15 +149,23 @@ document.addEventListener('DOMContentLoaded', () => {
             input.addEventListener('input', (e) => {
                 const val = parseFloat(e.target.value);
                 currentParams[p.key] = val;
-                document.getElementById(`val-${p.key}`).textContent = `${val} ${p.unit}`;
+                const badge = document.getElementById(`val-${p.key}`);
+                if (badge) badge.textContent = `${val} ${p.unit}`;
 
                 SolidsBuilder.build(sceneMgr, currentSolidId, currentParams);
                 dimensionsHelper.buildDimensions(currentSolidId, currentParams);
+                vertexDeformer.setSolid(currentSolidId, currentParams);
                 liquidSim.setSolid(currentSolidId, currentParams);
                 crossSection.setSolid(currentSolidId, currentParams);
                 unfoldSys.setSolid(currentSolidId, currentParams);
 
+                if (buildingStudio.active) {
+                    const bldReport = buildingStudio.buildBuilding(currentParams);
+                    updateBuildingUI(bldReport);
+                }
+
                 updateMathCards(solidDef);
+                renderAuxiliaryDrawerContent();
             });
 
             row.appendChild(header);
@@ -125,320 +174,550 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function updateParamSliderValues(solidDef) {
+        solidDef.paramDefs.forEach(p => {
+            const input = document.querySelector(`#paramSlidersContainer input[value][step="${p.step}"]`);
+            const badge = document.getElementById(`val-${p.key}`);
+            if (badge) badge.textContent = `${currentParams[p.key]} ${p.unit}`;
+        });
+    }
+
     // Atualiza os cartões matemáticos (com formatação limpa e passo a passo)
     function updateMathCards(solidDef) {
         const calc = solidDef.calculate(currentParams);
 
         // Área Total (At)
-        document.getElementById('totalAreaVal').textContent = calc.totalArea.toFixed(2) + ' m²';
-        document.getElementById('totalAreaFormula').innerHTML = calc.formulas.totalArea;
-        document.getElementById('totalAreaSteps').innerHTML = calc.stepByStep.totalArea;
+        const totalAreaVal = document.getElementById('totalAreaVal');
+        if (totalAreaVal) totalAreaVal.textContent = calc.totalArea.toFixed(2) + ' m²';
+        const totalAreaFormula = document.getElementById('totalAreaFormula');
+        if (totalAreaFormula) totalAreaFormula.innerHTML = calc.formulas.totalArea;
+        const totalAreaSteps = document.getElementById('totalAreaSteps');
+        if (totalAreaSteps) totalAreaSteps.innerHTML = calc.stepByStep.totalArea;
 
         // Volume (V)
-        document.getElementById('volumeVal').textContent = calc.volume.toFixed(2) + ' m³';
-        document.getElementById('volumeFormula').innerHTML = calc.formulas.volume;
-        document.getElementById('volumeSteps').innerHTML = calc.stepByStep.volume;
+        const volumeVal = document.getElementById('volumeVal');
+        if (volumeVal) volumeVal.textContent = calc.volume.toFixed(2) + ' m³';
+        const volumeFormula = document.getElementById('volumeFormula');
+        if (volumeFormula) volumeFormula.innerHTML = calc.formulas.volume;
+        const volumeSteps = document.getElementById('volumeSteps');
+        if (volumeSteps) volumeSteps.innerHTML = calc.stepByStep.volume;
 
         // Área da Base (Ab)
-        document.getElementById('baseAreaVal').textContent = calc.baseArea.toFixed(2) + ' m²';
-        document.getElementById('baseAreaFormula').innerHTML = calc.formulas.baseArea;
+        const baseAreaVal = document.getElementById('baseAreaVal');
+        if (baseAreaVal) baseAreaVal.textContent = calc.baseArea.toFixed(2) + ' m²';
+        const baseAreaFormula = document.getElementById('baseAreaFormula');
+        if (baseAreaFormula) baseAreaFormula.innerHTML = calc.formulas.baseArea;
 
         // Área Lateral (Al)
-        document.getElementById('lateralAreaVal').textContent = calc.lateralArea.toFixed(2) + ' m²';
-        document.getElementById('lateralAreaFormula').innerHTML = calc.formulas.lateralArea;
+        const lateralAreaVal = document.getElementById('lateralAreaVal');
+        if (lateralAreaVal) lateralAreaVal.textContent = calc.lateralArea.toFixed(2) + ' m²';
+        const lateralAreaFormula = document.getElementById('lateralAreaFormula');
+        if (lateralAreaFormula) lateralAreaFormula.innerHTML = calc.formulas.lateralArea;
 
-        // Medidas auxiliares (apótema, geratriz, etc.)
+        // Medidas auxiliares
         const extraContainer = document.getElementById('extraMeasuresContainer');
-        extraContainer.innerHTML = '';
-        calc.extraMeasures.forEach(m => {
-            const item = document.createElement('div');
-            item.className = 'math-card';
-            item.innerHTML = `
-                <div class="math-card-header">
-                    <span class="math-card-title">${m.label}</span>
-                </div>
-                <div class="math-card-value" style="font-size:1.1rem;">${m.value}</div>
-                <div class="math-card-formula">${m.formula}</div>
-            `;
-            extraContainer.appendChild(item);
-        });
+        if (extraContainer) {
+            extraContainer.innerHTML = '';
+            calc.extraMeasures.forEach(m => {
+                const item = document.createElement('div');
+                item.className = 'math-card';
+                item.innerHTML = `
+                    <div class="math-card-header">
+                        <span class="math-card-title">${m.label}</span>
+                    </div>
+                    <div class="math-card-value" style="font-size:1.1rem;">${m.value}</div>
+                    <div class="math-card-formula">${m.formula}</div>
+                `;
+                extraContainer.appendChild(item);
+            });
+        }
     }
 
     // Atualiza a Relação de Euler
     function updateElementsUI(solidDef) {
         const elem = solidDef.elements;
-        document.getElementById('vertCount').textContent = elem.verticesCount;
-        document.getElementById('edgeCount').textContent = elem.edgesCount;
-        document.getElementById('faceCount').textContent = elem.facesCount;
-        document.getElementById('faceTypesDesc').textContent = elem.faceTypes;
+        const vertCount = document.getElementById('vertCount');
+        if (vertCount) vertCount.textContent = elem.verticesCount;
+        const edgeCount = document.getElementById('edgeCount');
+        if (edgeCount) edgeCount.textContent = elem.edgesCount;
+        const faceCount = document.getElementById('faceCount');
+        if (faceCount) faceCount.textContent = elem.facesCount;
 
         const eulerBox = document.getElementById('eulerResultBox');
-        if (elem.euler.valid) {
+        if (eulerBox && elem.euler.valid) {
             const V = elem.euler.v;
             const A = elem.euler.a;
             const F = elem.euler.f;
             const res = V - A + F;
             eulerBox.innerHTML = `
-                <div class="euler-equation-box">${V} - ${A} + ${F} = ${res}</div>
-                <div style="color:var(--accent-emerald); font-weight:600; font-size:0.78rem; text-align:center; margin-top:4px;">
-                    ✓ Poliedro Euleriano Válido (V - A + F = 2)
-                </div>
-            `;
-        } else {
-            eulerBox.innerHTML = `
-                <div style="color:var(--text-secondary); font-size:0.78rem; text-align:center; padding:6px;">
-                    ${elem.euler.note || 'Não aplicável a corpos redondos (curvos).'}
-                </div>
+                <span style="color:var(--text-secondary);">Relação V - A + F:</span>
+                <span style="font-weight:700; color:var(--accent-emerald);">${V} - ${A} + ${F} = ${res} ✓ Poliedro Regular</span>
             `;
         }
     }
 
-    // Configura o Estúdio de Projetos para Aulas em Grupo
-    function setupStudioUI() {
-        const grid = document.getElementById('teamProjectsSelectorGrid');
-        grid.innerHTML = '';
+    // ==========================================================================
+    // MENU INICIAL (WELCOME HUB COM CARDS DIDÁTICOS)
+    // ==========================================================================
+    function setupWelcomeMenu() {
+        const menu = document.getElementById('mainWelcomeMenu');
+        const btnOpen = document.getElementById('btnOpenMainMenu');
+        const btnClose = document.getElementById('btnCloseWelcomeMenu');
 
-        studio.projects.forEach((proj, idx) => {
-            const btn = document.createElement('button');
-            btn.className = `view-btn ${idx === 0 ? 'active' : ''}`;
-            btn.textContent = `Equipe ${idx + 1}: ${proj.title.split('(')[0].trim()}`;
-            btn.addEventListener('click', () => {
-                grid.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                loadStudioProject(idx);
-                if (window.sounds) window.sounds.playClick();
-            });
-            grid.appendChild(btn);
-        });
-
-        const btnSubmit = document.getElementById('btnSubmitTeamProject');
-        btnSubmit.addEventListener('click', () => {
-            const valAt = parseFloat(document.getElementById('inputTeamAt').value);
-            const valV = parseFloat(document.getElementById('inputTeamV').value);
-
-            const fb = document.getElementById('studioFeedbackBox');
-            fb.style.display = 'block';
-
-            if (isNaN(valAt) || isNaN(valV)) {
-                fb.style.background = 'rgba(244, 63, 94, 0.15)';
-                fb.style.color = 'var(--accent-rose)';
-                fb.innerHTML = '⚠️ Por favor, informe a Área Total e o Volume antes de submeter!';
-                if (window.sounds) window.sounds.playError();
-                return;
-            }
-
-            const res = studio.validateSubmission(valAt, valV);
-            if (res.success) {
-                fb.style.background = 'rgba(16, 185, 129, 0.15)';
-                fb.style.color = 'var(--accent-emerald)';
-                fb.innerHTML = `
-                    🎉 PROJETO APROVADO COM SUCESSO!<br>
-                    <span style="font-weight:400; font-size:0.78rem;">
-                        Área Total: ${res.correctAt.toFixed(2)} m² | Volume: ${res.correctV.toFixed(2)} m³<br>
-                        Os cálculos da equipe estão corretos para a fabricação/construção real! +100 XP
-                    </span>
-                `;
-                gameMgr.addXP(100);
-                if (window.sounds) window.sounds.playSuccess();
-                updateGameStatsUI();
-            } else {
-                fb.style.background = 'rgba(245, 158, 11, 0.15)';
-                fb.style.color = 'var(--accent-amber)';
-                let msg = '⚠️ Ajuste de Cálculo Necessário:<br>';
-                if (!res.isAtOk) msg += `• Área Total informada (${valAt} m²) difere do esperado. `;
-                if (!res.isVOk) msg += `• Volume informado (${valV} m³) difere do esperado. `;
-                msg += '<br><span style="font-weight:400; font-size:0.76rem;">Dica: Revise a fórmula da área lateral ou a multiplicação da base pela altura.</span>';
-                fb.innerHTML = msg;
-                if (window.sounds) window.sounds.playError();
-            }
-        });
-    }
-
-    function loadStudioProject(index) {
-        const proj = studio.selectProject(index);
-        document.getElementById('studioTeamBadge').textContent = proj.teamName;
-        document.getElementById('studioProjectTitle').textContent = `Projeto: ${proj.title}`;
-
-        // Exibe as medidas de forma limpa e direta
-        const solidDef = SOLIDS_DATA[proj.solidId];
-        const measureStrs = solidDef.paramDefs.map(p => `${p.label}: ${proj.params[p.key]} ${p.unit}`);
-        const liveMeasuresEl = document.getElementById('studioLiveMeasures');
-        if (liveMeasuresEl) {
-            liveMeasuresEl.textContent = measureStrs.join('  |  ');
-        }
-
-        document.getElementById('inputTeamAt').value = '';
-        document.getElementById('inputTeamV').value = '';
-        document.getElementById('studioFeedbackBox').style.display = 'none';
-
-        // Botão de atalho para abrir a fórmula deste sólido
-        const btnGuide = document.getElementById('btnContextualGuide');
-        if (btnGuide) {
-            btnGuide.onclick = () => {
-                openSupportGuideTopic(proj.solidId);
-            };
-        }
-    }
-
-    // Configuração do Modal Didático de Apoio & Fórmulas
-    function setupSupportGuide() {
-        const modal = document.getElementById('supportGuideModal');
-        const btnOpen = document.getElementById('btnOpenSupportGuide');
-        const btnClose = document.getElementById('btnCloseSupportGuide');
-
-        if (btnOpen) {
+        if (btnOpen && menu) {
             btnOpen.addEventListener('click', () => {
-                modal.classList.remove('hidden');
-                renderGuideTopic('concepts');
+                menu.classList.remove('hidden');
                 if (window.sounds) window.sounds.playClick();
             });
         }
 
-        if (btnClose) {
+        if (btnClose && menu) {
             btnClose.addEventListener('click', () => {
-                modal.classList.add('hidden');
-            });
-        }
-
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.classList.add('hidden');
-            });
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
-                modal.classList.add('hidden');
-            }
-        });
-
-        // Abas do Guia
-        document.querySelectorAll('.guide-tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.guide-tab-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                renderGuideTopic(btn.dataset.topic);
+                menu.classList.add('hidden');
                 if (window.sounds) window.sounds.playClick();
             });
+        }
+
+        document.querySelectorAll('.menu-action-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const action = card.dataset.action;
+                if (menu) menu.classList.add('hidden');
+                if (window.sounds) window.sounds.playClick();
+
+                switch (action) {
+                    case 'career':
+                        switchMode('career');
+                        break;
+                    case 'lab':
+                        switchMode('lab');
+                        break;
+                    case 'building':
+                        switchMode('building');
+                        break;
+                    case 'album':
+                        openAlbumModal();
+                        break;
+                    case 'formulas':
+                        openAuxDrawer('formulas');
+                        break;
+                    case 'settings':
+                        openSettingsModal();
+                        break;
+                    default:
+                        switchMode('lab');
+                }
+            });
         });
     }
 
-    function openSupportGuideTopic(topicId) {
-        const modal = document.getElementById('supportGuideModal');
-        if (!modal) return;
-        modal.classList.remove('hidden');
-        document.querySelectorAll('.guide-tab-btn').forEach(b => {
-            b.classList.toggle('active', b.dataset.topic === topicId);
+    // ==========================================================================
+    // PAINEL AUXILIAR RETRÁTIL (OFF-CANVAS DRAWER)
+    // ==========================================================================
+    let currentDrawerTab = 'formulas';
+
+    function setupAuxiliaryDrawer() {
+        const drawer = document.getElementById('auxiliaryDrawer');
+        const btnOpen = document.getElementById('btnOpenAuxDrawer');
+        const btnClose = document.getElementById('btnCloseAuxDrawer');
+        const btnCareerAux = document.getElementById('btnCareerAuxGuide');
+
+        const toggleDrawer = () => {
+            drawer.classList.toggle('open');
+            if (drawer.classList.contains('open')) {
+                renderAuxiliaryDrawerContent();
+            }
+            if (window.sounds) window.sounds.playClick();
+        };
+
+        if (btnOpen) btnOpen.addEventListener('click', toggleDrawer);
+        if (btnClose) btnClose.addEventListener('click', () => drawer.classList.remove('open'));
+        if (btnCareerAux) {
+            btnCareerAux.addEventListener('click', () => {
+                drawer.classList.add('open');
+                switchDrawerTab('formulas');
+            });
+        }
+
+        document.querySelectorAll('.drawer-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                switchDrawerTab(btn.dataset.dtab);
+            });
         });
-        renderGuideTopic(topicId);
-        if (window.sounds) window.sounds.playClick();
     }
 
-    function renderGuideTopic(topicId) {
-        const container = document.getElementById('guideContentBody');
-        if (!container || !window.SUPPORT_GUIDE_DATA) return;
+    function openAuxDrawer(tabName = 'formulas') {
+        const drawer = document.getElementById('auxiliaryDrawer');
+        if (drawer) {
+            drawer.classList.add('open');
+            switchDrawerTab(tabName);
+        }
+    }
+
+    function switchDrawerTab(tabName) {
+        currentDrawerTab = tabName;
+        document.querySelectorAll('.drawer-tab-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.dtab === tabName);
+        });
+        renderAuxiliaryDrawerContent();
+    }
+
+    function renderAuxiliaryDrawerContent() {
+        const container = document.getElementById('auxDrawerBody');
+        if (!container) return;
         container.innerHTML = '';
 
-        if (topicId === 'concepts') {
-            const data = SUPPORT_GUIDE_DATA.concepts;
-            const card = document.createElement('div');
-            card.className = 'guide-formula-box';
-            card.innerHTML = `
-                <div style="font-size:1.05rem; font-weight:700; color:#fff; margin-bottom:8px;">${data.title}</div>
-                ${data.content.map(c => `
-                    <div style="margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.06);">
-                        <div style="font-weight:700; color:var(--accent-cyan); font-size:0.95rem;">${c.term} (${c.symbol})</div>
-                        <div style="font-size:0.85rem; color:var(--text-primary); margin-top:4px; line-height:1.5;">${c.simpleExplanation}</div>
-                        <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;"><b>Na Prática:</b> ${c.whyItMatters}</div>
-                        ${c.conversionNote ? `<div style="font-size:0.8rem; color:var(--accent-amber); font-weight:600; margin-top:4px;">💡 ${c.conversionNote}</div>` : ''}
+        const solidDef = SOLIDS_DATA[currentSolidId];
+        const calc = solidDef ? solidDef.calculate(currentParams) : null;
+
+        if (currentDrawerTab === 'formulas') {
+            container.innerHTML = `
+                <div style="font-size:1rem; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">
+                    <span>📐</span> Fórmulas Oficiais: ${solidDef.name}
+                </div>
+                
+                <div class="math-card">
+                    <span class="math-card-title">Área da Base (Ab)</span>
+                    <div class="math-card-formula" style="font-size:1.1rem;">${calc.formulas.baseArea}</div>
+                    <div class="math-card-steps">Valor atual: ${calc.baseArea.toFixed(2)} m²</div>
+                </div>
+
+                <div class="math-card">
+                    <span class="math-card-title">Área Lateral (Al)</span>
+                    <div class="math-card-formula" style="font-size:1.1rem;">${calc.formulas.lateralArea}</div>
+                    <div class="math-card-steps">Valor atual: ${calc.lateralArea.toFixed(2)} m²</div>
+                </div>
+
+                <div class="math-card">
+                    <span class="math-card-title">Área Total (At)</span>
+                    <div class="math-card-formula" style="font-size:1.1rem; color:var(--accent-amber);">${calc.formulas.totalArea}</div>
+                    <div class="math-card-steps">${calc.stepByStep.totalArea}</div>
+                </div>
+
+                <div class="math-card">
+                    <span class="math-card-title">Volume (V)</span>
+                    <div class="math-card-formula" style="font-size:1.1rem; color:#fff;">${calc.formulas.volume}</div>
+                    <div class="math-card-steps">${calc.stepByStep.volume}</div>
+                    <div style="font-size:0.75rem; color:var(--accent-amber); font-weight:700; margin-top:4px;">
+                        💡 Capacidade: ${(calc.volume * 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} Litros
                     </div>
-                `).join('')}
+                </div>
             `;
-            container.appendChild(card);
-        } else if (topicId === 'dictionary') {
-            const items = SUPPORT_GUIDE_DATA.dictionary;
-            const card = document.createElement('div');
-            card.className = 'guide-formula-box';
-            card.innerHTML = `
-                <div style="font-size:1.05rem; font-weight:700; color:#fff; margin-bottom:8px;">🔤 Dicionário de Letras e Símbolos</div>
+        } else if (currentDrawerTab === 'concepts') {
+            container.innerHTML = `
+                <div style="font-size:1rem; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">
+                    <span>💡</span> Área Total vs Volume (Capacidade)
+                </div>
+
+                <div class="career-concept-box">
+                    <b style="color:var(--accent-cyan); display:block; margin-bottom:4px;">Área Total (At):</b>
+                    É a "casca" externa do sólido. Imagine embrulhar o sólido em papel de presente ou pintar todas as paredes externas. Mede-se em <b>m²</b> ou <b>cm²</b>.
+                </div>
+
+                <div class="career-concept-box" style="border-left-color:var(--accent-amber);">
+                    <b style="color:var(--accent-amber); display:block; margin-bottom:4px;">Volume (V):</b>
+                    É o espaço tridimensional que o sólido ocupa por dentro (capacidade de armazenamento). Mede-se em <b>m³</b> ou <b>Litros</b>.
+                </div>
+
+                <div class="math-card" style="border-color:var(--accent-amber); background:rgba(245,158,11,0.08);">
+                    <span class="math-card-title" style="color:var(--accent-amber);">Equivalência Fundamental da Física</span>
+                    <div style="font-size:1.25rem; font-weight:800; color:#fff; font-family:'JetBrains Mono'; margin:4px 0;">
+                        1 m³ = 1.000 Litros
+                    </div>
+                    <div style="font-size:0.78rem; color:var(--text-secondary); line-height:1.5;">
+                        • 1 metro cúbico (1 m³) = 1.000 Litros<br>
+                        • 1 decímetro cúbico (1 dm³) = 1 Litro<br>
+                        • 1 centímetro cúbico (1 cm³) = 1 mL
+                    </div>
+                </div>
+            `;
+        } else if (currentDrawerTab === 'steps') {
+            container.innerHTML = `
+                <div style="font-size:1rem; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">
+                    <span>🧮</span> Passo a Passo de Resolução (${solidDef.name})
+                </div>
+
+                <div class="math-card">
+                    <span class="math-card-title">Passo 1: Identificar as Dimensões</span>
+                    <div style="font-size:0.8rem; color:var(--text-secondary); line-height:1.6;">
+                        ${Object.keys(currentParams).map(k => `• <b>${k}</b> = ${currentParams[k]} m`).join('<br>')}
+                    </div>
+                </div>
+
+                <div class="math-card">
+                    <span class="math-card-title">Passo 2: Calcular a Área Total</span>
+                    <div style="font-size:0.8rem; color:var(--text-secondary); line-height:1.6;">
+                        1. Aplique a fórmula: <code>${calc.formulas.totalArea}</code><br>
+                        2. Substitua os valores numéricos.<br>
+                        3. Resultado: <b style="color:var(--accent-cyan);">${calc.totalArea.toFixed(2)} m²</b>
+                    </div>
+                </div>
+
+                <div class="math-card">
+                    <span class="math-card-title">Passo 3: Calcular o Volume</span>
+                    <div style="font-size:0.8rem; color:var(--text-secondary); line-height:1.6;">
+                        1. Aplique a fórmula: <code>${calc.formulas.volume}</code><br>
+                        2. Resultado: <b style="color:#fff;">${calc.volume.toFixed(2)} m³</b><br>
+                        3. Em Litros: <code>${calc.volume.toFixed(2)} × 1.000 = ${(calc.volume * 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} L</code>
+                    </div>
+                </div>
+            `;
+        } else if (currentDrawerTab === 'dictionary') {
+            const dict = (window.SUPPORT_GUIDE_DATA && window.SUPPORT_GUIDE_DATA.dictionary) || [];
+            container.innerHTML = `
+                <div style="font-size:1rem; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">
+                    <span>🔤</span> Dicionário de Letras e Símbolos
+                </div>
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    ${items.map(it => `
-                        <div style="display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; border-bottom:1px dashed rgba(255,255,255,0.06);">
-                            <span style="font-family:'JetBrains Mono'; font-weight:700; color:var(--accent-amber); font-size:1rem; width:80px;">${it.symbol}</span>
-                            <span style="flex:1; font-size:0.85rem; color:#fff; font-weight:600;">${it.name}</span>
-                            <span style="flex:2; font-size:0.8rem; color:var(--text-secondary); text-align:right;">${it.desc}</span>
+                    ${dict.map(item => `
+                        <div style="background:rgba(0,0,0,0.25); padding:8px 10px; border-radius:6px; border-left:2px solid var(--primary-light);">
+                            <div style="font-family:'JetBrains Mono'; font-weight:700; color:var(--accent-amber);">${item.symbol} - ${item.name}</div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">${item.desc}</div>
                         </div>
                     `).join('')}
                 </div>
             `;
-            container.appendChild(card);
-        } else if (SUPPORT_GUIDE_DATA.formulasBySolid[topicId]) {
-            const f = SUPPORT_GUIDE_DATA.formulasBySolid[topicId];
-            const card = document.createElement('div');
-            card.className = 'guide-formula-box';
-            card.innerHTML = `
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                    <span style="font-size:1.5rem;">${f.icon}</span>
-                    <span style="font-size:1.15rem; font-weight:700; color:#fff;">${f.title}</span>
-                </div>
-
-                <div class="guide-formula-row">
-                    <span class="guide-formula-label">Área da Base (Ab):</span>
-                    <div>
-                        <span class="guide-formula-val">${f.baseArea.formula}</span>
-                        <div style="font-size:0.75rem; color:var(--text-secondary);">${f.baseArea.desc}</div>
-                    </div>
-                </div>
-
-                <div class="guide-formula-row">
-                    <span class="guide-formula-label">Área Lateral (Al):</span>
-                    <div>
-                        <span class="guide-formula-val">${f.lateralArea.formula}</span>
-                        <div style="font-size:0.75rem; color:var(--text-secondary);">${f.lateralArea.desc}</div>
-                    </div>
-                </div>
-
-                <div class="guide-formula-row" style="background:rgba(99,102,241,0.12); padding:8px; border-radius:6px;">
-                    <span class="guide-formula-label" style="color:var(--primary-light);">Área Total (At):</span>
-                    <div>
-                        <span class="guide-formula-val" style="color:#fff; font-size:1.05rem;">${f.totalArea.formula}</span>
-                        <div style="font-size:0.75rem; color:var(--text-secondary);">${f.totalArea.desc}</div>
-                    </div>
-                </div>
-
-                <div class="guide-formula-row" style="background:rgba(16,185,129,0.12); padding:8px; border-radius:6px;">
-                    <span class="guide-formula-label" style="color:var(--accent-emerald);">Volume (V):</span>
-                    <div>
-                        <span class="guide-formula-val" style="color:#fff; font-size:1.05rem;">${f.volume.formula}</span>
-                        <div style="font-size:0.75rem; color:var(--text-secondary);">${f.volume.desc}</div>
-                    </div>
-                </div>
-
-                <!-- EXEMPLO RESOLVIDO PASSO A PASSO -->
-                <div class="guide-example-card" style="margin-top:12px;">
-                    <div style="font-size:0.85rem; font-weight:700; color:var(--accent-emerald);">📝 Exemplo Real Resolvido Passo a Passo:</div>
-                    <div style="font-size:0.8rem; font-weight:600; color:#fff;">${f.example.scenario}</div>
-                    <div style="font-size:0.8rem; color:var(--text-secondary); line-height:1.6; margin-top:4px;">
-                        • ${f.example.step1}<br>
-                        • ${f.example.step2}<br>
-                        • ${f.example.step3}
-                        ${f.example.step4 ? `<br>• ${f.example.step4}` : ''}
-                        ${f.example.step5 ? `<br>• ${f.example.step5}` : ''}
-                    </div>
-                </div>
-            `;
-            container.appendChild(card);
         }
     }
 
-    // Alternador de Abas de Modo
+    // ==========================================================================
+    // CAPTURA DE SNAPSHOT E ÁLBUM
+    // ==========================================================================
+    let pendingSnapshotRecord = null;
+
+    function setupGalleryAndSnapshot() {
+        const btnSnapshot = document.getElementById('btnQuickSnapshot');
+        const btnTopAlbum = document.getElementById('btnTopAlbum');
+        const modalSnap = document.getElementById('snapshotModal');
+        const modalAlbum = document.getElementById('albumModal');
+        const btnCloseSnap = document.getElementById('btnCloseSnapshotModal');
+        const btnCloseAlbum = document.getElementById('btnCloseAlbumModal');
+        const btnConfirmSave = document.getElementById('btnConfirmSaveSnapshot');
+        const btnDownloadSnap = document.getElementById('btnDownloadSnapshotPng');
+
+        // Abre modal de snapshot
+        const triggerSnapshot = (defaultTitle = '') => {
+            const solidDef = SOLIDS_DATA[currentSolidId];
+            const calc = solidDef ? solidDef.calculate(currentParams) : { totalArea: 0, volume: 0 };
+            
+            const metrics = {
+                totalArea: calc.totalArea.toFixed(2) + ' m²',
+                volume: calc.volume.toFixed(2) + ' m³ (' + (calc.volume * 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + ' L)',
+                dimensions: Object.keys(currentParams).map(k => `${k}=${currentParams[k]}`).join(', ')
+            };
+
+            const rec = galleryAlbum.captureSnapshot(
+                defaultTitle || solidDef.name,
+                solidDef.name,
+                metrics,
+                ''
+            );
+
+            pendingSnapshotRecord = rec;
+
+            const previewImg = document.getElementById('snapshotPreviewImg');
+            if (previewImg) previewImg.src = rec.image;
+
+            const titleInput = document.getElementById('inputSnapshotTitle');
+            if (titleInput) titleInput.value = defaultTitle || solidDef.name;
+
+            const summary = document.getElementById('snapshotMetricsSummary');
+            if (summary) {
+                summary.innerHTML = `
+                    <div><span style="color:var(--text-secondary);">Sólido:</span><br><b>${solidDef.name}</b></div>
+                    <div><span style="color:var(--text-secondary);">Área Total:</span><br><b style="color:var(--accent-cyan);">${metrics.totalArea}</b></div>
+                    <div><span style="color:var(--text-secondary);">Volume:</span><br><b style="color:var(--accent-amber);">${metrics.volume}</b></div>
+                `;
+            }
+
+            if (modalSnap) modalSnap.classList.remove('hidden');
+            if (window.sounds) window.sounds.playCameraShutter();
+        };
+
+        if (btnSnapshot) btnSnapshot.addEventListener('click', () => triggerSnapshot());
+        const btnPhotoBuilding = document.getElementById('btnPhotoBuilding');
+        if (btnPhotoBuilding) btnPhotoBuilding.addEventListener('click', () => triggerSnapshot('Edifício Residencial Aurora'));
+        const btnCareerPhoto = document.getElementById('btnCareerPhoto');
+        if (btnCareerPhoto) btnCareerPhoto.addEventListener('click', () => triggerSnapshot(careerMode.getCurrentStage().title));
+
+        if (btnConfirmSave && modalSnap) {
+            btnConfirmSave.addEventListener('click', () => {
+                const notesInput = document.getElementById('inputSnapshotNotes');
+                const titleInput = document.getElementById('inputSnapshotTitle');
+                if (pendingSnapshotRecord) {
+                    pendingSnapshotRecord.title = titleInput.value || pendingSnapshotRecord.title;
+                    pendingSnapshotRecord.notes = notesInput.value || 'Atividade registrada no GeoLab 3D.';
+                    const records = galleryAlbum.getRecords();
+                    const idx = records.findIndex(r => r.id === pendingSnapshotRecord.id);
+                    if (idx >= 0) {
+                        records[idx] = pendingSnapshotRecord;
+                        galleryAlbum.saveRecords(records);
+                    }
+                }
+                modalSnap.classList.add('hidden');
+                if (window.sounds) window.sounds.playSuccess();
+                showNotification('📸 Foto e relatório salvos com sucesso no seu Álbum!');
+            });
+        }
+
+        if (btnDownloadSnap) {
+            btnDownloadSnap.addEventListener('click', () => {
+                if (pendingSnapshotRecord) {
+                    galleryAlbum.downloadImage(pendingSnapshotRecord.image, `geolab3d-${pendingSnapshotRecord.title.toLowerCase().replace(/\s+/g, '-')}.png`);
+                }
+            });
+        }
+
+        if (btnCloseSnap && modalSnap) btnCloseSnap.addEventListener('click', () => modalSnap.classList.add('hidden'));
+
+        if (btnTopAlbum) btnTopAlbum.addEventListener('click', openAlbumModal);
+        if (btnCloseAlbum && modalAlbum) btnCloseAlbum.addEventListener('click', () => modalAlbum.classList.add('hidden'));
+    }
+
+    function openAlbumModal() {
+        const modalAlbum = document.getElementById('albumModal');
+        const body = document.getElementById('albumModalBody');
+        if (modalAlbum && body) {
+            galleryAlbum.renderAlbumUI(body);
+            modalAlbum.classList.remove('hidden');
+            if (window.sounds) window.sounds.playClick();
+        }
+    }
+
+    // ==========================================================================
+    // MODO CARREIRA BNCC
+    // ==========================================================================
+    function setupCareerUI() {
+        renderCareerStage();
+
+        const btnValidate = document.getElementById('btnValidateCareer');
+        if (btnValidate) {
+            btnValidate.addEventListener('click', () => {
+                const stage = careerMode.getCurrentStage();
+                const inputValues = {};
+                stage.inputs.forEach(inp => {
+                    const el = document.getElementById(`career_input_${inp.id}`);
+                    inputValues[inp.id] = el ? el.value : '';
+                });
+
+                const res = careerMode.validateAnswers(inputValues);
+                const feedbackBox = document.getElementById('careerFeedbackBox');
+                const btnNext = document.getElementById('btnCareerNext');
+
+                if (res.success) {
+                    gameMgr.addXp(res.xpReward);
+                    updateGameStatsUI();
+                    feedbackBox.className = 'career-feedback-box success';
+                    feedbackBox.innerHTML = `
+                        🎉 <b>Parabéns! Cálculos Perfeitos!</b><br>
+                        Você conquistou <b>+${res.xpReward} XP</b> e o troféu <b>${res.trophy}</b>!<br>
+                        💡 Agora, registre esta vitória clicando em <b>Salvar Conquista no Álbum</b>!
+                    `;
+                    feedbackBox.classList.remove('hidden');
+                    if (btnNext) btnNext.style.display = 'block';
+                    if (window.sounds) window.sounds.playSuccess();
+                } else {
+                    feedbackBox.className = 'career-feedback-box error';
+                    feedbackBox.innerHTML = `
+                        ❌ <b>Quase lá! Revise os cálculos:</b><br>
+                        ${res.results.map(r => r.isOk ? `✓ ${r.label} correto!` : `• ${r.label} incorreto. Dica: ${r.hint}`).join('<br>')}
+                    `;
+                    feedbackBox.classList.remove('hidden');
+                    if (window.sounds) window.sounds.playError();
+                }
+            });
+        }
+
+        const btnNext = document.getElementById('btnCareerNext');
+        if (btnNext) {
+            btnNext.addEventListener('click', () => {
+                careerMode.nextStage();
+                renderCareerStage();
+                btnNext.style.display = 'none';
+                if (window.sounds) window.sounds.playClick();
+            });
+        }
+    }
+
+    function renderCareerStage() {
+        const stage = careerMode.getCurrentStage();
+        const badge = document.getElementById('careerLevelBadge');
+        if (badge) badge.textContent = `Fase ${stage.level} · BNCC`;
+
+        const title = document.getElementById('careerStageTitle');
+        if (title) title.textContent = stage.title;
+
+        const subtitle = document.getElementById('careerStageSubtitle');
+        if (subtitle) subtitle.textContent = stage.subtitle;
+
+        const conceptBox = document.getElementById('careerConceptBox');
+        if (conceptBox) conceptBox.innerHTML = stage.conceptText;
+
+        const actionBox = document.getElementById('careerActionBox');
+        if (actionBox) actionBox.innerHTML = stage.actionPrompt;
+
+        const inputsContainer = document.getElementById('careerInputsContainer');
+        if (inputsContainer) {
+            inputsContainer.innerHTML = '';
+            stage.inputs.forEach(inp => {
+                const group = document.createElement('div');
+                group.className = 'mission-input-group';
+                group.innerHTML = `
+                    <label>${inp.label}</label>
+                    <input type="number" step="0.01" class="mission-input" id="career_input_${inp.id}" placeholder="Digite sua resposta">
+                `;
+                inputsContainer.appendChild(group);
+            });
+        }
+
+        const feedbackBox = document.getElementById('careerFeedbackBox');
+        if (feedbackBox) feedbackBox.classList.add('hidden');
+
+        // Aplica o sólido no 3D
+        switchSolid(stage.solidId, stage.targetParams);
+    }
+
+    // ==========================================================================
+    // ESTÚDIO DE ARQUITETURA (PRÉDIO 3D)
+    // ==========================================================================
+    function updateBuildingUI(report) {
+        if (!report) return;
+        const bldGlassArea = document.getElementById('bldGlassArea');
+        if (bldGlassArea) bldGlassArea.textContent = report.totalGlassArea + ' m²';
+
+        const bldGlassDesc = document.getElementById('bldGlassDesc');
+        if (bldGlassDesc) bldGlassDesc.textContent = `${report.totalWindowsCount} janelas de vidro (${report.singleWindowArea} m² cada)`;
+
+        const bldMasonryArea = document.getElementById('bldMasonryArea');
+        if (bldMasonryArea) bldMasonryArea.textContent = report.netMasonryArea + ' m²';
+
+        const bldVolumeArea = document.getElementById('bldVolumeArea');
+        if (bldVolumeArea) bldVolumeArea.textContent = report.buildingVolume + ' m³';
+
+        const bldVolumeLiters = document.getElementById('bldVolumeLiters');
+        if (bldVolumeLiters) bldVolumeLiters.textContent = `${report.volumeLiters} Litros (1 m³ = 1.000 L)`;
+    }
+
+    // ==========================================================================
+    // ALTERNADOR DE MODOS
+    // ==========================================================================
     function switchMode(mode) {
         currentMode = mode;
         document.body.className = 'mode-' + mode;
 
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
+        // Atualiza o pill do modo no topo
+        const modeTextMap = {
+            career: '🚀 Carreira BNCC',
+            lab: '🔬 Laboratório Livre',
+            building: '🏢 Estúdio de Arquitetura',
+            studio: '👥 Projetos em Grupo',
+            elements: '🧩 Vértices & Euler',
+            unfold: '📦 Planificação',
+            cross_section: '✂️ Fatiador / Cortes',
+            liquid: '💧 Hidráulica (1m³=1000L)',
+            game: '🎮 Quiz & Desafios'
+        };
+        const modeIndicator = document.getElementById('currentModeText');
+        if (modeIndicator) modeIndicator.textContent = modeTextMap[mode] || '🔬 Laboratório 3D';
 
         document.querySelectorAll('.mobile-mode-chip').forEach(chip => {
             const isActive = chip.dataset.mode === mode;
@@ -448,26 +727,65 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Oculta todos os subpainéis
         document.querySelectorAll('.mode-subpanel').forEach(p => p.classList.add('hidden'));
 
-        const activeSubpanel = document.getElementById(`subpanel-${mode}`);
-        if (activeSubpanel) activeSubpanel.classList.remove('hidden');
-
-        const activeRightPanel = document.getElementById(`subpanel-${mode}-right`);
-        if (activeRightPanel) activeRightPanel.classList.remove('hidden');
-
+        // Ativação e limpeza de subsistemas 3D
         crossSection.setActive(mode === 'cross_section');
         unfoldSys.setActive(mode === 'unfold');
+        buildingStudio.setActive(mode === 'building');
 
-        if (mode === 'elements') {
-            sceneMgr.setElementsVisibility(true, true, true);
+        // Se planificação estiver ativa, oculta cotas para eliminar silhuetas
+        if (mode === 'unfold') {
+            dimensionsHelper.setVisible(false);
+            const btnDim = document.getElementById('btnToggleDimensions');
+            if (btnDim) btnDim.classList.remove('active');
+        } else {
+            dimensionsHelper.setVisible(true);
+            const btnDim = document.getElementById('btnToggleDimensions');
+            if (btnDim) btnDim.classList.add('active');
+        }
+
+        // Subpainéis por modo
+        if (mode === 'career') {
+            const careerCard = document.getElementById('subpanel-career');
+            if (careerCard) careerCard.classList.remove('hidden');
+            renderCareerStage();
+        } else if (mode === 'building') {
+            const bldLeft = document.getElementById('subpanel-building-left');
+            if (bldLeft) bldLeft.classList.remove('hidden');
+            const bldRight = document.getElementById('subpanel-building-right');
+            if (bldRight) bldRight.classList.remove('hidden');
+            switchSolid('rectangular_prism', { a: 6.0, b: 5.0, c: 8.0 });
+            const rep = buildingStudio.buildBuilding(currentParams);
+            updateBuildingUI(rep);
+        } else if (mode === 'elements') {
+            const elemSub = document.getElementById('subpanel-elements');
+            if (elemSub) elemSub.classList.remove('hidden');
             const elemRight = document.getElementById('subpanel-elements-right');
             if (elemRight) elemRight.classList.remove('hidden');
+            sceneMgr.setElementsVisibility(true, true, true);
         } else {
             sceneMgr.setElementsVisibility(false, false, false);
         }
 
+        if (mode === 'unfold') {
+            const unfoldSub = document.getElementById('subpanel-unfold');
+            if (unfoldSub) unfoldSub.classList.remove('hidden');
+        }
+
+        if (mode === 'cross_section') {
+            const csSub = document.getElementById('subpanel-cross_section');
+            if (csSub) csSub.classList.remove('hidden');
+            const csRight = document.getElementById('subpanel-cross_section-right');
+            if (csRight) csRight.classList.remove('hidden');
+        }
+
         if (mode === 'liquid') {
+            const liqSub = document.getElementById('subpanel-liquid');
+            if (liqSub) liqSub.classList.remove('hidden');
+            const liqRight = document.getElementById('subpanel-liquid-right');
+            if (liqRight) liqRight.classList.remove('hidden');
             sceneMgr.faucetGroup.visible = true;
             liquidSim.notifyUI();
         } else {
@@ -488,73 +806,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Renderizador de desafios do modo jogo
-    function renderChallenge(ch) {
-        const container = document.getElementById('gameChallengeArea');
-        container.innerHTML = '';
-
-        if (ch.type === 'quiz') {
-            switchSolid(ch.solidId);
-            const card = document.createElement('div');
-            card.className = 'math-card';
-            card.style.borderColor = 'rgba(99, 102, 241, 0.4)';
-            card.innerHTML = `
-                <div style="font-size:0.75rem; color:var(--accent-amber); font-weight:700;">DESAFIO TÉCNICO (+${ch.xpReward} XP)</div>
-                <div style="font-size:0.9rem; font-weight:600; color:#fff; line-height:1.4;">${ch.text}</div>
-                <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
-                    ${ch.options.map((opt, idx) => `
-                        <button class="view-btn" style="text-align:left; padding:9px 12px;" data-idx="${idx}">${opt}</button>
-                    `).join('')}
-                </div>
-                <div id="quizFeedback" style="font-size:0.82rem; font-weight:600; min-height:20px; margin-top:4px;"></div>
-            `;
-
-            card.querySelectorAll('button[data-idx]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const idx = parseInt(e.target.dataset.idx);
-                    const res = gameMgr.submitAnswer(idx);
-                    const feedback = document.getElementById('quizFeedback');
-                    feedback.textContent = res.message;
-                    feedback.style.color = res.correct ? 'var(--accent-emerald)' : 'var(--accent-rose)';
-
-                    updateGameStatsUI();
-
-                    setTimeout(() => {
-                        const nextCat = ['euler', 'cutting', 'math'][Math.floor(Math.random() * 3)];
-                        renderChallenge(gameMgr.generateChallenge(nextCat));
-                    }, 2600);
-                });
-            });
-
-            container.appendChild(card);
-        }
-    }
-
-    function updateGameStatsUI() {
-        document.getElementById('xpCount').textContent = gameMgr.xp;
-        document.getElementById('playerLevel').textContent = `Nv. ${gameMgr.level}`;
-    }
-
-    // Navegação Otimizada para Mobile
-    function setupMobileNavigation() {
-        const chips = document.querySelectorAll('.mobile-mode-chip');
-        chips.forEach(chip => {
-            chip.addEventListener('click', () => {
-                switchMode(chip.dataset.mode);
-                if (window.sounds) window.sounds.playClick();
-            });
-        });
-    }
-
-    // Registra Eventos da Interface
+    // ==========================================================================
+    // EVENTOS GERAIS DA INTERFACE
+    // ==========================================================================
     function setupEventListeners() {
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                switchMode(btn.dataset.mode);
+        // Toolbar 3D: Cotas
+        const btnToggleDimensions = document.getElementById('btnToggleDimensions');
+        if (btnToggleDimensions) {
+            btnToggleDimensions.addEventListener('click', () => {
+                const isVisible = dimensionsHelper.toggle();
+                btnToggleDimensions.classList.toggle('active', isVisible);
+                if (window.sounds) window.sounds.playClick();
+            });
+        }
+
+        // Toolbar 3D: Deformador de Vértices
+        const btnToggleDeform = document.getElementById('btnToggleDeform');
+        if (btnToggleDeform) {
+            btnToggleDeform.addEventListener('click', () => {
+                const isActive = vertexDeformer.toggle();
+                btnToggleDeform.classList.toggle('active', isActive);
+                if (window.sounds) window.sounds.playClick();
+                showNotification(isActive ? '✋ Modo Deformação Ativo: Clique e arraste qualquer vértice no 3D!' : '✋ Modo Deformação Desativado');
+            });
+        }
+
+        // Seletor de cores das arestas (toolbar e subpainel)
+        document.querySelectorAll('.color-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                const color = dot.dataset.color;
+                document.querySelectorAll('.color-dot').forEach(d => {
+                    d.classList.toggle('active', d.dataset.color === color);
+                });
+                sceneMgr.setEdgeColor(color);
                 if (window.sounds) window.sounds.playClick();
             });
         });
 
+        // Controles de câmera
+        const btnResetCamera = document.getElementById('btnResetCamera');
+        if (btnResetCamera) {
+            btnResetCamera.addEventListener('click', () => {
+                sceneMgr.resetCamera();
+                if (window.sounds) window.sounds.playClick();
+            });
+        }
+
+        const btnAutoRotate = document.getElementById('btnAutoRotate');
+        if (btnAutoRotate) {
+            btnAutoRotate.addEventListener('click', () => {
+                sceneMgr.isAutoRotating = !sceneMgr.isAutoRotating;
+                btnAutoRotate.classList.toggle('active', sceneMgr.isAutoRotating);
+                if (window.sounds) window.sounds.playClick();
+            });
+        }
+
+        // Modos visuais (Sólido, Raio-X, Wireframe)
         document.querySelectorAll('.view-btn[data-view]').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.view-btn[data-view]').forEach(b => b.classList.remove('active'));
@@ -564,40 +871,76 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // Toggles de elementos
         const chkVertices = document.getElementById('chkVertices');
         const chkEdges = document.getElementById('chkEdges');
         const chkFaces = document.getElementById('chkFaces');
-
-        const updateElements = () => {
-            sceneMgr.setElementsVisibility(chkVertices.checked, chkEdges.checked, chkFaces.checked);
+        const onElementToggle = () => {
+            sceneMgr.setElementsVisibility(
+                chkVertices ? chkVertices.checked : false,
+                chkEdges ? chkEdges.checked : false,
+                chkFaces ? chkFaces.checked : false
+            );
         };
-        if (chkVertices) chkVertices.addEventListener('change', updateElements);
-        if (chkEdges) chkEdges.addEventListener('change', updateElements);
-        if (chkFaces) chkFaces.addEventListener('change', updateElements);
+        if (chkVertices) chkVertices.addEventListener('change', onElementToggle);
+        if (chkEdges) chkEdges.addEventListener('change', onElementToggle);
+        if (chkFaces) chkFaces.addEventListener('change', onElementToggle);
 
+        // Planificação slider
         const unfoldSlider = document.getElementById('unfoldSlider');
         if (unfoldSlider) {
             unfoldSlider.addEventListener('input', (e) => {
-                const t = parseFloat(e.target.value);
-                unfoldSys.setUnfoldProgress(t);
-                document.getElementById('unfoldPercent').textContent = `${Math.round(t * 100)}%`;
+                const val = parseFloat(e.target.value);
+                unfoldSys.setUnfoldProgress(val);
+                const percent = document.getElementById('unfoldPercent');
+                if (percent) percent.textContent = `${Math.round(val * 100)}%`;
             });
         }
 
-        const cutHeightSlider = document.getElementById('cutHeightSlider');
-        const cutAngleXSlider = document.getElementById('cutAngleXSlider');
-        const cutAngleZSlider = document.getElementById('cutAngleZSlider');
-
-        const updateCut = () => {
-            const h = parseFloat(cutHeightSlider.value);
-            const ax = parseFloat(cutAngleXSlider.value);
-            const az = parseFloat(cutAngleZSlider.value);
+        // Fatiador de corte
+        const cutHSlider = document.getElementById('cutHeightSlider');
+        const cutAXSlider = document.getElementById('cutAngleXSlider');
+        const cutAZSlider = document.getElementById('cutAngleZSlider');
+        const onCutChange = () => {
+            const h = parseFloat(cutHSlider.value);
+            const ax = parseFloat(cutAXSlider.value);
+            const az = parseFloat(cutAZSlider.value);
             crossSection.setCut(h, ax, az);
-        };
-        if (cutHeightSlider) cutHeightSlider.addEventListener('input', updateCut);
-        if (cutAngleXSlider) cutAngleXSlider.addEventListener('input', updateCut);
-        if (cutAngleZSlider) cutAngleZSlider.addEventListener('input', updateCut);
 
+            const hVal = document.getElementById('cutHeightVal');
+            if (hVal) hVal.textContent = h.toFixed(2) + ' m';
+            const axVal = document.getElementById('cutAngleXVal');
+            if (axVal) axVal.textContent = ax + '°';
+            const azVal = document.getElementById('cutAngleZVal');
+            if (azVal) azVal.textContent = az + '°';
+        };
+        if (cutHSlider) cutHSlider.addEventListener('input', onCutChange);
+        if (cutAXSlider) cutAXSlider.addEventListener('input', onCutChange);
+        if (cutAZSlider) cutAZSlider.addEventListener('input', onCutChange);
+
+        // Edifício sliders
+        const sliderFloors = document.getElementById('sliderBuildingFloors');
+        if (sliderFloors) {
+            sliderFloors.addEventListener('input', (e) => {
+                const f = parseInt(e.target.value);
+                buildingStudio.setFloors(f);
+                const val = document.getElementById('buildingFloorsVal');
+                if (val) val.textContent = f;
+                updateBuildingUI(buildingStudio.getReport());
+            });
+        }
+        const sliderWindows = document.getElementById('sliderBuildingWindows');
+        if (sliderWindows) {
+            sliderWindows.addEventListener('input', (e) => {
+                const w = parseInt(e.target.value);
+                buildingStudio.setWindowsPerFloor(w);
+                const val = document.getElementById('buildingWindowsVal');
+                if (val) val.textContent = w;
+                updateBuildingUI(buildingStudio.getReport());
+            });
+        }
+
+        // Líquido
         const btnFaucet = document.getElementById('btnFaucet');
         const btnDrain = document.getElementById('btnDrain');
         const btnEmpty = document.getElementById('btnEmpty');
@@ -640,46 +983,37 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        const btnToggleDimensions = document.getElementById('btnToggleDimensions');
-        if (btnToggleDimensions) {
-            btnToggleDimensions.addEventListener('click', () => {
-                const isVisible = dimensionsHelper.toggle();
-                btnToggleDimensions.classList.toggle('active', isVisible);
-                if (window.sounds) window.sounds.playClick();
+        // Áudio e Fullscreen
+        const btnAudio = document.getElementById('btnAudioToggle');
+        if (btnAudio) {
+            btnAudio.addEventListener('click', () => {
+                const isMuted = window.sounds.toggleMute();
+                btnAudio.textContent = isMuted ? '🔇' : '🔊';
             });
         }
 
-        document.getElementById('btnResetCamera').addEventListener('click', () => {
-            sceneMgr.resetCamera();
-            if (window.sounds) window.sounds.playClick();
-        });
+        const btnFull = document.getElementById('btnFullscreen');
+        if (btnFull) {
+            btnFull.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                } else {
+                    document.exitFullscreen().catch(() => {});
+                }
+            });
+        }
 
-        const btnAutoRotate = document.getElementById('btnAutoRotate');
-        btnAutoRotate.addEventListener('click', () => {
-            sceneMgr.isAutoRotating = !sceneMgr.isAutoRotating;
-            btnAutoRotate.classList.toggle('active', sceneMgr.isAutoRotating);
-            if (window.sounds) window.sounds.playClick();
-        });
-
-        const btnAudio = document.getElementById('btnAudioToggle');
-        btnAudio.addEventListener('click', () => {
-            const isMuted = window.sounds.toggleMute();
-            btnAudio.textContent = isMuted ? '🔇' : '🔊';
-        });
-
-        document.getElementById('btnFullscreen').addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else {
-                document.exitFullscreen().catch(() => {});
-            }
-        });
-
+        // Callbacks de atualização de simulações
         window.onLiquidStateChange = (state) => {
-            document.getElementById('liquidLevelText').textContent = `${state.height.toFixed(2)} m / ${state.maxHeight.toFixed(2)} m`;
-            document.getElementById('liquidVolText').textContent = `${state.currentVolumeCm3.toFixed(2)} m³ (${(state.currentVolumeLiters).toLocaleString('pt-BR', {maximumFractionDigits:0})} L)`;
-            document.getElementById('liquidPercentText').textContent = `${state.percentage.toFixed(0)}%`;
-            document.getElementById('liquidBarFill').style.width = `${state.percentage}%`;
+            const volM3 = state.currentVolumeM3 !== undefined ? state.currentVolumeM3 : (state.currentVolumeCm3 || 0);
+            const levelEl = document.getElementById('liquidLevelText');
+            if (levelEl) levelEl.textContent = `${state.height.toFixed(2)} m / ${state.maxHeight.toFixed(2)} m`;
+            const volEl = document.getElementById('liquidVolText');
+            if (volEl) volEl.textContent = `${volM3.toFixed(2)} m³ (${(state.currentVolumeLiters).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} L)`;
+            const pctEl = document.getElementById('liquidPercentText');
+            if (pctEl) pctEl.textContent = `${state.percentage.toFixed(0)}%`;
+            const bar = document.getElementById('liquidBarFill');
+            if (bar) bar.style.width = `${state.percentage}%`;
 
             if (liquidSlider) {
                 liquidSlider.max = state.maxHeight;
@@ -688,10 +1022,221 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         window.onCrossSectionChange = (info) => {
-            document.getElementById('crossSectionShapeName').textContent = info.shapeName;
-            document.getElementById('crossSectionArea').textContent = info.estimatedArea;
-            document.getElementById('crossSectionDesc').textContent = info.description;
+            const nameEl = document.getElementById('crossSectionShapeName');
+            if (nameEl) nameEl.textContent = info.shapeName;
+            const sliceEl = document.getElementById('crossSectionSliceDims');
+            if (sliceEl) sliceEl.textContent = info.sliceDimensions || '';
+            const areaEl = document.getElementById('crossSectionArea');
+            if (areaEl) areaEl.textContent = info.estimatedArea;
+            const remH = document.getElementById('cutRemainingH');
+            if (remH) remH.textContent = info.remainingHeight;
+            const remSup = document.getElementById('cutRemovedH');
+            if (remSup) remSup.textContent = info.removedHeight;
+            const remVol = document.getElementById('cutRemainingVol');
+            if (remVol) remVol.textContent = info.remainingVolume;
+            const descEl = document.getElementById('crossSectionDesc');
+            if (descEl) descEl.textContent = info.description;
         };
+    }
+
+    // Navegação Otimizada para Mobile
+    function setupMobileNavigation() {
+        const chips = document.querySelectorAll('.mobile-mode-chip');
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                switchMode(chip.dataset.mode);
+                if (window.sounds) window.sounds.playClick();
+            });
+        });
+    }
+
+    // Modal de Configurações
+    function setupSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        const btnClose = document.getElementById('btnCloseSettingsModal');
+        const chkAudio = document.getElementById('chkSettingsAudio');
+        const btnReset = document.getElementById('btnResetProgress');
+
+        if (btnClose && modal) btnClose.addEventListener('click', () => modal.classList.add('hidden'));
+
+        if (chkAudio) {
+            chkAudio.addEventListener('change', () => {
+                const muted = !chkAudio.checked;
+                window.sounds.isMuted = muted;
+                const btnAudio = document.getElementById('btnAudioToggle');
+                if (btnAudio) btnAudio.textContent = muted ? '🔇' : '🔊';
+            });
+        }
+
+        if (btnReset) {
+            btnReset.addEventListener('click', () => {
+                if (confirm('Deseja zerar seu XP e reiniciar sua pontuação?')) {
+                    gameMgr.xp = 0;
+                    gameMgr.level = 1;
+                    updateGameStatsUI();
+                    modal.classList.add('hidden');
+                    showNotification('Progresso zerado com sucesso.');
+                }
+            });
+        }
+    }
+
+    function openSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    // ==========================================================================
+    // ESTÚDIO DE PROJETOS REAIS (AULAS EM GRUPO)
+    // ==========================================================================
+    function setupStudioUI() {
+        const grid = document.getElementById('teamProjectsSelectorGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        studio.projects.forEach((proj, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `view-btn ${idx === 0 ? 'active' : ''}`;
+            btn.textContent = `Equipe ${idx + 1}: ${proj.title.split('(')[0].trim()}`;
+            btn.addEventListener('click', () => {
+                grid.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                loadStudioProject(idx);
+                if (window.sounds) window.sounds.playClick();
+            });
+            grid.appendChild(btn);
+        });
+
+        const btnSubmit = document.getElementById('btnSubmitTeamProject');
+        if (btnSubmit) {
+            btnSubmit.addEventListener('click', () => {
+                const userAt = parseFloat(document.getElementById('inputTeamAt').value);
+                const userV = parseFloat(document.getElementById('inputTeamV').value);
+
+                if (isNaN(userAt) || isNaN(userV)) {
+                    showStudioFeedback(false, 'Por favor, digite valores numéricos para Área Total e Volume.');
+                    return;
+                }
+
+                const result = studio.validateSubmission(userAt, userV);
+                const feedbackEl = document.getElementById('studioFeedbackBox');
+
+                if (result.success) {
+                    gameMgr.addXp(150);
+                    updateGameStatsUI();
+                    feedbackEl.style.display = 'block';
+                    feedbackEl.style.background = 'rgba(16, 185, 129, 0.15)';
+                    feedbackEl.style.border = '1px solid var(--accent-emerald)';
+                    feedbackEl.style.color = '#34d399';
+                    feedbackEl.innerHTML = `
+                        🎉 <b>Excelente trabalho da equipe!</b> Cálculos corretos!<br>
+                        • Área Total: ${result.correctAt.toFixed(2)} m² (Sua resposta: ${userAt} m²)<br>
+                        • Volume: ${result.correctV.toFixed(2)} m³ (${(result.correctV * 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} Litros)<br>
+                        +150 XP adicionados ao placar da turma!
+                    `;
+                    if (window.sounds) window.sounds.playSuccess();
+                } else {
+                    feedbackEl.style.display = 'block';
+                    feedbackEl.style.background = 'rgba(244, 63, 94, 0.15)';
+                    feedbackEl.style.border = '1px solid var(--accent-rose)';
+                    feedbackEl.style.color = '#fb7185';
+                    feedbackEl.innerHTML = `
+                        ❌ <b>Quase lá! Revise os cálculos da equipe:</b><br>
+                        ${!result.isAtOk ? `• Área Total calculada difere do valor esperado.<br>` : '• Área Total correta! ✓<br>'}
+                        ${!result.isVOk ? `• Volume calculado difere do valor esperado.<br>` : '• Volume correto! ✓<br>'}
+                        💡 Use o botão <b>"Ver Como Calcular"</b> para consultar as fórmulas da equipe.
+                    `;
+                    if (window.sounds) window.sounds.playError();
+                }
+            });
+        }
+    }
+
+    function loadStudioProject(index) {
+        const proj = studio.selectProject(index);
+        document.getElementById('studioTeamBadge').textContent = proj.teamName.split('-')[0].trim();
+        document.getElementById('studioProjectTitle').textContent = `Projeto: ${proj.title}`;
+        document.getElementById('inputTeamAt').value = '';
+        document.getElementById('inputTeamV').value = '';
+        const feedback = document.getElementById('studioFeedbackBox');
+        if (feedback) feedback.style.display = 'none';
+
+        const measuresEl = document.getElementById('studioLiveMeasures');
+        if (measuresEl) {
+            measuresEl.innerHTML = Object.keys(proj.params)
+                .map(k => `${k} = ${proj.params[k]} m`)
+                .join(' &nbsp;·&nbsp; ');
+        }
+    }
+
+    function showStudioFeedback(isSuccess, msg) {
+        const el = document.getElementById('studioFeedbackBox');
+        if (!el) return;
+        el.style.display = 'block';
+        el.style.background = isSuccess ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
+        el.style.color = isSuccess ? '#34d399' : '#fb7185';
+        el.innerHTML = msg;
+    }
+
+    function updateGameStatsUI() {
+        const xp = document.getElementById('xpCount');
+        if (xp) xp.textContent = gameMgr.xp;
+    }
+
+    function showNotification(msg) {
+        const notif = document.getElementById('game-notification');
+        if (!notif) return;
+        notif.textContent = msg;
+        notif.classList.remove('hidden');
+        setTimeout(() => notif.classList.add('hidden'), 3500);
+    }
+
+    // Desafios e Quiz
+    function renderChallenge(ch) {
+        const container = document.getElementById('gameChallengeArea');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (ch.type === 'quiz') {
+            switchSolid(ch.solidId);
+            const card = document.createElement('div');
+            card.className = 'math-card';
+            card.style.borderColor = 'rgba(99, 102, 241, 0.4)';
+            card.innerHTML = `
+                <div style="font-size:0.75rem; color:var(--accent-amber); font-weight:700;">DESAFIO TÉCNICO (+${ch.xpReward} XP)</div>
+                <div style="font-size:0.9rem; font-weight:600; color:#fff; line-height:1.4;">${ch.text}</div>
+                <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+                    ${ch.options.map((opt, idx) => `
+                        <button class="view-btn" style="text-align:left; padding:9px 12px;" data-idx="${idx}">${opt}</button>
+                    `).join('')}
+                </div>
+                <div id="quizFeedback" style="font-size:0.82rem; font-weight:600; min-height:20px; margin-top:4px;"></div>
+            `;
+
+            card.querySelectorAll('button[data-idx]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const chosen = parseInt(btn.dataset.idx);
+                    const feedback = card.querySelector('#quizFeedback');
+                    if (chosen === ch.correctIdx) {
+                        btn.style.background = 'rgba(16, 185, 129, 0.3)';
+                        btn.style.borderColor = 'var(--accent-emerald)';
+                        feedback.style.color = '#34d399';
+                        feedback.textContent = `✓ Correto! (+${ch.xpReward} XP) · ${ch.explanation}`;
+                        gameMgr.addXp(ch.xpReward);
+                        updateGameStatsUI();
+                        if (window.sounds) window.sounds.playSuccess();
+                    } else {
+                        btn.style.background = 'rgba(244, 63, 94, 0.3)';
+                        btn.style.borderColor = 'var(--accent-rose)';
+                        feedback.style.color = '#fb7185';
+                        feedback.textContent = `✕ Incorreto. Tente novamente!`;
+                        if (window.sounds) window.sounds.playError();
+                    }
+                });
+            });
+
+            container.appendChild(card);
+        }
     }
 
     init();

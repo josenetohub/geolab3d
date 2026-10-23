@@ -242,10 +242,11 @@ class LiquidSimulation {
             window.onLiquidStateChange({
                 height: this.currentHeight,
                 maxHeight: this.maxHeight,
-                currentVolumeCm3: currentVol,
-                currentVolumeLiters: currentVol / 1000,
-                totalVolumeCm3: totalVol,
-                totalVolumeLiters: totalVol / 1000,
+                currentVolumeM3: currentVol,
+                currentVolumeLiters: currentVol * 1000,
+                totalVolumeM3: totalVol,
+                totalVolumeLiters: totalVol * 1000,
+                equivalenceNote: '1 m³ = 1.000 Litros (1 dm³ = 1 L)',
                 percentage: Math.min(100, percentage),
                 isFull: this.currentHeight >= this.maxHeight - 0.01
             });

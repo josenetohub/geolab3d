@@ -148,7 +148,8 @@ class SolidsBuilder {
         // --- ELEMENTOS DESTACADOS ---
 
         // 1. Arestas Neon (quando ativado "Arestas")
-        const neonEdgeMat = new THREE.LineBasicMaterial({ color: 0x00f2fe, linewidth: 3 });
+        const edgeColor = sceneManager.edgeColor || 0x00f2fe;
+        const neonEdgeMat = new THREE.LineBasicMaterial({ color: edgeColor, linewidth: 3 });
         const neonEdges = new THREE.LineSegments(edgesGeo, neonEdgeMat);
         neonEdges.name = 'edgeHighlight';
         neonEdges.visible = sceneManager.showEdges;

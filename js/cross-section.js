@@ -17,7 +17,8 @@ class CrossSectionAnalyzer {
         this.currentParams = { ...params };
         const solidDef = SOLIDS_DATA[solidId];
         const h = solidDef ? solidDef.height(params) : 5;
-        this.cutHeight = h / 2;
+        this.cutHeight = Math.min(this.cutHeight, h);
+        if (this.cutHeight <= 0) this.cutHeight = h / 2;
         this.update();
     }
 
@@ -33,8 +34,13 @@ class CrossSectionAnalyzer {
         this.sm.setClipping(active, this.cutHeight, this.cutAngleX, this.cutAngleZ);
         if (active) {
             this.update();
-        } else if (this.ctx) {
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        } else {
+            if (this.ctx && this.canvas) {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            if (window.dimensionsHelper) {
+                window.dimensionsHelper.update(this.currentSolidId, this.currentParams);
+            }
         }
     }
 
@@ -43,6 +49,16 @@ class CrossSectionAnalyzer {
         this.sm.setClipping(true, this.cutHeight, this.cutAngleX, this.cutAngleZ);
         const sectionInfo = this.detectCrossSection();
         this.render2DPreview(sectionInfo);
+
+        // Atualiza as cotas 3D no modelo cortado
+        if (window.dimensionsHelper && typeof window.dimensionsHelper.updateCutDimensions === 'function') {
+            window.dimensionsHelper.updateCutDimensions(
+                this.currentSolidId,
+                this.currentParams,
+                this.cutHeight,
+                sectionInfo
+            );
+        }
 
         if (typeof window.onCrossSectionChange === 'function') {
             window.onCrossSectionChange(sectionInfo);
@@ -57,10 +73,17 @@ class CrossSectionAnalyzer {
         const az = Math.abs(this.cutAngleZ);
         const angle = Math.sqrt(ax * ax + az * az);
 
+        const solidDef = SOLIDS_DATA[id];
+        const totalHeight = solidDef ? solidDef.height(p) : 5;
+        const clampedH = Math.max(0, Math.min(totalHeight, h));
+
         let shape = 'Círculo';
         let description = 'Seção transversal circular regular.';
         let estimatedArea = 0;
+        let sliceDimensions = '';
         let previewType = 'circle';
+        let remainingVolume = 0;
+        let totalVolume = solidDef ? solidDef.calculate(p).volume : 10;
 
         switch (id) {
             case 'cube':
@@ -72,24 +95,18 @@ class CrossSectionAnalyzer {
                 if (angle < 4) {
                     shape = (a === b) ? 'Quadrado' : 'Retângulo';
                     estimatedArea = a * b;
-                    description = `Corte paralelo à base resultando em um ${shape} de ${a}×${b} cm.`;
+                    sliceDimensions = `Largura: ${a.toFixed(2)} m × Comprimento: ${b.toFixed(2)} m`;
+                    description = `Corte horizontal paralelo à base gerando um ${shape} de ${a.toFixed(2)}×${b.toFixed(2)} m.`;
                     previewType = (a === b) ? 'square' : 'rect';
-                } else if (angle >= 4 && angle < 40) {
+                    remainingVolume = a * b * clampedH;
+                } else {
                     shape = 'Retângulo Inclinado';
                     const f = 1 / Math.cos((angle * Math.PI) / 180);
                     estimatedArea = a * b * f;
-                    description = `Corte inclinado interceptando 4 faces laterais.`;
+                    sliceDimensions = `Seção inclinada a ${angle.toFixed(0)}°`;
+                    description = `Corte oblíquo interceptando as 4 faces laterais.`;
                     previewType = 'rect';
-                } else if (angle >= 40 && angle < 65) {
-                    shape = 'Hexágono / Trapézio';
-                    estimatedArea = a * b * 0.9;
-                    description = 'Corte oblíquo atravessando as arestas dos cantos do poliedro.';
-                    previewType = 'polygon';
-                } else {
-                    shape = 'Triângulo / Pentágono';
-                    estimatedArea = (a * b) * 0.5;
-                    description = 'Corte tangenciando vértices angulares.';
-                    previewType = 'triangle';
+                    remainingVolume = a * b * clampedH;
                 }
                 break;
             }
@@ -98,21 +115,20 @@ class CrossSectionAnalyzer {
                 const r = p.r || 2.5;
                 const H = p.h || 5;
                 if (angle < 3) {
-                    shape = 'Círculo';
+                    shape = 'Círculo Perfeito';
                     estimatedArea = Math.PI * r * r;
-                    description = `Corte horizontal perpendicular ao eixo central (Raio = ${r.toFixed(1)} cm).`;
+                    sliceDimensions = `Raio: ${r.toFixed(2)} m (Diâmetro: ${(2 * r).toFixed(2)} m)`;
+                    description = `Corte horizontal perpendicular ao eixo do cilindro. A seção tem as mesmas dimensões da base.`;
                     previewType = 'circle';
-                } else if (angle >= 3 && angle < 60) {
-                    shape = 'Elipse (Cônica)';
+                    remainingVolume = Math.PI * r * r * clampedH;
+                } else {
+                    shape = 'Elipse';
                     const semimajor = r / Math.cos((angle * Math.PI) / 180);
                     estimatedArea = Math.PI * r * semimajor;
-                    description = `Corte oblíquo interceptando todas as geratrizes sem tocar as bases.`;
+                    sliceDimensions = `Eixo Menor: ${(2 * r).toFixed(2)} m · Eixo Maior: ${(2 * semimajor).toFixed(2)} m`;
+                    description = `Corte oblíquo interceptando as paredes cilíndricas em uma elipse cônica.`;
                     previewType = 'ellipse';
-                } else {
-                    shape = 'Retângulo / Segmento Retangular';
-                    estimatedArea = (2 * r) * H;
-                    description = 'Corte longitudinal paralelo ao eixo do cilindro.';
-                    previewType = 'rect';
+                    remainingVolume = Math.PI * r * r * clampedH;
                 }
                 break;
             }
@@ -120,46 +136,47 @@ class CrossSectionAnalyzer {
             case 'cone': {
                 const r = p.r || 3;
                 const H = p.h || 5;
-                const rCut = Math.max(0.1, r * ((H - h) / H));
+                // Raio da seção transversal na altura h (semelhança de triângulos)
+                const rCut = Math.max(0.01, r * ((H - clampedH) / H));
 
                 if (angle < 3) {
                     shape = 'Círculo Menor';
                     estimatedArea = Math.PI * rCut * rCut;
-                    description = `Corte paralelo à base circular na altura ${h.toFixed(1)} cm (Raio = ${rCut.toFixed(1)} cm).`;
+                    sliceDimensions = `Raio da fatia: ${rCut.toFixed(2)} m (Diâmetro: ${(2 * rCut).toFixed(2)} m)`;
+                    description = `Corte paralelo à base a ${clampedH.toFixed(2)} m de altura. Por semelhança, o raio reduz para ${rCut.toFixed(2)} m.`;
                     previewType = 'circle';
-                } else if (angle < 35) {
-                    shape = 'Elipse Cônica';
-                    estimatedArea = Math.PI * rCut * (rCut * 1.3);
-                    description = 'Seção cônica elíptica fechada.';
-                    previewType = 'ellipse';
-                } else if (angle >= 35 && angle < 65) {
-                    shape = 'Parábola';
-                    estimatedArea = (4 / 3) * rCut * H * 0.4;
-                    description = 'Corte paralelo à reta geratriz do cone, gerando uma parábola.';
-                    previewType = 'parabola';
+                    // Volume do tronco de cone inferior
+                    remainingVolume = (Math.PI * clampedH / 3) * (r * r + r * rCut + rCut * rCut);
                 } else {
-                    shape = 'Hipérbole';
-                    estimatedArea = rCut * H * 0.6;
-                    description = 'Corte perpendicular à base interceptando a face lateral em hipérbole.';
-                    previewType = 'hyperbola';
+                    shape = 'Elipse / Parábola';
+                    estimatedArea = Math.PI * rCut * (rCut * 1.3);
+                    sliceDimensions = `Corte Cônico Inclinado a ${angle.toFixed(0)}°`;
+                    description = 'Corte oblíquo das geratrizes do cone.';
+                    previewType = 'ellipse';
+                    remainingVolume = totalVolume * (clampedH / H);
                 }
                 break;
             }
 
             case 'sphere': {
                 const R = p.r || 3;
-                const distCenter = Math.abs(h - R);
+                const distCenter = Math.abs(clampedH - R);
                 if (distCenter >= R) {
                     shape = 'Ponto Tangente';
                     estimatedArea = 0;
-                    description = 'O plano de corte tangencia a esfera na extremidade.';
+                    sliceDimensions = 'Raio = 0 (Tangente)';
+                    description = 'O plano toca a esfera no polo sem fatiá-la.';
                     previewType = 'point';
+                    remainingVolume = clampedH <= R ? 0 : totalVolume;
                 } else {
                     const rSecao = Math.sqrt(R * R - distCenter * distCenter);
-                    shape = (distCenter < 0.2) ? 'Círculo Máximo (Equador)' : 'Círculo Menor';
+                    shape = (distCenter < 0.15) ? 'Círculo Máximo (Equador)' : 'Círculo Menor';
                     estimatedArea = Math.PI * rSecao * rSecao;
-                    description = `Toda seção plana de uma esfera é sempre um círculo perfeito (Raio da seção: ${rSecao.toFixed(2)} cm).`;
+                    sliceDimensions = `Raio da seção: ${rSecao.toFixed(2)} m (Diâmetro: ${(2 * rSecao).toFixed(2)} m)`;
+                    description = `Corte a ${clampedH.toFixed(2)} m. A seção é um círculo interno de raio r = √(R² - d²) = ${rSecao.toFixed(2)} m.`;
                     previewType = 'circle';
+                    // Volume da calota esférica inferior
+                    remainingVolume = (Math.PI * clampedH * clampedH / 3) * (3 * R - clampedH);
                 }
                 break;
             }
@@ -167,41 +184,55 @@ class CrossSectionAnalyzer {
             case 'square_pyramid': {
                 const L = p.l || 4;
                 const H = p.h || 5;
-                const lCut = Math.max(0.1, L * ((H - h) / H));
+                // Lado da seção quadrada na altura h
+                const lCut = Math.max(0.01, L * ((H - clampedH) / H));
+
                 if (angle < 4) {
                     shape = 'Quadrado Menor';
                     estimatedArea = lCut * lCut;
-                    description = `Corte paralelo à base quadrada (Lado = ${lCut.toFixed(2)} cm).`;
+                    sliceDimensions = `Lado da fatia: ${lCut.toFixed(2)} m × ${lCut.toFixed(2)} m`;
+                    description = `Corte paralelo à base a ${clampedH.toFixed(2)} m. O lado do quadrado reduz para ${lCut.toFixed(2)} m.`;
                     previewType = 'square';
-                } else if (angle < 45) {
-                    shape = 'Trapézio Isósceles';
-                    estimatedArea = lCut * lCut * 1.2;
-                    description = 'Corte oblíquo interceptando as faces laterais em trapézio.';
-                    previewType = 'trapezoid';
+                    // Volume do tronco de pirâmide
+                    remainingVolume = (clampedH / 3) * (L * L + L * lCut + lCut * lCut);
                 } else {
-                    shape = 'Triângulo';
-                    estimatedArea = (L * H) / 2;
-                    description = 'Corte vertical passando pelo vértice da pirâmide.';
-                    previewType = 'triangle';
+                    shape = 'Trapézio / Polígono';
+                    estimatedArea = lCut * lCut * 1.1;
+                    sliceDimensions = `Corte Inclinado a ${angle.toFixed(0)}°`;
+                    description = 'Corte oblíquo atravessando as faces triangulares da pirâmide.';
+                    previewType = 'trapezoid';
+                    remainingVolume = totalVolume * (clampedH / H);
                 }
                 break;
             }
 
             default: {
                 shape = 'Polígono Convexo';
-                estimatedArea = 12.5;
-                description = 'Seção transversal plana poligonal.';
+                estimatedArea = 4.5;
+                sliceDimensions = `Altura: ${clampedH.toFixed(2)} m`;
+                description = 'Seção transversal do prisma.';
                 previewType = 'polygon';
+                remainingVolume = totalVolume * (clampedH / totalHeight);
             }
         }
 
+        const remainingH = clampedH;
+        const removedH = Math.max(0, totalHeight - clampedH);
+        const removedVolume = Math.max(0, totalVolume - remainingVolume);
+
         return {
             shapeName: shape,
-            estimatedArea: estimatedArea.toFixed(2) + ' cm²',
+            estimatedArea: estimatedArea.toFixed(2) + ' m²',
+            sliceDimensions,
             description,
             previewType,
-            cutHeight: h.toFixed(1) + ' cm',
-            cutAngle: angle.toFixed(0) + '°'
+            cutHeightVal: clampedH,
+            totalHeight: totalHeight.toFixed(2) + ' m',
+            remainingHeight: remainingH.toFixed(2) + ' m',
+            removedHeight: removedH.toFixed(2) + ' m',
+            remainingVolume: `${remainingVolume.toFixed(2)} m³ (${(remainingVolume * 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} L)`,
+            removedVolume: `${removedVolume.toFixed(2)} m³ (${(removedVolume * 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} L)`,
+            equivalenceNote: '1 m³ = 1.000 Litros'
         };
     }
 
@@ -214,7 +245,7 @@ class CrossSectionAnalyzer {
 
         this.ctx.clearRect(0, 0, w, h);
 
-        // Fundo com grade sutil de radar
+        // Grade sutil de radar técnico
         this.ctx.strokeStyle = '#1e293b';
         this.ctx.lineWidth = 1;
         for (let x = 0; x < w; x += 20) {
@@ -230,64 +261,76 @@ class CrossSectionAnalyzer {
             this.ctx.stroke();
         }
 
-        // Desenhar forma da seção 2D
-        this.ctx.fillStyle = 'rgba(244, 63, 94, 0.35)';
+        // Círculos concêntricos de radar
+        this.ctx.strokeStyle = 'rgba(14, 165, 233, 0.2)';
+        [25, 45, 65].forEach(r => {
+            this.ctx.beginPath();
+            this.ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            this.ctx.stroke();
+        });
+
+        // Desenha a forma geométrica da fatia
+        this.ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
         this.ctx.strokeStyle = '#f43f5e';
         this.ctx.lineWidth = 3;
 
-        this.ctx.beginPath();
         switch (info.previewType) {
             case 'circle':
-                this.ctx.arc(cx, cy, 45, 0, Math.PI * 2);
+                this.ctx.beginPath();
+                this.ctx.arc(cx, cy, 40, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
                 break;
+
             case 'ellipse':
-                this.ctx.ellipse(cx, cy, 60, 35, 0, 0, Math.PI * 2);
+                this.ctx.beginPath();
+                this.ctx.ellipse(cx, cy, 55, 32, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
                 break;
+
             case 'square':
-                this.ctx.rect(cx - 40, cy - 40, 80, 80);
+                this.ctx.beginPath();
+                this.ctx.rect(cx - 36, cy - 36, 72, 72);
+                this.ctx.fill();
+                this.ctx.stroke();
                 break;
+
             case 'rect':
-                this.ctx.rect(cx - 55, cy - 35, 110, 70);
+                this.ctx.beginPath();
+                this.ctx.rect(cx - 50, cy - 30, 100, 60);
+                this.ctx.fill();
+                this.ctx.stroke();
                 break;
-            case 'triangle':
-                this.ctx.moveTo(cx, cy - 50);
-                this.ctx.lineTo(cx + 45, cy + 40);
-                this.ctx.lineTo(cx - 45, cy + 40);
-                this.ctx.closePath();
-                break;
+
             case 'trapezoid':
-                this.ctx.moveTo(cx - 30, cy - 35);
-                this.ctx.lineTo(cx + 30, cy - 35);
-                this.ctx.lineTo(cx + 50, cy + 35);
-                this.ctx.lineTo(cx - 50, cy + 35);
+                this.ctx.beginPath();
+                this.ctx.moveTo(cx - 25, cy - 30);
+                this.ctx.lineTo(cx + 25, cy - 30);
+                this.ctx.lineTo(cx + 45, cy + 30);
+                this.ctx.lineTo(cx - 45, cy + 30);
                 this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
                 break;
-            case 'parabola':
-            case 'hyperbola':
-                this.ctx.moveTo(cx - 50, cy + 45);
-                this.ctx.quadraticCurveTo(cx, cy - 60, cx + 50, cy + 45);
-                this.ctx.lineTo(cx - 50, cy + 45);
-                break;
+
             default:
-                // Hexágono
-                for (let i = 0; i < 6; i++) {
-                    const ang = (i * Math.PI) / 3;
-                    const px = cx + 45 * Math.cos(ang);
-                    const py = cy + 45 * Math.sin(ang);
-                    if (i === 0) this.ctx.moveTo(px, py);
-                    else this.ctx.lineTo(px, py);
-                }
-                this.ctx.closePath();
+                this.ctx.beginPath();
+                this.ctx.arc(cx, cy, 35, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
+                break;
         }
 
-        this.ctx.fill();
+        // Centro marcado com cruz ciano
+        this.ctx.strokeStyle = '#00f2fe';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(cx - 6, cy);
+        this.ctx.lineTo(cx + 6, cy);
+        this.ctx.moveTo(cx, cy - 6);
+        this.ctx.lineTo(cx, cy + 6);
         this.ctx.stroke();
-
-        // Rótulo da forma no canvas
-        this.ctx.fillStyle = '#f8fafc';
-        this.ctx.font = 'bold 12px Inter, sans-serif';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(info.shapeName, cx, h - 10);
     }
 }
 

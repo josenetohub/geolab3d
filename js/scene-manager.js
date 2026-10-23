@@ -20,6 +20,7 @@ class SceneManager {
         this.showVertices = false;
         this.showEdges = false;
         this.showFaces = false;
+        this.edgeColor = 0x00f2fe; // Ciano vibrante padrão para arestas
         this.isAutoRotating = false;
 
         // Materiais
@@ -291,16 +292,56 @@ class SceneManager {
         });
     }
 
+    setEdgeColor(hexColor) {
+        this.edgeColor = typeof hexColor === 'string' ? parseInt(hexColor.replace('#', '0x'), 16) : hexColor;
+        const applyColor = (root) => {
+            root.traverse(child => {
+                if (child.isLineSegments || child.name === 'edgeHighlight' || child.name === 'solidEdgesBase') {
+                    if (child.material) {
+                        child.material.color.setHex(this.edgeColor);
+                        child.material.opacity = 1.0;
+                        child.material.needsUpdate = true;
+                    }
+                }
+            });
+        };
+        applyColor(this.solidGroup);
+        applyColor(this.elementsGroup);
+    }
+
     setElementsVisibility(vertices, edges, faces) {
         this.showVertices = vertices;
         this.showEdges = edges;
         this.showFaces = faces;
 
-        this.elementsGroup.traverse(child => {
-            if (child.name === 'vertexMarker') child.visible = vertices;
-            if (child.name === 'edgeHighlight') child.visible = edges;
-            if (child.name === 'faceHighlight') child.visible = faces;
-        });
+        const updateVisibility = (root) => {
+            root.traverse(child => {
+                if (child.name === 'vertexMarker') child.visible = vertices;
+                if (child.name === 'edgeHighlight') {
+                    child.visible = edges;
+                    if (edges && child.material) {
+                        child.material.color.setHex(this.edgeColor || 0x00f2fe);
+                        child.material.opacity = 1.0;
+                    }
+                }
+                if (child.name === 'solidEdgesBase') {
+                    if (child.material) {
+                        if (edges) {
+                            child.material.color.setHex(this.edgeColor || 0x00f2fe);
+                            child.material.opacity = 1.0;
+                        } else {
+                            child.material.color.setHex(0x818cf8);
+                            child.material.opacity = 0.6;
+                        }
+                        child.material.needsUpdate = true;
+                    }
+                }
+                if (child.name === 'faceHighlight') child.visible = faces;
+            });
+        };
+
+        updateVisibility(this.solidGroup);
+        updateVisibility(this.elementsGroup);
     }
 
     resetCamera() {

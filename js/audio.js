@@ -158,6 +158,25 @@ class SoundManager {
         }
     }
 
+    playCameraShutter() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        // Clique duplo característico do obturador mecânico
+        [0, 0.08].forEach((delay, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(idx === 0 ? 1200 : 800, now + delay);
+            gain.gain.setValueAtTime(0.18, now + delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.04);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + delay);
+            osc.stop(now + delay + 0.04);
+        });
+    }
+
     playOverflowWarning() {
         if (this.muted) return;
         this.init();

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GeoLab 3D - Estúdio de Geometria Espacial & Engenharia</title>
+    <title>GeoLab 3D - Estúdio de Geometria Espacial & Design Arquitetônico</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📐</text></svg>">
 </head>
@@ -12,14 +12,114 @@
     <!-- NOTIFICAÇÃO FLUTUANTE DE CONQUISTAS E NÍVEL -->
     <div id="game-notification" class="hidden"></div>
 
-    <!-- BARRA SUPERIOR SIMÉTRICA -->
+    <!-- ==========================================================================
+         MENU INICIAL (HUB CENTRAL COM CARDS DIDÁTICOS E AUTOEXPLICATIVOS)
+         ========================================================================== -->
+    <div id="mainWelcomeMenu" class="welcome-menu-overlay">
+        <div class="welcome-container">
+            <header class="welcome-header">
+                <div class="welcome-badge">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                </div>
+                <h1 class="welcome-title">GeoLab 3D</h1>
+                <p class="welcome-subtitle">
+                    Estúdio Interativo de Geometria Espacial, Engenharia e Design Arquitetônico (BNCC)
+                </p>
+                <div class="welcome-tip-pill">
+                    💡 Dica Didática: <b>1 m³ equivale a exatamente 1.000 Litros de água</b> (1 dm³ = 1 L)
+                </div>
+            </header>
+
+            <!-- GRID DE CARDS DIDÁTICOS E AUTOEXPLICATIVOS -->
+            <div class="welcome-cards-grid">
+                <!-- CARD 1: MODO CARREIRA -->
+                <div class="menu-action-card featured" data-action="career">
+                    <div class="card-tag-badge">Jornada Guiada</div>
+                    <div class="card-icon-circle">🚀</div>
+                    <div class="card-content">
+                        <h3>Iniciar Modo Carreira</h3>
+                        <p>Aprenda geometria espacial do zero: manipule propriedades no 3D, deforme vértices, calcule áreas totais e volumes, e construa um edifício completo.</p>
+                        <div class="card-footer-cta">Começar Jornada ▶</div>
+                    </div>
+                </div>
+
+                <!-- CARD 2: LABORATÓRIO 3D LIVRE -->
+                <div class="menu-action-card" data-action="lab">
+                    <div class="card-tag-badge">Exploração Aberta</div>
+                    <div class="card-icon-circle">🔬</div>
+                    <div class="card-content">
+                        <h3>Laboratório Livre 3D</h3>
+                        <p>Manipule livremente os 8 sólidos, ative o modo raio-X, corte seções com laser, desdobre em planificação completa e teste abastecimento de água.</p>
+                        <div class="card-footer-cta">Explorar Sólidos 🔬</div>
+                    </div>
+                </div>
+
+                <!-- CARD 3: CONSTRUTOR DE PRÉDIO -->
+                <div class="menu-action-card" data-action="building">
+                    <div class="card-tag-badge">Missão Arquitetônica</div>
+                    <div class="card-icon-circle">🏢</div>
+                    <div class="card-content">
+                        <h3>Estúdio de Arquitetura (Prédio 3D)</h3>
+                        <p>Transforme o modelo tridimensional num edifício residencial: adicione andares, janelas e portas. Calcule área de vidro, alvenaria e volume de ar.</p>
+                        <div class="card-footer-cta">Projetar Edifício 🏢</div>
+                    </div>
+                </div>
+
+                <!-- CARD 4: ÁLBUM E GALERIA -->
+                <div class="menu-action-card" data-action="album">
+                    <div class="card-tag-badge">Portfólio Estudantil</div>
+                    <div class="card-icon-circle">📸</div>
+                    <div class="card-content">
+                        <h3>Álbum & Galeria de Conquistas</h3>
+                        <p>Veja todos os seus projetos salvos, fotos capturadas dos sólidos em alta resolução, relatórios matemáticos e anotações das aulas.</p>
+                        <div class="card-footer-cta">Abrir Álbum 🖼️</div>
+                    </div>
+                </div>
+
+                <!-- CARD 5: GUIA DE FÓRMULAS & APOIO -->
+                <div class="menu-action-card" data-action="formulas">
+                    <div class="card-tag-badge">Material de Consulta</div>
+                    <div class="card-icon-circle">📖</div>
+                    <div class="card-content">
+                        <h3>Guia de Fórmulas & Como Calcular</h3>
+                        <p>Consulte a qualquer momento o dicionário de símbolos, fórmulas de Área da Base, Lateral, Total e Volume, e o passo a passo resolvido.</p>
+                        <div class="card-footer-cta">Ver Fórmulas 📚</div>
+                    </div>
+                </div>
+
+                <!-- CARD 6: CONFIGURAÇÕES -->
+                <div class="menu-action-card" data-action="settings">
+                    <div class="card-tag-badge">Preferências</div>
+                    <div class="card-icon-circle">⚙️</div>
+                    <div class="card-content">
+                        <h3>Configurações & Cores 3D</h3>
+                        <p>Personalize os efeitos sonoros, o estilo de iluminação da cena e mude as cores das arestas e vértices para facilitar a visualização.</p>
+                        <div class="card-footer-cta">Configurar ⚙️</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-close-welcome" id="btnCloseWelcomeMenu" title="Entrar no Jogo">
+                Entrar no Estúdio 3D ✕
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         BARRA SUPERIOR LIMPA & SIMÉTRICA
+         ========================================================================== -->
     <header class="topbar">
         <div class="brand-section">
+            <button class="btn-home-menu" id="btnOpenMainMenu" title="Abrir Menu Inicial">
+                <span>🏠</span> <b>Menu</b>
+            </button>
             <div class="brand-badge">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
                 </svg>
             </div>
             <div>
@@ -28,48 +128,36 @@
             </div>
         </div>
 
-        <!-- ABAS DE NAVEGAÇÃO CENTRALIZADAS (COM ROLAGEM TOUCH NO MOBILE) -->
-        <nav class="nav-tabs">
-            <button class="tab-btn active" data-mode="lab">
-                <svg viewBox="0 0 24 24"><path d="M2 12h20M12 2v20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/></svg>
-                Laboratório 3D
-            </button>
-            <button class="tab-btn" data-mode="studio" style="color:var(--primary-light);">
-                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                Projetos Reais (Aulas em Grupo)
-            </button>
-            <button class="tab-btn" data-mode="elements">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M3 12h3M18 12h3M12 3v3M12 18v3"/></svg>
-                Vértices & Euler
-            </button>
-            <button class="tab-btn" data-mode="unfold">
-                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                Planificação
-            </button>
-            <button class="tab-btn" data-mode="cross_section">
-                <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
-                Fatiador / Corte
-            </button>
-            <button class="tab-btn" data-mode="liquid">
-                <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-                Abastecimento
-            </button>
-            <button class="tab-btn" data-mode="game">
-                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                Desafios & Quiz
-            </button>
-        </nav>
+        <!-- MODO ATIVO DISPLAY PILL -->
+        <div class="current-mode-indicator" id="currentModeIndicator">
+            <span class="mode-pulse-dot"></span>
+            <span id="currentModeText">🔬 Laboratório 3D</span>
+        </div>
 
-        <!-- STATUS BAR -->
+        <!-- STATUS BAR & FERRAMENTAS PRINCIPAIS -->
         <div class="user-hud">
-            <button class="btn-help-guide" id="btnOpenSupportGuide" title="Abrir Guia de Fórmulas e Apoio">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                Guia de Fórmulas
+            <!-- BOTÃO DE CAPTURA RÁPIDA (FOTOGRAFAR PARA O ÁLBUM) -->
+            <button class="btn-hud-tool btn-snapshot" id="btnQuickSnapshot" title="Tirar Foto do Sólido e Salvar no Álbum">
+                📸 Fotografar
             </button>
+
+            <!-- BOTÃO DO PAINEL AUXILIAR DE FÓRMULAS & APOIO -->
+            <button class="btn-hud-tool btn-auxiliary" id="btnOpenAuxDrawer" title="Abrir Painel Auxiliar de Fórmulas e Definições">
+                📖 Fórmulas & Apoio
+            </button>
+
+            <!-- BOTÃO DO ÁLBUM / GALERIA -->
+            <button class="btn-hud-tool" id="btnTopAlbum" title="Abrir Álbum de Projetos">
+                🖼️ Álbum
+            </button>
+
+            <!-- XP COUNTER -->
             <div class="hud-item xp-item">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 <span id="xpCount">0</span> XP
             </div>
+
+            <!-- SOM E TELA CHEIA -->
             <button class="btn-hud-action" id="btnAudioToggle" title="Ligar/Desligar Som">🔊</button>
             <button class="btn-hud-action" id="btnFullscreen" title="Tela Cheia">⛶</button>
         </div>
@@ -77,16 +165,20 @@
 
     <!-- BARRA DE MODOS PARA DISPOSITIVOS MÓVEIS (NAVEGAÇÃO TOUCH 1-TOQUE) -->
     <div class="mobile-mode-bar" id="mobileModeBar">
-        <button class="mobile-mode-chip active" data-mode="lab">🔬 Laboratório</button>
+        <button class="mobile-mode-chip active" data-mode="career">🚀 Carreira BNCC</button>
+        <button class="mobile-mode-chip" data-mode="lab">🔬 Laboratório</button>
+        <button class="mobile-mode-chip" data-mode="building">🏢 Prédio 3D</button>
         <button class="mobile-mode-chip" data-mode="studio">👥 Equipes</button>
         <button class="mobile-mode-chip" data-mode="elements">🧩 Euler (V, F, A)</button>
         <button class="mobile-mode-chip" data-mode="unfold">📦 Planificar</button>
         <button class="mobile-mode-chip" data-mode="cross_section">✂️ Cortes</button>
-        <button class="mobile-mode-chip" data-mode="liquid">💧 Água</button>
+        <button class="mobile-mode-chip" data-mode="liquid">💧 Água (1m³=1000L)</button>
         <button class="mobile-mode-chip" data-mode="game">🎮 Quiz</button>
     </div>
 
-    <!-- LAYOUT PRINCIPAL -->
+    <!-- ==========================================================================
+         LAYOUT PRINCIPAL (SEM ROLAGEM LATERAL / OVERFLOW CONTROLADO)
+         ========================================================================== -->
     <main class="app-layout">
 
         <!-- PAINEL ESQUERDO: CONTROLES E CONFIGURAÇÕES -->
@@ -151,6 +243,18 @@
                             <span class="switch-track"></span>
                         </label>
                     </div>
+
+                    <!-- SELETOR DE CORES DAS ARESTAS -->
+                    <div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
+                        <span style="font-size:0.75rem; color:var(--text-secondary); font-weight:600; display:block; margin-bottom:6px;">Cor das Arestas no 3D:</span>
+                        <div class="edge-color-picker" id="edgeColorPicker">
+                            <button class="color-dot active" data-color="#00f2fe" style="background:#00f2fe;" title="Ciano"></button>
+                            <button class="color-dot" data-color="#facc15" style="background:#facc15;" title="Amarelo"></button>
+                            <button class="color-dot" data-color="#22c55e" style="background:#22c55e;" title="Verde"></button>
+                            <button class="color-dot" data-color="#f43f5e" style="background:#f43f5e;" title="Rosa/Magenta"></button>
+                            <button class="color-dot" data-color="#ffffff" style="background:#ffffff;" title="Branco"></button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -166,7 +270,7 @@
                         <input type="range" id="unfoldSlider" min="0" max="1" step="0.01" value="0">
                     </div>
                     <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">
-                        Desdobre as faces do sólido para calcular a área de matéria-prima necessária para fabricação.
+                        Desdobre as faces do sólido para calcular a área de matéria-prima necessária para fabricação. (A silhueta 3D foi completamente ocultada).
                     </div>
                 </div>
             </div>
@@ -178,30 +282,36 @@
                     <div class="slider-unit">
                         <div class="slider-label-row">
                             <span>Altura do Corte (Y)</span>
+                            <span class="slider-badge-val" id="cutHeightVal">2.50 m</span>
                         </div>
-                        <input type="range" id="cutHeightSlider" min="0.1" max="6" step="0.1" value="2.5">
+                        <input type="range" id="cutHeightSlider" min="0.1" max="10" step="0.05" value="2.5">
                     </div>
                     <div class="slider-unit">
                         <div class="slider-label-row">
-                            <span>Inclinação Frontal (θX)</span>
+                            <span>Inclinação do Corte (X)</span>
+                            <span class="slider-badge-val" id="cutAngleXVal">0°</span>
                         </div>
-                        <input type="range" id="cutAngleXSlider" min="-65" max="65" step="1" value="0">
+                        <input type="range" id="cutAngleXSlider" min="-45" max="45" step="1" value="0">
                     </div>
                     <div class="slider-unit">
                         <div class="slider-label-row">
-                            <span>Inclinação Lateral (θZ)</span>
+                            <span>Inclinação do Corte (Z)</span>
+                            <span class="slider-badge-val" id="cutAngleZVal">0°</span>
                         </div>
-                        <input type="range" id="cutAngleZSlider" min="-65" max="65" step="1" value="0">
+                        <input type="range" id="cutAngleZSlider" min="-45" max="45" step="1" value="0">
                     </div>
                 </div>
             </div>
 
-            <!-- SUBPAINEL: ABASTECIMENTO HIDRÁULICO -->
+            <!-- SUBPAINEL: LÍQUIDO / HIDRÁULICA -->
             <div class="mode-subpanel hidden" id="subpanel-liquid">
-                <div class="section-title">Operação de Abastecimento</div>
+                <div class="section-title">Simulação de Enchimento</div>
                 <div class="sliders-card">
-                    <button class="btn-action-primary" id="btnFaucet">💧 Abrir Torneira</button>
-                    <div style="display:flex; gap:8px;">
+                    <div style="font-size:0.75rem; color:var(--accent-amber); font-weight:700; margin-bottom:6px;">
+                        💡 1 m³ = 1.000 Litros de água (1 dm³ = 1 L)
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn-action-primary" id="btnFaucet" style="flex:1;">💧 Abrir Torneira</button>
                         <button class="btn-action-secondary" id="btnDrain" style="flex:1;">🚰 Drenar</button>
                         <button class="btn-action-secondary" id="btnEmpty" style="flex:1; border-color:rgba(244,63,94,0.3); color:var(--accent-rose);">Esvaziar</button>
                     </div>
@@ -214,15 +324,51 @@
                 </div>
             </div>
 
+            <!-- SUBPAINEL: ESTÚDIO DE ARQUITETURA (PRÉDIO 3D) -->
+            <div class="mode-subpanel hidden" id="subpanel-building-left">
+                <div class="section-title">Parâmetros do Edifício</div>
+                <div class="sliders-card">
+                    <div class="slider-unit">
+                        <div class="slider-label-row">
+                            <span>Número de Andares</span>
+                            <span class="slider-badge-val" id="buildingFloorsVal">4</span>
+                        </div>
+                        <input type="range" id="sliderBuildingFloors" min="1" max="8" step="1" value="4">
+                    </div>
+                    <div class="slider-unit">
+                        <div class="slider-label-row">
+                            <span>Janelas por Andar</span>
+                            <span class="slider-badge-val" id="buildingWindowsVal">3</span>
+                        </div>
+                        <input type="range" id="sliderBuildingWindows" min="1" max="5" step="1" value="3">
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4; margin-top:4px;">
+                        O modelo 3D atualiza as janelas, portas e frisos entre andares em tempo real.
+                    </div>
+                </div>
+            </div>
+
         </aside>
 
         <!-- VIEWPORT CENTRAL: CANVAS 3D -->
         <section id="canvas-container">
             <div class="canvas-hint">👆 Toque e arraste para girar · 2 dedos para zoom</div>
+            
+            <!-- TOOLBAR MODERNA DO CANVAS -->
             <div class="canvas-toolbar">
                 <button class="toolbar-btn active" id="btnToggleDimensions">📏 Cotas (Medidas)</button>
+                <button class="toolbar-btn" id="btnToggleDeform" title="Permite empurrar ou puxar os vértices para achatar ou ampliar">
+                    ✋ Deformar Vértices
+                </button>
                 <button class="toolbar-btn" id="btnResetCamera">🎯 Centralizar</button>
                 <button class="toolbar-btn" id="btnAutoRotate">🔄 Rotação Auto</button>
+                
+                <!-- SELETOR RÁPIDO DE COR DAS ARESTAS -->
+                <div class="quick-edge-colors">
+                    <span class="color-dot active" data-color="#00f2fe" style="background:#00f2fe;" title="Arestas Ciano"></span>
+                    <span class="color-dot" data-color="#facc15" style="background:#facc15;" title="Arestas Amarelas"></span>
+                    <span class="color-dot" data-color="#22c55e" style="background:#22c55e;" title="Arestas Verdes"></span>
+                </div>
             </div>
         </section>
 
@@ -233,6 +379,91 @@
             <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
                 <div id="solidTitle" style="font-size:1.15rem; font-weight:700; color:var(--text-primary);">Cubo</div>
                 <span id="solidCategoryBadge" style="font-size:0.75rem; color:var(--primary-light); font-weight:600;">Prisma Reto</span>
+            </div>
+
+            <!-- ==================================================================
+                 MODO CARREIRA BNCC (SUBPAINEL CENTRAL DA JORNADA)
+                 ================================================================== -->
+            <div class="mode-subpanel" id="subpanel-career">
+                <div class="career-mission-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="team-badge" id="careerLevelBadge">Fase 1 · BNCC</span>
+                        <button class="btn-quick-guide" id="btnCareerAuxGuide" title="Ver fórmula desta fase">
+                            💡 Ver Fórmula
+                        </button>
+                    </div>
+
+                    <div id="careerStageTitle" style="font-size:1.05rem; font-weight:700; color:#fff; margin-top:4px;">
+                        Fase 1: O Cubo e a Caixa d'Água Residencial
+                    </div>
+                    <div id="careerStageSubtitle" style="font-size:0.76rem; color:var(--accent-cyan); font-weight:600;">
+                        Propriedades dos Poliedros Regulares, Áreas e Volume
+                    </div>
+
+                    <div class="career-concept-box" id="careerConceptBox"></div>
+
+                    <!-- PASSOS DA MISSÃO -->
+                    <div class="career-action-box" id="careerActionBox"></div>
+
+                    <!-- CAMPOS DE ENTRADA DO ALUNO -->
+                    <div id="careerInputsContainer" style="display:flex; flex-direction:column; gap:8px; margin:10px 0;"></div>
+
+                    <button class="btn-action-primary" id="btnValidateCareer" style="width:100%;">
+                        🚀 Validar Respostas da Fase
+                    </button>
+
+                    <div id="careerFeedbackBox" class="career-feedback-box hidden"></div>
+
+                    <div style="display:flex; gap:6px; margin-top:8px;">
+                        <button class="btn-action-secondary" id="btnCareerNext" style="flex:1; display:none;">
+                            Próxima Fase ▶
+                        </button>
+                        <button class="btn-action-secondary" id="btnCareerPhoto" style="flex:1;">
+                            📸 Salvar Conquista no Álbum
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================================================================
+                 MODO ARQUITETURA: PRÉDIO 3D
+                 ================================================================== -->
+            <div class="mode-subpanel hidden" id="subpanel-building-right">
+                <div class="team-mission-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="team-badge" style="background:rgba(14,165,233,0.2); border-color:#0ea5e9; color:#38bdf8;">
+                            Projeto Arquitetônico
+                        </span>
+                        <button class="btn-quick-guide" id="btnPhotoBuilding">
+                            📸 Salvar no Álbum
+                        </button>
+                    </div>
+
+                    <div style="font-size:1.05rem; font-weight:700; color:#fff; margin-top:6px;">
+                        Edifício Residencial Aurora
+                    </div>
+
+                    <!-- RELATÓRIO TÉCNICO DE CÁLCULO ARQUITETÔNICO -->
+                    <div class="building-report-grid" id="buildingReportGrid" style="margin-top:10px;">
+                        <div class="math-card">
+                            <span class="math-card-title">Área Total Envidraçada (Janelas)</span>
+                            <div class="math-card-value" id="bldGlassArea" style="font-size:1.15rem; color:var(--accent-cyan);">18.00 m²</div>
+                            <div class="math-card-formula" id="bldGlassDesc">24 janelas de vidro laminado</div>
+                        </div>
+
+                        <div class="math-card">
+                            <span class="math-card-title">Área Líquida de Alvenaria (Paredes)</span>
+                            <div class="math-card-value" id="bldMasonryArea" style="font-size:1.15rem; color:var(--accent-amber);">154.50 m²</div>
+                            <div class="math-card-formula">Alateral - Avidro - Aporta</div>
+                        </div>
+
+                        <div class="math-card">
+                            <span class="math-card-title">Volume de Ar Climatizado</span>
+                            <div class="math-card-value" id="bldVolumeArea" style="font-size:1.15rem; color:#fff;">240.00 m³</div>
+                            <div class="math-card-formula" id="bldVolumeLiters">240.000 Litros (1 m³ = 1.000 L)</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- MODO ESTÚDIO DE PROJETOS REAIS (AULAS EM GRUPO) -->
@@ -301,16 +532,34 @@
             <!-- ÁREA DO MODO DESAFIOS & QUIZ -->
             <div id="gameChallengeArea" class="mode-subpanel hidden"></div>
 
-            <!-- RESUMO DE CORTE (CROSS SECTION RADAR) -->
+            <!-- RESUMO DE CORTE (CROSS SECTION RADAR & DIMENSÕES RESULTANTES) -->
             <div class="mode-subpanel hidden" id="subpanel-cross_section-right">
-                <div class="section-title">Forma da Seção Transversal</div>
+                <div class="section-title">Dimensões & Geometria do Corte</div>
                 <div style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle); display:flex; flex-direction:column; align-items:center; gap:8px;">
                     <canvas id="radarCanvas" width="180" height="140" style="background:#070b14; border-radius:8px;"></canvas>
                     <div style="text-align:center;">
                         <div id="crossSectionShapeName" style="font-size:1.1rem; font-weight:700; color:var(--accent-rose);">Círculo</div>
-                        <div id="crossSectionArea" style="font-size:0.85rem; font-family:'JetBrains Mono'; color:var(--accent-cyan); font-weight:600;">19.63 m²</div>
+                        <div id="crossSectionSliceDims" style="font-size:0.82rem; font-family:'JetBrains Mono'; color:var(--accent-cyan); font-weight:600;">Raio = 2.00 m</div>
+                        <div id="crossSectionArea" style="font-size:0.95rem; font-family:'JetBrains Mono'; color:#fff; font-weight:700; margin-top:2px;">12.57 m²</div>
                     </div>
-                    <div id="crossSectionDesc" style="font-size:0.75rem; color:var(--text-secondary); text-align:center; line-height:1.4;"></div>
+                    
+                    <!-- DIMENSÕES DOS DOIS PEDAÇOS CORTADOS -->
+                    <div class="cut-dimensions-summary" style="width:100%; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px; font-size:0.75rem;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <span style="color:var(--text-secondary);">Altura Restante (Inferior):</span>
+                            <span style="font-weight:700; color:var(--accent-cyan);" id="cutRemainingH">2.50 m</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <span style="color:var(--text-secondary);">Altura Cortada (Removida):</span>
+                            <span style="font-weight:700; color:var(--accent-rose);" id="cutRemovedH">2.50 m</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:var(--text-secondary);">Volume Restante:</span>
+                            <span style="font-weight:700; color:#fff;" id="cutRemainingVol">12.50 m³ (12.500 L)</span>
+                        </div>
+                    </div>
+
+                    <div id="crossSectionDesc" style="font-size:0.74rem; color:var(--text-secondary); text-align:center; line-height:1.4;"></div>
                 </div>
             </div>
 
@@ -318,73 +567,75 @@
             <div class="mode-subpanel hidden" id="subpanel-liquid-right">
                 <div class="section-title">Capacidade & Volume de Líquido</div>
                 <div style="background:var(--bg-surface-elevated); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle); display:flex; flex-direction:column; gap:8px;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
-                        <span style="color:var(--text-secondary);">Coluna de Líquido</span>
-                        <span id="liquidLevelText" style="font-family:'JetBrains Mono'; color:var(--accent-cyan); font-weight:600;">0 m</span>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                        <span style="font-size:0.8rem; color:var(--text-secondary);">Nível da Coluna:</span>
+                        <span id="liquidLevelText" style="font-family:'JetBrains Mono'; font-weight:700; color:#fff;">0.00 m / 5.00 m</span>
                     </div>
-                    <div style="width:100%; height:8px; background:#334155; border-radius:4px; overflow:hidden;">
-                        <div id="liquidBarFill" style="height:100%; width:0%; background:linear-gradient(90deg, var(--primary), var(--accent-cyan)); transition:width 0.1s;"></div>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                        <span style="font-size:0.8rem; color:var(--text-secondary);">Volume Armazenado:</span>
+                        <span id="liquidVolText" style="font-family:'JetBrains Mono'; font-weight:700; color:var(--accent-cyan);">0.00 m³ (0 L)</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
-                        <span style="color:var(--text-secondary);">Volume Ocupado</span>
-                        <span id="liquidVolText" style="font-family:'JetBrains Mono'; color:#fff; font-weight:700;">0 m³</span>
+                    <div class="tank-progress-bar">
+                        <div class="tank-progress-fill" id="liquidBarFill" style="width:0%;"></div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
-                        <span style="color:var(--text-secondary);">Capacidade Total</span>
-                        <span id="liquidPercentText" style="font-family:'JetBrains Mono'; color:var(--accent-emerald); font-weight:700;">0%</span>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-secondary);">
+                        <span>Capacidade Utilizada:</span>
+                        <span id="liquidPercentText" style="font-weight:700; color:#fff;">0%</span>
+                    </div>
+                    <div style="font-size:0.74rem; color:var(--accent-amber); font-weight:600; text-align:center; padding-top:4px; border-top:1px dashed rgba(255,255,255,0.08);">
+                        💡 Equivalência Universal: 1 m³ = 1.000 Litros
                     </div>
                 </div>
             </div>
 
-            <!-- EULER PANEL -->
+            <!-- RELAÇÃO DE EULER -->
             <div class="mode-subpanel hidden" id="subpanel-elements-right">
-                <div class="section-title">Relação de Euler (Poliedros)</div>
-                <div class="euler-panel">
-                    <div class="euler-counts-grid">
-                        <div>
-                            <div style="font-size:0.68rem; color:var(--text-secondary); font-weight:700;">VÉRTICES (V)</div>
-                            <div id="vertCount" class="euler-count-val" style="color:#fbbf24;">8</div>
+                <div class="section-title">Relação de Euler (V - A + F = 2)</div>
+                <div class="euler-hud-card">
+                    <div class="euler-metrics-row">
+                        <div class="euler-chip">
+                            <span class="euler-chip-val" id="vertCount">8</span>
+                            <span class="euler-chip-lbl">Vértices (V)</span>
                         </div>
-                        <div>
-                            <div style="font-size:0.68rem; color:var(--text-secondary); font-weight:700;">ARESTAS (A)</div>
-                            <div id="edgeCount" class="euler-count-val" style="color:#0ea5e9;">12</div>
+                        <div class="euler-chip">
+                            <span class="euler-chip-val" id="edgeCount">12</span>
+                            <span class="euler-chip-lbl">Arestas (A)</span>
                         </div>
-                        <div>
-                            <div style="font-size:0.68rem; color:var(--text-secondary); font-weight:700;">FACES (F)</div>
-                            <div id="faceCount" class="euler-count-val" style="color:#a855f7;">6</div>
+                        <div class="euler-chip">
+                            <span class="euler-chip-val" id="faceCount">6</span>
+                            <span class="euler-chip-lbl">Faces (F)</span>
                         </div>
                     </div>
-                    <div id="eulerResultBox"></div>
-                    <div id="faceTypesDesc" style="font-size:0.75rem; color:var(--text-secondary); text-align:center;"></div>
+                    <div class="euler-formula-card" id="eulerResultBox">
+                        <span style="color:var(--text-secondary);">Teorema de Euler:</span>
+                        <span style="font-weight:700; color:var(--accent-emerald);">8 - 12 + 6 = 2 ✓ Poliedro Convexo</span>
+                    </div>
                 </div>
-            </div>
-
-            <!-- CARTÕES DE CÁLCULO PRINCIPAIS: ÁREA TOTAL E VOLUME (BNCC) -->
-            <div class="section-title">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                Grandezas & Cálculos Exatos
             </div>
 
             <!-- ÁREA TOTAL (AT) -->
-            <div class="math-card" style="border-color:rgba(99, 102, 241, 0.4);">
+            <div class="math-card">
                 <div class="math-card-header">
                     <span class="math-card-title">Área Total da Superfície (At)</span>
-                    <span style="font-size:0.7rem; color:var(--primary-light); font-weight:600;">Superfície Externa</span>
+                    <span class="math-card-badge">Casca Externa</span>
                 </div>
-                <div class="math-card-value" id="totalAreaVal" style="color:var(--primary-light);">24.00 m²</div>
+                <div class="math-card-value" id="totalAreaVal">24.00 m²</div>
                 <div class="math-card-formula" id="totalAreaFormula">A<sub>t</sub> = 6 · a²</div>
-                <div class="math-card-steps" id="totalAreaSteps">Cálculo: A<sub>t</sub> = 6 · (2.00²) = 24.00 m²</div>
+                <div class="math-card-steps" id="totalAreaSteps">Cálculo: A<sub>t</sub> = 6 · 2.00² = 24.00 m²</div>
             </div>
 
-            <!-- VOLUME (V) -->
-            <div class="math-card" style="border-color:rgba(16, 185, 129, 0.4);">
+            <!-- VOLUME (V) COM EQUIVALÊNCIA EM LITROS -->
+            <div class="math-card">
                 <div class="math-card-header">
-                    <span class="math-card-title">Volume (V) / Capacidade</span>
-                    <span style="font-size:0.7rem; color:var(--accent-emerald); font-weight:600;">Espaço Ocupado</span>
+                    <span class="math-card-title">Volume Interno (V)</span>
+                    <span class="math-card-badge" style="color:var(--accent-cyan); background:rgba(14,165,233,0.1);">Espaço Ocupado</span>
                 </div>
-                <div class="math-card-value" id="volumeVal" style="color:var(--accent-emerald);">8.00 m³</div>
+                <div class="math-card-value" id="volumeVal">8.00 m³</div>
                 <div class="math-card-formula" id="volumeFormula">V = a³</div>
                 <div class="math-card-steps" id="volumeSteps">Cálculo: V = 2.00³ = 8.00 m³ (8.000 Litros)</div>
+                <div style="font-size:0.72rem; color:var(--accent-amber); font-weight:600; margin-top:4px;">
+                    💡 1 m³ = 1.000 Litros de água (1 dm³ = 1 L)
+                </div>
             </div>
 
             <!-- ÁREA DA BASE (AB) -->
@@ -412,34 +663,150 @@
 
     </main>
 
-    <!-- MODAL DIDÁTICO: GUIA DE FÓRMULAS & APOIO -->
-    <div id="supportGuideModal" class="modal-backdrop hidden">
-        <div class="modal-dialog">
+    <!-- ==========================================================================
+         PAINEL AUXILIAR RETRÁTIL (DRAWER / OFF-CANVAS)
+         Fórmulas, Definições, Propriedades e "Como Calcular"
+         ========================================================================== -->
+    <aside id="auxiliaryDrawer" class="auxiliary-drawer closed">
+        <div class="drawer-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.3rem;">📖</span>
+                <div>
+                    <div style="font-size:1.05rem; font-weight:700; color:#fff;">Painel Auxiliar de Apoio</div>
+                    <div style="font-size:0.75rem; color:var(--text-secondary);">Fórmulas, propriedades e passo a passo</div>
+                </div>
+            </div>
+            <button class="btn-close-drawer" id="btnCloseAuxDrawer" title="Fechar Painel Auxiliar">✕</button>
+        </div>
+
+        <!-- ABAS INTERNAS DO PAINEL AUXILIAR -->
+        <div class="drawer-tabs">
+            <button class="drawer-tab-btn active" data-dtab="formulas">📐 Fórmulas do Sólido</button>
+            <button class="drawer-tab-btn" data-dtab="concepts">💡 Área x Volume</button>
+            <button class="drawer-tab-btn" data-dtab="steps">🧮 Como Calcular</button>
+            <button class="drawer-tab-btn" data-dtab="dictionary">🔤 Símbolos</button>
+        </div>
+
+        <div class="drawer-body" id="auxDrawerBody">
+            <!-- Conteúdo injetado dinamicamente -->
+        </div>
+    </aside>
+
+    <!-- ==========================================================================
+         MODAL DE CAPTURA / FOTOGRAFIA DO SÓLIDO (SALVAR NO ÁLBUM)
+         ========================================================================== -->
+    <div id="snapshotModal" class="modal-backdrop hidden">
+        <div class="modal-dialog" style="max-width:560px;">
             <div class="modal-header">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:1.3rem;">📖</span>
+                    <span style="font-size:1.3rem;">📸</span>
                     <div>
-                        <div style="font-size:1.1rem; font-weight:700; color:#fff;">Guia de Fórmulas & Apoio ao Estudante</div>
-                        <div style="font-size:0.75rem; color:var(--text-secondary);">Consulte os conceitos, fórmulas e exemplos passo a passo para resolver os desafios</div>
+                        <div style="font-size:1.1rem; font-weight:700; color:#fff;">Registrar Atividade no Álbum</div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">Grave sua foto 3D e anotações técnicas no seu portfólio</div>
                     </div>
                 </div>
-                <button class="btn-close-modal" id="btnCloseSupportGuide" title="Fechar">✕</button>
+                <button class="btn-close-modal" id="btnCloseSnapshotModal" title="Fechar">✕</button>
+            </div>
+            
+            <div class="modal-content-body" style="padding:1.25rem;">
+                <div class="snapshot-preview-box">
+                    <img id="snapshotPreviewImg" src="" alt="Foto do Sólido" />
+                </div>
+
+                <div class="mission-input-group" style="margin-top:12px;">
+                    <label>Título do Projeto / Obra:</label>
+                    <input type="text" id="inputSnapshotTitle" class="mission-input" placeholder="Ex: Silo da Cooperativa Agrícola" />
+                </div>
+
+                <div class="snapshot-metrics-summary" id="snapshotMetricsSummary"></div>
+
+                <div class="mission-input-group" style="margin-top:10px;">
+                    <label>Anotações do Estudante (O que aprendi nesta atividade):</label>
+                    <textarea id="inputSnapshotNotes" class="mission-input" rows="3" placeholder="Ex: Observei que ao dobrar o raio do cilindro, o volume quadruplicou..."></textarea>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-top:14px;">
+                    <button class="btn-action-primary" id="btnConfirmSaveSnapshot" style="flex:1;">
+                        💾 Salvar no Meu Álbum
+                    </button>
+                    <button class="btn-action-secondary" id="btnDownloadSnapshotPng" style="flex:1;">
+                        ⬇️ Baixar Imagem PNG
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL DO ÁLBUM & GALERIA DE CONQUISTAS
+         ========================================================================== -->
+    <div id="albumModal" class="modal-backdrop hidden">
+        <div class="modal-dialog" style="max-width:880px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.3rem;">🖼️</span>
+                    <div>
+                        <div style="font-size:1.1rem; font-weight:700; color:#fff;">Álbum & Galeria de Projetos</div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">Suas atividades registradas, fotos 3D e relatórios das aulas</div>
+                    </div>
+                </div>
+                <button class="btn-close-modal" id="btnCloseAlbumModal" title="Fechar">✕</button>
+            </div>
+            
+            <div class="modal-content-body" id="albumModalBody" style="padding:1.25rem; max-height:75vh; overflow-y:auto;">
+                <!-- Grid de fotos gerado dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL DE CONFIGURAÇÕES
+         ========================================================================== -->
+    <div id="settingsModal" class="modal-backdrop hidden">
+        <div class="modal-dialog" style="max-width:500px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.3rem;">⚙️</span>
+                    <div>
+                        <div style="font-size:1.1rem; font-weight:700; color:#fff;">Configurações & Acessibilidade</div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">Personalize a experiência do GeoLab 3D</div>
+                    </div>
+                </div>
+                <button class="btn-close-modal" id="btnCloseSettingsModal" title="Fechar">✕</button>
             </div>
 
-            <!-- NAVEGAÇÃO DE TÓPICOS DENTRO DO GUIA -->
-            <div class="guide-nav-tabs" id="guideNavTabs">
-                <button class="guide-tab-btn active" data-topic="concepts">💡 O que é Área x Volume</button>
-                <button class="guide-tab-btn" data-topic="cube">📦 Cubo</button>
-                <button class="guide-tab-btn" data-topic="rectangular_prism">🏢 Paralelepípedo</button>
-                <button class="guide-tab-btn" data-topic="cylinder">🛢️ Cilindro</button>
-                <button class="guide-tab-btn" data-topic="cone">⚠️ Cone</button>
-                <button class="guide-tab-btn" data-topic="sphere">🌐 Esfera</button>
-                <button class="guide-tab-btn" data-topic="square_pyramid">🏛️ Pirâmide</button>
-                <button class="guide-tab-btn" data-topic="dictionary">🔤 Dicionário de Letras</button>
-            </div>
+            <div class="modal-content-body" style="padding:1.25rem; display:flex; flex-direction:column; gap:14px;">
+                <div class="toggle-item">
+                    <span class="toggle-title">🔊 Efeitos Sonoros de Interação</span>
+                    <label class="switch-ui">
+                        <input type="checkbox" id="chkSettingsAudio" checked>
+                        <span class="switch-track"></span>
+                    </label>
+                </div>
 
-            <!-- CONTEÚDO ROLÁVEL DO GUIA -->
-            <div class="guide-content-body" id="guideContentBody"></div>
+                <div style="border-top:1px solid var(--border-subtle); padding-top:12px;">
+                    <span style="font-size:0.82rem; font-weight:600; color:#fff; display:block; margin-bottom:8px;">
+                        Cor Padrão das Arestas no 3D:
+                    </span>
+                    <div class="edge-color-picker" id="settingsEdgeColorPicker">
+                        <button class="color-dot active" data-color="#00f2fe" style="background:#00f2fe;" title="Ciano"></button>
+                        <button class="color-dot" data-color="#facc15" style="background:#facc15;" title="Amarelo"></button>
+                        <button class="color-dot" data-color="#22c55e" style="background:#22c55e;" title="Verde"></button>
+                        <button class="color-dot" data-color="#f43f5e" style="background:#f43f5e;" title="Rosa/Magenta"></button>
+                        <button class="color-dot" data-color="#ffffff" style="background:#ffffff;" title="Branco"></button>
+                    </div>
+                </div>
+
+                <div style="border-top:1px solid var(--border-subtle); padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:0.85rem; font-weight:600; color:#fff;">Progresso do Aluno</div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">Zerar XP e reiniciar fases</div>
+                    </div>
+                    <button class="btn-action-secondary" id="btnResetProgress" style="color:var(--accent-rose); border-color:rgba(244,63,94,0.3);">
+                        Zerar Progresso
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -452,6 +819,10 @@
     <script src="js/scene-manager.js"></script>
     <script src="js/dimensions-helper.js"></script>
     <script src="js/solids-builder.js"></script>
+    <script src="js/vertex-deformer.js"></script>
+    <script src="js/building-builder.js"></script>
+    <script src="js/gallery-album.js"></script>
+    <script src="js/career-mode.js"></script>
     <script src="js/liquid-simulation.js"></script>
     <script src="js/cross-section.js"></script>
     <script src="js/unfolding.js"></script>
