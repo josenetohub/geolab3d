@@ -80,7 +80,7 @@ class DimensionsHelper {
     }
 
     // Desenha uma linha de cota com traços terminais perpendiculares
-    createMeasureLine(p1, p2, labelText, tickSize = 0.2, lineColor = 0x0ea5e9) {
+    createMeasureLine(p1, p2, labelText, tickSize = 0.2, lineColor = 0x0ea5e9, dimKey = null, dimVal = null) {
         const lineGeo = new THREE.BufferGeometry().setFromPoints([p1, p2]);
         const lineMat = new THREE.LineBasicMaterial({
             color: lineColor,
@@ -114,10 +114,18 @@ class DimensionsHelper {
         ]);
         this.group.add(new THREE.Line(t2Geo, lineMat));
 
-        // Rótulo de texto no ponto médio
+        // Rótulo de texto no ponto médio (interativo)
         const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
         const sprite = this.createTextSprite(labelText);
         sprite.position.copy(mid);
+        if (dimKey !== null && dimVal !== null) {
+            sprite.userData = {
+                isDimensionLabel: true,
+                key: dimKey,
+                val: dimVal,
+                label: labelText
+            };
+        }
         this.group.add(sprite);
     }
 
@@ -135,19 +143,19 @@ class DimensionsHelper {
                 this.createMeasureLine(
                     new THREE.Vector3(-a / 2, 0, a / 2 + offset),
                     new THREE.Vector3(a / 2, 0, a / 2 + offset),
-                    `a = ${a} m`, 0.15, lineColor
+                    `a = ${a} m`, 0.15, lineColor, 'a', a
                 );
                 // Altura vertical (eixo Y)
                 this.createMeasureLine(
                     new THREE.Vector3(a / 2 + offset, 0, a / 2),
                     new THREE.Vector3(a / 2 + offset, a, a / 2),
-                    `h = a = ${a} m`, 0.15, lineColor
+                    `h = a = ${a} m`, 0.15, lineColor, 'a', a
                 );
                 // Profundidade (eixo Z)
                 this.createMeasureLine(
                     new THREE.Vector3(a / 2 + offset, 0, -a / 2),
                     new THREE.Vector3(a / 2 + offset, 0, a / 2),
-                    `a = ${a} m`, 0.15, lineColor
+                    `a = ${a} m`, 0.15, lineColor, 'a', a
                 );
                 break;
             }
@@ -159,19 +167,19 @@ class DimensionsHelper {
                 this.createMeasureLine(
                     new THREE.Vector3(-a / 2, 0, b / 2 + offset),
                     new THREE.Vector3(a / 2, 0, b / 2 + offset),
-                    `a = ${a} m`, 0.15, lineColor
+                    `a = ${a} m`, 0.15, lineColor, 'a', a
                 );
                 // Largura (b)
                 this.createMeasureLine(
                     new THREE.Vector3(a / 2 + offset, 0, -b / 2),
                     new THREE.Vector3(a / 2 + offset, 0, b / 2),
-                    `b = ${b} m`, 0.15, lineColor
+                    `b = ${b} m`, 0.15, lineColor, 'b', b
                 );
                 // Altura (c)
                 this.createMeasureLine(
                     new THREE.Vector3(a / 2 + offset, 0, b / 2),
                     new THREE.Vector3(a / 2 + offset, c, b / 2),
-                    `c = ${c} m`, 0.15, lineColor
+                    `c = ${c} m`, 0.15, lineColor, 'c', c
                 );
                 break;
             }
@@ -183,7 +191,7 @@ class DimensionsHelper {
                 this.createMeasureLine(
                     new THREE.Vector3(0, 0.05, 0),
                     new THREE.Vector3(r, 0.05, 0),
-                    `r = ${r} m`, 0.15, 0xf59e0b
+                    `r = ${r} m`, 0.15, 0xf59e0b, 'r', r
                 );
                 // Diâmetro da base (D = 2r)
                 this.createMeasureLine(
@@ -195,7 +203,7 @@ class DimensionsHelper {
                 this.createMeasureLine(
                     new THREE.Vector3(r + offset, 0, 0),
                     new THREE.Vector3(r + offset, h, 0),
-                    `h = ${h} m`, 0.15, lineColor
+                    `h = ${h} m`, 0.15, lineColor, 'h', h
                 );
                 break;
             }
@@ -208,13 +216,13 @@ class DimensionsHelper {
                 this.createMeasureLine(
                     new THREE.Vector3(0, 0.05, 0),
                     new THREE.Vector3(r, 0.05, 0),
-                    `r = ${r} m`, 0.15, 0xf59e0b
+                    `r = ${r} m`, 0.15, 0xf59e0b, 'r', r
                 );
                 // Altura vertical central (h)
                 this.createMeasureLine(
                     new THREE.Vector3(0, 0, 0),
                     new THREE.Vector3(0, h, 0),
-                    `h = ${h} m`, 0.15, lineColor
+                    `h = ${h} m`, 0.15, lineColor, 'h', h
                 );
                 // Geratriz (g)
                 this.createMeasureLine(
@@ -231,7 +239,7 @@ class DimensionsHelper {
                 this.createMeasureLine(
                     new THREE.Vector3(0, r, 0),
                     new THREE.Vector3(r, r, 0),
-                    `R = ${r} m`, 0.18, 0xf59e0b
+                    `R = ${r} m`, 0.18, 0xf59e0b, 'r', r
                 );
                 // Marcador central
                 const centerGeo = new THREE.SphereGeometry(0.08, 12, 12);
@@ -258,19 +266,19 @@ class DimensionsHelper {
                 this.createMeasureLine(
                     new THREE.Vector3(-l / 2, 0, l / 2 + offset),
                     new THREE.Vector3(l / 2, 0, l / 2 + offset),
-                    `L = ${l} m`, 0.15, lineColor
+                    `L = ${l} m`, 0.15, lineColor, 'l', l
                 );
                 // Altura central (h)
                 this.createMeasureLine(
                     new THREE.Vector3(0, 0, 0),
                     new THREE.Vector3(0, h, 0),
-                    `h = ${h} m`, 0.15, lineColor
+                    `h = ${h} m`, 0.15, lineColor, 'h', h
                 );
                 // Apótema da pirâmide (ap)
                 this.createMeasureLine(
                     new THREE.Vector3(0, 0, l / 2),
                     new THREE.Vector3(0, h, 0),
-                    `ap = ${apPiramide.toFixed(2)} m`, 0.15, 0x10b981
+                    `ap = ${apPiramide.toFixed(2)} m`, 0.15, 0x10b981, 'ap', parseFloat(apPiramide.toFixed(2))
                 );
                 break;
             }

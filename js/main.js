@@ -13,17 +13,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const unfoldingCartela = new UnfoldingCartela(unfoldSys, sceneMgr);
     const gameMgr = new GameManager();
 
-    // Novos Módulos Pedagógicos
+    // 1.1 Sistema de Tutoria Ativa: O Engenheiro Guia (Leo)
+    const engineerGuide = new EngineerGuide();
+    window.engineerGuide = engineerGuide;
+
+    // 1.2 Calculadora Interativa Drag & Drop (Lousa de Dedução Matemática)
+    const interactiveBlackboard = new InteractiveBlackboard(sceneMgr, engineerGuide, (solidId, ftype, finalResult) => {
+        careerMode.markStageDerived(careerMode.currentStageIndex);
+        
+        // Auto-preenche os campos do estudante como recompensa pela dedução prática
+        const stage = careerMode.getCurrentStage();
+        if (stage && stage.inputs) {
+            stage.inputs.forEach(inp => {
+                if ((ftype === 'volume' && inp.id.includes('v')) || (ftype === 'area_total' && inp.id.includes('at'))) {
+                    const el1 = document.getElementById(`career_input_${inp.id}`);
+                    const el2 = document.getElementById(`modal_input_${inp.id}`);
+                    if (el1) el1.value = finalResult.toFixed(2);
+                    if (el2) el2.value = finalResult.toFixed(2);
+                }
+            });
+        }
+    });
+
+    // 1.3 Raio-X Didático: 1D (Perímetro) vs 2D (Área) vs 3D (Volume)
+    const didacticXRay = new DidacticXRay(sceneMgr, unfoldSys, liquidSim, engineerGuide);
+
+    // 1.4 Deformador Tridimensional por Vértices
     const vertexDeformer = new VertexDeformer(sceneMgr, (newParams) => {
         currentParams = { ...newParams };
         updateParamSliderValues(SOLIDS_DATA[currentSolidId]);
         updateMathCards(SOLIDS_DATA[currentSolidId]);
         dimensionsHelper.update(currentSolidId, currentParams);
+        interactiveBlackboard.setSolid(currentSolidId, currentParams);
         if (buildingStudio.active) buildingStudio.buildBuilding(currentParams);
         updateUnfoldingCartela();
     });
 
     const buildingStudio = new BuildingBuilder(sceneMgr);
+    buildingStudio.setExternalHelpers(vertexDeformer, engineerGuide, (rep) => {
+        updateBuildingUI(rep);
+    });
+
     const galleryAlbum = new GalleryAlbum(sceneMgr);
 
     // Modo Carreira BNCC
@@ -55,9 +85,22 @@ document.addEventListener('DOMContentLoaded', () => {
         setupStudioUI();
         setupCareerUI();
 
+        // Monta a Lousa Interativa
+        const bbContainer = document.getElementById('interactiveBlackboardContainer');
+        if (bbContainer) {
+            interactiveBlackboard.mount(bbContainer);
+        }
+
         switchSolid('cube');
         switchMode('career');
         updateGameStatsUI();
+
+        // Inicia Onboarding guiado com o Engenheiro para novos estudantes
+        if (!engineerGuide.hasSeenOnboarding) {
+            setTimeout(() => {
+                engineerGuide.startOnboarding();
+            }, 1200);
+        }
     }
 
     // Preenche o seletor de sólidos
@@ -126,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateElementsUI(solidDef);
         renderAuxiliaryDrawerContent();
         updateUnfoldingCartela();
+        interactiveBlackboard.setSolid(solidId, currentParams);
     }
 
     // Constrói os sliders com medidas legíveis
@@ -170,6 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateMathCards(solidDef);
                 renderAuxiliaryDrawerContent();
                 updateUnfoldingCartela();
+                interactiveBlackboard.setSolid(currentSolidId, currentParams);
             });
 
             row.appendChild(header);
@@ -303,12 +348,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'career':
                         switchMode('career');
                         openCareerChallengeModal();
+                        if (engineerGuide) engineerGuide.speak('Bem-vindo ao Modo Carreira BNCC! Resolva as missões deduzindo as fórmulas na Lousa!', { icon: '👷' });
                         break;
                     case 'lab':
                         switchMode('lab');
+                        if (engineerGuide) engineerGuide.speak('Modo Laboratório Livre! Explore qualquer sólido, use o Raio-X Didático no topo ou deforme os vértices!', { icon: '🔬' });
                         break;
                     case 'building':
                         switchMode('building');
+                        if (engineerGuide) engineerGuide.speak('Bem-vindo ao Estúdio de Arquitetura 3D! Pinte as fachadas e puxe os vértices do prédio para ver o volume mudar!', { icon: '🏢' });
                         break;
                     case 'album':
                         openAlbumModal();
@@ -760,6 +808,24 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('btnCareerNext'),
             document.getElementById('btnModalCareerNext')
         ];
+
+        // Se bloqueado por não ter feito a dedução interativa da fórmula
+        if (res.blockedByDerivation) {
+            feedbackBoxes.forEach(fb => {
+                if (!fb) return;
+                fb.className = 'career-feedback-box error';
+                fb.innerHTML = res.message;
+                fb.classList.remove('hidden');
+            });
+            if (source === 'modal') {
+                closeCareerChallengeModal();
+            }
+            if (engineerGuide) {
+                engineerGuide.guideUserTo('#interactiveBlackboardContainer', 'Antes de validar a resposta final, deduza a fórmula na Lousa arrastando a medida aqui!', { position: 'left' });
+            }
+            if (window.sounds) window.sounds.playError();
+            return;
+        }
 
         if (res.success) {
             gameMgr.addXp(res.xpReward);
@@ -1286,6 +1352,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 liquidSlider.value = state.height;
             }
         };
+
+        // Clique interativo nas cotas e medidas 3D para alimentar a Lousa
+        const dimRaycaster = new THREE.Raycaster();
+        const dimMouse = new THREE.Vector2();
+        let pointerDownCoord = { x: 0, y: 0 };
+
+        sceneMgr.renderer.domElement.addEventListener('pointerdown', (e) => {
+            pointerDownCoord = { x: e.clientX, y: e.clientY };
+        });
+
+        sceneMgr.renderer.domElement.addEventListener('pointerup', (e) => {
+            const dist = Math.hypot(e.clientX - pointerDownCoord.x, e.clientY - pointerDownCoord.y);
+            if (dist > 8) return; // Movimento de rotação/órbita da câmera
+
+            const rect = sceneMgr.renderer.domElement.getBoundingClientRect();
+            dimMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            dimMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            dimRaycaster.setFromCamera(dimMouse, sceneMgr.camera);
+
+            const intersects = dimRaycaster.intersectObjects(dimensionsHelper.group.children, true);
+            for (const hit of intersects) {
+                if (hit.object && hit.object.userData && hit.object.userData.isDimensionLabel) {
+                    const data = hit.object.userData;
+                    interactiveBlackboard.handleValueInserted(data.key, data.val);
+                    if (engineerGuide) {
+                        engineerGuide.speak(`
+                            🎯 <b>Medida capturada direto do 3D!</b><br>
+                            A cota <b>${data.label}</b> foi inserida na <b>Lousa de Dedução</b>. Continue calculando!
+                        `, { icon: '🎯', btnText: 'Continuar' });
+                    }
+                    break;
+                }
+            }
+        });
 
         window.onCrossSectionChange = (info) => {
             const nameEl = document.getElementById('crossSectionShapeName');

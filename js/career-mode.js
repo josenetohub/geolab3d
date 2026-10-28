@@ -6,6 +6,7 @@ class CareerMode {
         this.onOpenBuildingStudio = onOpenBuildingStudio;
         this.currentStageIndex = 0;
         this.completedStages = new Set();
+        this.derivedStages = new Set(); // Rastreia fases onde o aluno passou pela lousa drag & drop
         this.loadProgress();
 
         this.stages = [
@@ -148,6 +149,15 @@ class CareerMode {
         this.saveProgress();
     }
 
+    markStageDerived(stageIndex) {
+        this.derivedStages.add(stageIndex);
+    }
+
+    hasStageBeenDerived(stageIndex) {
+        // Se a fase já foi concluída anteriormente ou deduzida nesta sessão
+        return this.isStageCompleted(stageIndex) || this.derivedStages.has(stageIndex);
+    }
+
     isStageCompleted(stageIndex) {
         return this.completedStages.has(stageIndex);
     }
@@ -179,6 +189,16 @@ class CareerMode {
 
     validateAnswers(inputValues) {
         const stage = this.getCurrentStage();
+
+        // REGRA PEDAGÓGICA MANDATÓRIA:
+        // A validação só é permitida APÓS o aluno passar pelo processo de arrastar e soltar da equação
+        if (!this.hasStageBeenDerived(this.currentStageIndex)) {
+            return {
+                blockedByDerivation: true,
+                message: '⚠️ <b>Etapa Pedagógica Obrigatória:</b> Antes de validar o resultado final, utilize a <b>Lousa Interativa</b> ao lado para deduzir a fórmula arrastando as medidas!'
+            };
+        }
+
         let allCorrect = true;
         const results = [];
 

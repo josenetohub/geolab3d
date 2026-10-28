@@ -789,51 +789,56 @@
                 </div>
             </div>
 
-            <!-- ÁREA TOTAL (AT) -->
-            <div class="math-card">
-                <div class="math-card-header">
-                    <span class="math-card-title">Área Total da Superfície (At)</span>
-                    <span class="math-card-badge">Casca Externa</span>
-                </div>
-                <div class="math-card-value" id="totalAreaVal">24.00 m²</div>
-                <div class="math-card-formula" id="totalAreaFormula">A<sub>t</sub> = 6 · a²</div>
-                <div class="math-card-steps" id="totalAreaSteps">Cálculo: A<sub>t</sub> = 6 · 2.00² = 24.00 m²</div>
-            </div>
+            <!-- ==================================================================
+                 LOUSA INTERATIVA DE CÁLCULO (DRAG & DROP DE EQUAÇÕES)
+                 Substitui os cartões estáticos por dedução passo a passo
+                 ================================================================== -->
+            <div id="interactiveBlackboardContainer" class="interactive-blackboard-container"></div>
 
-            <!-- VOLUME (V) COM EQUIVALÊNCIA EM LITROS -->
-            <div class="math-card">
-                <div class="math-card-header">
-                    <span class="math-card-title">Volume Interno (V)</span>
-                    <span class="math-card-badge" style="color:var(--accent-cyan); background:rgba(14,165,233,0.1);">Espaço Ocupado</span>
-                </div>
-                <div class="math-card-value" id="volumeVal">8.00 m³</div>
-                <div class="math-card-formula" id="volumeFormula">V = a³</div>
-                <div class="math-card-steps" id="volumeSteps">Cálculo: V = 2.00³ = 8.00 m³ (8.000 Litros)</div>
-                <div style="font-size:0.72rem; color:var(--accent-amber); font-weight:600; margin-top:4px;">
-                    💡 1 m³ = 1.000 Litros de água (1 dm³ = 1 L)
-                </div>
-            </div>
+            <!-- CARTÕES DE REFERÊNCIA RESUMIDOS -->
+            <div class="math-summary-accordion">
+                <details>
+                    <summary style="font-size:0.75rem; color:var(--text-secondary); cursor:pointer; padding:6px 0; font-weight:600;">
+                        📋 Ver Resumo Estático de Medidas (At, V, Ab, Al)
+                    </summary>
+                    <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+                        <div class="math-card" style="padding:8px 10px;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="font-size:0.75rem; color:var(--text-secondary);">Área Total (At):</span>
+                                <span id="totalAreaVal" style="font-weight:700; color:var(--accent-amber);">24.00 m²</span>
+                            </div>
+                            <div id="totalAreaFormula" style="font-size:0.7rem; color:var(--accent-cyan);">At = 6 · a²</div>
+                        </div>
 
-            <!-- ÁREA DA BASE (AB) -->
-            <div class="math-card">
-                <div class="math-card-header">
-                    <span class="math-card-title">Área da Base (Ab)</span>
-                </div>
-                <div class="math-card-value" id="baseAreaVal" style="font-size:1.15rem;">4.00 m²</div>
-                <div class="math-card-formula" id="baseAreaFormula">A<sub>b</sub> = a²</div>
-            </div>
+                        <div class="math-card" style="padding:8px 10px;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="font-size:0.75rem; color:var(--text-secondary);">Volume (V):</span>
+                                <span id="volumeVal" style="font-weight:700; color:#fff;">8.00 m³</span>
+                            </div>
+                            <div id="volumeFormula" style="font-size:0.7rem; color:var(--accent-cyan);">V = a³ (8.000 Litros)</div>
+                        </div>
 
-            <!-- ÁREA LATERAL (AL) -->
-            <div class="math-card">
-                <div class="math-card-header">
-                    <span class="math-card-title">Área Lateral (Al)</span>
-                </div>
-                <div class="math-card-value" id="lateralAreaVal" style="font-size:1.15rem;">16.00 m²</div>
-                <div class="math-card-formula" id="lateralAreaFormula">A<sub>l</sub> = 4 · a²</div>
+                        <div class="math-card" style="padding:8px 10px;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="font-size:0.75rem; color:var(--text-secondary);">Área da Base (Ab):</span>
+                                <span id="baseAreaVal" style="font-weight:700; color:#fff;">4.00 m²</span>
+                            </div>
+                            <div id="baseAreaFormula" style="font-size:0.7rem; color:var(--accent-cyan);">Ab = a²</div>
+                        </div>
+
+                        <div class="math-card" style="padding:8px 10px;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="font-size:0.75rem; color:var(--text-secondary);">Área Lateral (Al):</span>
+                                <span id="lateralAreaVal" style="font-weight:700; color:#fff;">16.00 m²</span>
+                            </div>
+                            <div id="lateralAreaFormula" style="font-size:0.7rem; color:var(--accent-cyan);">Al = 4 · a²</div>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             <!-- MEDIDAS AUXILIARES -->
-            <div id="extraMeasuresContainer" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+            <div id="extraMeasuresContainer" style="display:flex; flex-direction:column; gap:0.5rem; margin-top:8px;"></div>
 
         </aside>
 
@@ -1078,6 +1083,9 @@
     <script src="js/liquid-simulation.js"></script>
     <script src="js/cross-section.js"></script>
     <script src="js/unfolding.js"></script>
+    <script src="js/engineer-guide.js"></script>
+    <script src="js/interactive-blackboard.js"></script>
+    <script src="js/didactic-xray.js"></script>
     <script src="js/game-mode.js"></script>
     <script src="js/game-design-studio.js"></script>
     <script src="js/main.js"></script>

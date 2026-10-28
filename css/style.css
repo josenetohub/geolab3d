@@ -1852,3 +1852,941 @@ input:checked + .switch-track:before {
         margin: 6px;
     }
 }
+
+/* =============================================================================
+   1. ASSISTENTE VIRTUAL: O ENGENHEIRO GUIA (LEO)
+   ============================================================================= */
+.engineer-guide-container {
+    position: fixed;
+    left: 20px;
+    bottom: 24px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    pointer-events: none;
+}
+
+.engineer-avatar-badge {
+    pointer-events: auto;
+    width: 68px;
+    height: 68px;
+    cursor: pointer;
+    position: relative;
+    border-radius: 50%;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.4));
+}
+
+.engineer-avatar-badge:hover {
+    transform: scale(1.1) translateY(-4px);
+}
+
+.engineer-svg-wrapper {
+    width: 100%;
+    height: 100%;
+    animation: engineerBobbing 3.5s ease-in-out infinite;
+}
+
+@keyframes engineerBobbing {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.engineer-status-beacon {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #0f172a;
+    border: 2px solid #facc15;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.engineer-status-beacon.pulse {
+    animation: beaconPulse 1.5s infinite;
+}
+
+@keyframes beaconPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
+    70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(250, 204, 21, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+}
+
+/* BALÃO DE FALA INTERATIVO */
+.engineer-speech-bubble {
+    pointer-events: auto;
+    position: relative;
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.15);
+    border-radius: 14px;
+    padding: 12px 14px;
+    max-width: 330px;
+    margin-bottom: 12px;
+    color: #ffffff;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    animation: bubblePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bubblePop {
+    0% { opacity: 0; transform: scale(0.8) translateY(12px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.speech-bubble-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 4px;
+}
+
+.engineer-role-tag {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--accent-amber);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.speech-btn-icon {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 2px 4px;
+    transition: color 0.15s;
+}
+
+.speech-btn-icon:hover {
+    color: #fff;
+}
+
+.speech-bubble-body {
+    margin-bottom: 10px;
+}
+
+.speech-bubble-footer {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.btn-speech-action {
+    padding: 5px 12px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+}
+
+.btn-speech-action.primary {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+.btn-speech-action.primary:hover {
+    background: #0284c7;
+    transform: translateY(-1px);
+}
+
+.btn-speech-action.secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+}
+
+.speech-bubble-tail {
+    position: absolute;
+    bottom: -8px;
+    left: 28px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #0f172a;
+}
+
+/* SETA GUIADA E HOLOFOTE SPOTLIGHT */
+.guided-spotlight-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 998;
+}
+
+.guided-floating-arrow {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: arrowBounce 1.2s infinite ease-in-out;
+}
+
+@keyframes arrowBounce {
+    0%, 100% { transform: translate(-50%, -100%) translateY(0); }
+    50% { transform: translate(-50%, -100%) translateY(-10px); }
+}
+
+.arrow-pulsing-badge {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.7);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 2px solid #fef08a;
+}
+
+.guided-target-pulse {
+    outline: 3px solid #facc15 !important;
+    box-shadow: 0 0 24px rgba(250, 204, 21, 0.8) !important;
+    animation: targetPulse 1.6s infinite ease-in-out;
+}
+
+@keyframes targetPulse {
+    0%, 100% { outline-color: #facc15; }
+    50% { outline-color: #38bdf8; }
+}
+
+/* =============================================================================
+   2. LOUSA INTERATIVA DE CÁLCULO (DRAG & DROP DE EQUAÇÕES)
+   ============================================================================= */
+.interactive-blackboard-container {
+    margin-bottom: 12px;
+}
+
+.blackboard-card {
+    background: radial-gradient(circle at 50% 20%, #1e293b 0%, #090d16 100%);
+    border: 2px solid rgba(56, 189, 248, 0.3);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 8px 24px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.blackboard-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 8px;
+}
+
+.blackboard-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chalk-icon {
+    font-size: 1.25rem;
+}
+
+.blackboard-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.3px;
+}
+
+.blackboard-subtitle {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+.blackboard-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.b-tab {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    padding: 6px 4px;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+}
+
+.b-tab:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.b-tab.active {
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.3), rgba(2, 132, 199, 0.6));
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+/* BANDEJA DE MEDIDAS ARRASTÁVEIS */
+.blackboard-tray {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.tray-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent-amber);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dimension-chips-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.draggable-measure-chip {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1.5px solid #0ea5e9;
+    border-radius: 6px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: grab;
+    user-select: none;
+    transition: all 0.15s ease;
+}
+
+.draggable-measure-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+    background: rgba(30, 41, 59, 1);
+}
+
+.draggable-measure-chip.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+}
+
+.chip-drag-handle {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.chip-name {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.chip-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+/* ÁREA DA EQUAÇÃO COM SLOTS */
+.blackboard-equation-stage {
+    min-height: 100px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.equation-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.eq-symbol {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.highlight-symbol {
+    color: var(--accent-cyan);
+}
+
+.eq-exponent {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--accent-amber);
+    margin-left: -4px;
+    margin-top: -12px;
+}
+
+.formula-drop-zone {
+    min-width: 90px;
+    height: 40px;
+    border: 2px dashed rgba(56, 189, 248, 0.6);
+    border-radius: 8px;
+    background: rgba(56, 189, 248, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    transition: all 0.2s;
+}
+
+.formula-drop-zone.drop-pulse {
+    animation: dropPulse 1.8s infinite;
+}
+
+@keyframes dropPulse {
+    0%, 100% { border-color: rgba(56, 189, 248, 0.6); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); }
+    50% { border-color: #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.6); }
+}
+
+.formula-drop-zone.drop-hover {
+    background: rgba(56, 189, 248, 0.25);
+    border-color: #fde047;
+    transform: scale(1.05);
+}
+
+.drop-hint-text {
+    font-size: 0.72rem;
+    color: var(--accent-cyan);
+    font-weight: 600;
+    text-align: center;
+}
+
+/* BLOCOS NUMÉRICOS DA POTÊNCIA EXPANDIDA */
+.expansion-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: expandPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes expandPop {
+    0% { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.number-block {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border: 2px solid #38bdf8;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    position: relative;
+    user-select: none;
+    cursor: grab;
+    transition: all 0.2s;
+}
+
+.number-block:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4);
+}
+
+.number-block.merged-highlight {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(15, 23, 42, 0.95));
+    border-color: #f59e0b;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+}
+
+.factor-origin {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.op-multiply-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--accent-amber);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+
+.op-multiply-btn:hover {
+    background: rgba(245, 158, 11, 0.2);
+    transform: scale(1.2);
+}
+
+.equation-action-prompt {
+    font-size: 0.78rem;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.4;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border-left: 3px solid var(--accent-amber);
+}
+
+.equation-subcaption {
+    font-size: 0.74rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* CARD DE RESULTADO FINAL */
+.equation-result-card {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(15, 23, 42, 0.8));
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.res-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #4ade80;
+    text-transform: uppercase;
+}
+
+.final-val-glow {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    text-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+}
+
+.liters-equivalence-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    color: #fff;
+    margin-top: 4px;
+}
+
+.water-icon {
+    font-size: 1.2rem;
+}
+
+.equation-badge-unlocked {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--accent-emerald);
+    margin-top: 4px;
+}
+
+.blackboard-misconception-row {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.btn-misconception-tip {
+    width: 100%;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px dashed rgba(245, 158, 11, 0.4);
+    color: #fde047;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 5px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.btn-misconception-tip:hover {
+    background: rgba(245, 158, 11, 0.22);
+    border-color: #f59e0b;
+    transform: translateY(-1px);
+}
+
+.blackboard-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 6px;
+}
+
+.chalk-helper-hint {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    line-height: 1.3;
+}
+
+.btn-chalk-reset {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-chalk-reset:hover {
+    color: #fff;
+    border-color: #fff;
+}
+
+/* =============================================================================
+   3. RAIO-X DIDÁTICO & ROLO DE PINTURA (1D vs 2D vs 3D)
+   ============================================================================= */
+.didactic-xray-toolbar {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 30px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.xray-toolbar-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--accent-amber);
+    padding: 0 4px;
+}
+
+.xray-btn-group {
+    display: flex;
+    gap: 4px;
+}
+
+.btn-xray {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-secondary);
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+}
+
+.btn-xray:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.btn-xray.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-color: var(--primary-light);
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+}
+
+.btn-xray-reset {
+    font-size: 0.68rem;
+    padding: 4px 8px;
+}
+
+/* OVERLAY DO ROLO DE PINTURA (PAINT ROLLER FX) */
+.paint-roller-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 35;
+    overflow: hidden;
+}
+
+.paint-sweep-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0.05) 100%);
+    border-right: 4px solid #f59e0b;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+    transition: width 0.05s linear;
+}
+
+.paint-roller-tool {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.roller-cylinder {
+    width: 26px;
+    height: 60px;
+    background: linear-gradient(180deg, #f59e0b, #d97706);
+    border: 2px solid #fef08a;
+    border-radius: 6px;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.8);
+}
+
+.roller-arm {
+    width: 14px;
+    height: 14px;
+    border-left: 3px solid #94a3b8;
+    border-bottom: 3px solid #94a3b8;
+}
+
+.roller-handle {
+    width: 8px;
+    height: 30px;
+    background: #475569;
+    border-radius: 3px;
+}
+
+.paint-roller-badge {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.9);
+    border: 1.5px solid #f59e0b;
+    color: #fbbf24;
+    font-size: 0.82rem;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    letter-spacing: 0.5px;
+}
+
+/* HUD INFORMATIVO DE DIMENSÕES (1D x 2D x 3D) */
+.didactic-dim-hud {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 8px 16px;
+    text-align: center;
+    z-index: 30;
+    pointer-events: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    animation: hudSlideDown 0.3s ease;
+}
+
+@keyframes hudSlideDown {
+    0% { transform: translate(-50%, -10px); opacity: 0; }
+    100% { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.dim-hud-title {
+    font-size: 0.84rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.dim-hud-desc {
+    font-size: 0.74rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* =============================================================================
+   4. PAINEL FLUTUANTE DO ESTÚDIO DE ARQUITETURA
+   ============================================================================= */
+.floating-building-studio-panel {
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    width: 280px;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: 14px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+    z-index: 42;
+    overflow: hidden;
+    animation: fbldPop 0.25s ease;
+}
+
+@keyframes fbldPop {
+    0% { transform: scale(0.92); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.fbld-header {
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fbld-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.fbld-subtitle {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+}
+
+.fbld-btn-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.fbld-btn-close:hover {
+    color: #fff;
+}
+
+.fbld-body {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 70vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.fbld-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fbld-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.fbld-color-palette {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.bld-color-chip {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.15s;
+}
+
+.bld-color-chip:hover {
+    transform: scale(1.2);
+}
+
+.bld-color-chip.active {
+    border-color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    transform: scale(1.15);
+}
+
+.bld-color-custom-wrapper {
+    position: relative;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.bld-color-custom-wrapper input[type="color"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.fbld-deform-btn {
+    width: 100%;
+    padding: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.fbld-metrics-card {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fbld-metric-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.74rem;
+    color: var(--text-primary);
+}
