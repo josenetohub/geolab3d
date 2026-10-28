@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GeoLab 3D - Estúdio de Geometria Espacial & Design Arquitetônico</title>
-    <link rel="stylesheet" href="css/style.css?v=3.2">
+    <link rel="stylesheet" href="css/style.css?v=3.5">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📐</text></svg>">
 </head>
 <body>
@@ -326,8 +326,8 @@
                 <div class="career-stages-list" id="careerStagesList"></div>
             </div>
 
-            <!-- SELETOR DE SÓLIDO -->
-            <div class="selector-box">
+            <!-- SELETOR DE SÓLIDO (APENAS MODO LABORATÓRIO LIVRE) -->
+            <div class="selector-box lab-only-control">
                 <div class="section-title">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                     Sólido Geométrico
@@ -338,8 +338,8 @@
                 </div>
             </div>
 
-            <!-- ESTILO VISUAL 3D -->
-            <div>
+            <!-- ESTILO VISUAL 3D (APENAS MODO LABORATÓRIO LIVRE) -->
+            <div class="lab-only-control">
                 <div class="section-title">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/></svg>
                     Modo de Renderização
@@ -351,8 +351,8 @@
                 </div>
             </div>
 
-            <!-- DIMENSÕES DO SÓLIDO -->
-            <div>
+            <!-- DIMENSÕES DO SÓLIDO (APENAS MODO LABORATÓRIO LIVRE) -->
+            <div class="lab-only-control">
                 <div class="section-title">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.3 15.3l-6.6-6.6a2 2 0 0 0-2.8 0L2.7 17.9a2 2 0 0 0 0 2.8l3.4 3.4a2 2 0 0 0 2.8 0l9.2-9.2a2 2 0 0 0 0-2.8z"/><line x1="14" y1="7" x2="17" y2="10"/><line x1="10" y1="11" x2="12" y2="13"/></svg>
                     Dimensões do Modelo
@@ -524,6 +524,15 @@
 
         <!-- VIEWPORT CENTRAL: CANVAS 3D -->
         <section id="canvas-container">
+            <!-- BARRA DE COMANDO DIRETO: O QUE FAZER AGORA (DIDÁTICA PROGRESSIVA) -->
+            <div class="direct-command-hud" id="directCommandHUD">
+                <div class="cmd-icon-box">👉</div>
+                <div class="cmd-body">
+                    <span class="cmd-badge" id="cmdStepBadge">PASSO 1 DE 3</span>
+                    <span class="cmd-text" id="cmdStepText">Arraste a aresta <b>a = 3.0 m</b> para a fórmula do Volume na Lousa.</span>
+                </div>
+            </div>
+
             <div class="canvas-hint">👆 Toque e arraste para girar · 2 dedos para zoom · Arraste as esferas amarelas para deformar!</div>
             
             <!-- BOTÃO FLUTUANTE PULSANTE NO CANVAS (LADO ESQUERDO) -->
@@ -577,21 +586,24 @@
                     <div id="careerStageTitle" style="font-size:1.05rem; font-weight:700; color:#fff; margin-top:4px;">
                         Fase 1: Fundação & Caixa d'Água Cúbica
                     </div>
-                    <div id="careerStageSubtitle" style="font-size:0.76rem; color:var(--accent-cyan); font-weight:600;">
+                    <div id="careerStageSubtitle" style="font-size:0.76rem; color:var(--accent-cyan); font-weight:600; margin-bottom:10px;">
                         Poliedros Regulares, Arestas, Área Total e Volume em Litros
                     </div>
 
-                    <div class="career-concept-box" id="careerConceptBox"></div>
+                    <!-- ==========================================================
+                         LOUSA INTERATIVA DE CÁLCULO DIRETO (SEM ROLAGEM DUPLICADA)
+                         ========================================================== -->
+                    <div id="interactiveBlackboardContainer" class="interactive-blackboard-container"></div>
 
-                    <!-- PASSOS DA MISSÃO -->
-                    <div class="career-action-box" id="careerActionBox"></div>
-
-                    <!-- CAMPOS DE ENTRADA DO ALUNO -->
-                    <div id="careerInputsContainer" style="display:flex; flex-direction:column; gap:8px; margin:10px 0;"></div>
-
-                    <button class="btn-action-primary" id="btnValidateCareer" style="width:100%;">
-                        🚀 Validar Respostas da Fase
-                    </button>
+                    <!-- CONTEÚDO TRADICIONAL (OCULTO NO MODO FOCO DIDÁTICO) -->
+                    <div class="career-traditional-inputs">
+                        <div class="career-concept-box" id="careerConceptBox"></div>
+                        <div class="career-action-box" id="careerActionBox"></div>
+                        <div id="careerInputsContainer" style="display:flex; flex-direction:column; gap:8px; margin:10px 0;"></div>
+                        <button class="btn-action-primary" id="btnValidateCareer" style="width:100%;">
+                            🚀 Validar Respostas da Fase
+                        </button>
+                    </div>
 
                     <div id="careerFeedbackBox" class="career-feedback-box hidden"></div>
 
@@ -793,12 +805,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- ==================================================================
-                 LOUSA INTERATIVA DE CÁLCULO (DRAG & DROP DE EQUAÇÕES)
-                 Substitui os cartões estáticos por dedução passo a passo
-                 ================================================================== -->
-            <div id="interactiveBlackboardContainer" class="interactive-blackboard-container"></div>
 
             <!-- CARTÕES DE REFERÊNCIA RESUMIDOS -->
             <div class="math-summary-accordion">
@@ -1074,26 +1080,26 @@
     <!-- SCRIPTS MODULARES -->
     <script src="js/three.min.js"></script>
     <script src="js/OrbitControls.js"></script>
-    <script src="js/audio.js?v=3.2"></script>
-    <script src="js/geometry-data.js?v=3.2"></script>
-    <script src="js/support-guide.js?v=3.2"></script>
-    <script src="js/scene-manager.js?v=3.2"></script>
-    <script src="js/dimensions-helper.js?v=3.2"></script>
-    <script src="js/solids-builder.js?v=3.2"></script>
-    <script src="js/vertex-deformer.js?v=3.2"></script>
-    <script src="js/building-builder.js?v=3.2"></script>
-    <script src="js/gallery-album.js?v=3.2"></script>
-    <script src="js/career-mode.js?v=3.2"></script>
-    <script src="js/unfolding-cartela.js?v=3.2"></script>
-    <script src="js/liquid-simulation.js?v=3.2"></script>
-    <script src="js/cross-section.js?v=3.2"></script>
-    <script src="js/unfolding.js?v=3.2"></script>
-    <script src="js/engineer-guide.js?v=3.2"></script>
-    <script src="js/interactive-blackboard.js?v=3.2"></script>
-    <script src="js/didactic-xray.js?v=3.2"></script>
-    <script src="js/game-mode.js?v=3.2"></script>
-    <script src="js/game-design-studio.js?v=3.2"></script>
-    <script src="js/main.js?v=3.2"></script>
+    <script src="js/audio.js?v=3.5"></script>
+    <script src="js/geometry-data.js?v=3.5"></script>
+    <script src="js/support-guide.js?v=3.5"></script>
+    <script src="js/scene-manager.js?v=3.5"></script>
+    <script src="js/dimensions-helper.js?v=3.5"></script>
+    <script src="js/solids-builder.js?v=3.5"></script>
+    <script src="js/vertex-deformer.js?v=3.5"></script>
+    <script src="js/building-builder.js?v=3.5"></script>
+    <script src="js/gallery-album.js?v=3.5"></script>
+    <script src="js/career-mode.js?v=3.5"></script>
+    <script src="js/unfolding-cartela.js?v=3.5"></script>
+    <script src="js/liquid-simulation.js?v=3.5"></script>
+    <script src="js/cross-section.js?v=3.5"></script>
+    <script src="js/unfolding.js?v=3.5"></script>
+    <script src="js/engineer-guide.js?v=3.5"></script>
+    <script src="js/interactive-blackboard.js?v=3.5"></script>
+    <script src="js/didactic-xray.js?v=3.5"></script>
+    <script src="js/game-mode.js?v=3.5"></script>
+    <script src="js/game-design-studio.js?v=3.5"></script>
+    <script src="js/main.js?v=3.5"></script>
 
 </body>
 </html>

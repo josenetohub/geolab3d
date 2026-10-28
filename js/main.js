@@ -895,6 +895,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.sounds) window.sounds.playClick();
         };
 
+        interactiveBlackboard.onNextStageRequested = onNextStage;
+
         const btnNext = document.getElementById('btnCareerNext');
         if (btnNext) btnNext.addEventListener('click', onNextStage);
 

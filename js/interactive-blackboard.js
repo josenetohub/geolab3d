@@ -117,6 +117,7 @@ class InteractiveBlackboard {
         `;
 
         this.attachEvents();
+        this.updateDirectCommandHUD();
     }
 
     renderDimensionChips() {
@@ -286,7 +287,13 @@ class InteractiveBlackboard {
                     </div>
 
                     <div class="equation-badge-unlocked">
-                        ✓ Validação da Fase Desbloqueada no Painel de Missões!
+                        ✓ Validação da Fase Concluída com Sucesso!
+                    </div>
+
+                    <div class="next-stage-cta-row" style="margin-top:10px;">
+                        <button class="btn-action-primary glow-pulse" id="btnBlackboardNextStage" style="width:100%; padding:10px; font-weight:800; font-size:0.95rem; cursor:pointer;">
+                            Avançar para a Próxima Fase ▶
+                        </button>
                     </div>
                 </div>
             `;
@@ -360,6 +367,11 @@ class InteractiveBlackboard {
                     </div>
                     <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:6px;">
                         É necessária uma área de <b>${totalArea.toFixed(2)} m²</b> de papel ou tinta para revestir todas as faces!
+                    </div>
+                    <div class="next-stage-cta-row" style="margin-top:10px;">
+                        <button class="btn-action-primary glow-pulse" id="btnBlackboardNextStage" style="width:100%; padding:10px; font-weight:800; font-size:0.95rem; cursor:pointer;">
+                            Avançar para a Próxima Fase ▶
+                        </button>
                     </div>
                 </div>
             `;
@@ -471,6 +483,11 @@ class InteractiveBlackboard {
                     <div class="liters-equivalence-box">
                         <span class="water-icon">📦</span>
                         <div>Capacidade Útil: <b>${(finalVol * 1000).toLocaleString('pt-BR')} Litros</b> de carga!</div>
+                    </div>
+                    <div class="next-stage-cta-row" style="margin-top:10px;">
+                        <button class="btn-action-primary glow-pulse" id="btnBlackboardNextStage" style="width:100%; padding:10px; font-weight:800; font-size:0.95rem; cursor:pointer;">
+                            Avançar para a Próxima Fase ▶
+                        </button>
                     </div>
                 </div>
             `;
@@ -596,6 +613,11 @@ class InteractiveBlackboard {
                     <span class="water-icon">🌽</span>
                     <div>Capacidade de Armazenamento: <b>${(finalVol * 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} Litros</b></div>
                 </div>
+                <div class="next-stage-cta-row" style="margin-top:10px;">
+                    <button class="btn-action-primary glow-pulse" id="btnBlackboardNextStage" style="width:100%; padding:10px; font-weight:800; font-size:0.95rem; cursor:pointer;">
+                        Avançar para a Próxima Fase ▶
+                    </button>
+                </div>
             </div>
         `;
     }
@@ -674,6 +696,11 @@ class InteractiveBlackboard {
                 <div class="liters-equivalence-box">
                     <span class="water-icon">💨</span>
                     <div>Capacidade de Vão Livre: <b>${(totalVol * 1000).toLocaleString('pt-BR')} Litros</b> de ar!</div>
+                </div>
+                <div class="next-stage-cta-row" style="margin-top:10px;">
+                    <button class="btn-action-primary glow-pulse" id="btnBlackboardNextStage" style="width:100%; padding:10px; font-weight:800; font-size:0.95rem; cursor:pointer;">
+                        Avançar para a Próxima Fase ▶
+                    </button>
                 </div>
             </div>
         `;
@@ -770,6 +797,11 @@ class InteractiveBlackboard {
                 <div class="liters-equivalence-box">
                     <span class="water-icon">⚡</span>
                     <div>Gás sob Pressão: <b>${(finalVol * 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} Litros</b></div>
+                </div>
+                <div class="next-stage-cta-row" style="margin-top:10px;">
+                    <button class="btn-action-primary glow-pulse" id="btnBlackboardNextStage" style="width:100%; padding:10px; font-weight:800; font-size:0.95rem; cursor:pointer;">
+                        Avançar para a Próxima Fase ▶
+                    </button>
                 </div>
             </div>
         `;
@@ -980,6 +1012,140 @@ class InteractiveBlackboard {
                 this.render();
                 this.triggerCompletion();
             });
+        }
+
+        // Botão de Avançar Fase direto na Lousa (Fluxo Progressivo Didático)
+        const btnNextBB = this.container.querySelector('#btnBlackboardNextStage');
+        if (btnNextBB) {
+            btnNextBB.addEventListener('click', () => {
+                if (typeof this.onNextStageRequested === 'function') {
+                    this.onNextStageRequested();
+                } else {
+                    const btnNext = document.getElementById('btnCareerNext');
+                    if (btnNext) btnNext.click();
+                }
+            });
+        }
+    }
+
+    // =========================================================================
+    // BARRA DE COMANDO DIRETO: "O QUE FAZER AGORA" (DIDÁTICA PROGRESSIVA)
+    // =========================================================================
+    updateDirectCommandHUD() {
+        const badge = document.getElementById('cmdStepBadge');
+        const text = document.getElementById('cmdStepText');
+        const icon = document.querySelector('.cmd-icon-box');
+        if (!badge || !text) return;
+
+        const id = this.currentSolidId;
+        const type = this.currentFormulaType;
+        const step = this.state.step;
+        const p = this.currentParams;
+
+        if (id === 'cube' && type === 'volume') {
+            const a = (p.a || 3).toFixed(1);
+            if (step === 'awaiting_dimension') {
+                badge.textContent = 'PASSO 1 DE 3';
+                badge.className = 'cmd-badge';
+                if (icon) icon.textContent = '👉';
+                text.innerHTML = `Arraste a aresta <b>a = ${a}m</b> (ou clique nela no 3D) para a fórmula <b>V = a³</b>.`;
+            } else if (step === 'power_expanded') {
+                badge.textContent = 'PASSO 2 DE 3';
+                badge.className = 'cmd-badge';
+                if (icon) icon.textContent = '⚡';
+                text.innerHTML = `A potência expandiu para <b>${a} × ${a} × ${a}</b>! Clique em <b>×</b> para calcular a base.`;
+            } else if (step === 'first_multiplied') {
+                const base = Math.round((p.a || 3) * (p.a || 3));
+                badge.textContent = 'PASSO 3 DE 3';
+                badge.className = 'cmd-badge';
+                if (icon) icon.textContent = '🚀';
+                text.innerHTML = `Base = <b>${base} m²</b>! Agora multiplique por <b>${a}</b> para obter o Volume total.`;
+            } else if (step === 'completed') {
+                const vol = Math.pow(p.a || 3, 3);
+                badge.textContent = '🏆 CONCLUÍDO!';
+                badge.className = 'cmd-badge step-completed';
+                if (icon) icon.textContent = '🎉';
+                text.innerHTML = `Volume = <b>${vol.toFixed(2)} m³ (${(vol * 1000).toLocaleString('pt-BR')} L)</b>! Clique em <b>Avançar para a Fase 2 ▶</b>.`;
+            }
+        } else if (id === 'rectangular_prism') {
+            if (step === 'awaiting_dimension') {
+                badge.textContent = 'PASSO 1 DE 2';
+                badge.className = 'cmd-badge';
+                if (icon) icon.textContent = '👉';
+                text.innerHTML = `Arraste o Comprimento (<b>${p.a || 6}m</b>), Largura (<b>${p.b || 2.5}m</b>) e Altura (<b>${p.c || 2.6}m</b>) para a Lousa.`;
+            } else if (step === 'first_multiplied' || step === 'power_expanded') {
+                badge.textContent = 'PASSO 2 DE 2';
+                badge.className = 'cmd-badge';
+                if (icon) icon.textContent = '⚡';
+                text.innerHTML = `Base do piso calculada! Multiplique pela altura para obter o volume útil de carga.`;
+            } else {
+                badge.textContent = '🏆 CONCLUÍDO!';
+                badge.className = 'cmd-badge step-completed';
+                if (icon) icon.textContent = '🎉';
+                const vol = (p.a || 6) * (p.b || 2.5) * (p.c || 2.6);
+                text.innerHTML = `Cubagem = <b>${vol.toFixed(2)} m³ (${(vol * 1000).toLocaleString('pt-BR')} L)</b>! Avance para a próxima fase.`;
+            }
+        } else if (id === 'cylinder') {
+            if (step === 'awaiting_dimension') {
+                badge.textContent = 'PASSO 1 DE 2';
+                badge.className = 'cmd-badge';
+                if (icon) icon.textContent = '👉';
+                text.innerHTML = `Arraste o Raio (<b>${p.r || 2}m</b>) e Altura (<b>${p.h || 6}m</b>) para a fórmula do Silo.`;
+            } else if (step === 'power_expanded') {
+                badge.textContent = 'PASSO 2 DE 2';
+                badge.className = 'cmd-badge';
+                if (icon) icon.textContent = '⚡';
+                text.innerHTML = `Calcule o raio ao quadrado (r² = ${p.r} × ${p.r}) para a base circular.`;
+            } else {
+                badge.textContent = '🏆 CONCLUÍDO!';
+                badge.className = 'cmd-badge step-completed';
+                if (icon) icon.textContent = '🎉';
+                const vol = Math.PI * Math.pow(p.r || 2, 2) * (p.h || 6);
+                text.innerHTML = `Capacidade = <b>${vol.toFixed(2)} m³ (${(vol * 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} L)</b>! Avance para a próxima fase.`;
+            }
+        } else if (id === 'square_pyramid') {
+            if (step === 'awaiting_dimension') {
+                badge.textContent = 'PASSO 1 DE 2';
+                badge.className = 'cmd-badge';
+                if (icon) icon.textContent = '👉';
+                text.innerHTML = `Arraste o Lado da Base (<b>${p.l || 6}m</b>) e Altura (<b>${p.h || 4}m</b>) para calcular o volume.`;
+            } else {
+                badge.textContent = '🏆 CONCLUÍDO!';
+                badge.className = 'cmd-badge step-completed';
+                if (icon) icon.textContent = '🎉';
+                const vol = (Math.pow(p.l || 6, 2) * (p.h || 4)) / 3;
+                text.innerHTML = `Vão livre = <b>${vol.toFixed(2)} m³</b>! Avance para a próxima fase.`;
+            }
+        } else if (id === 'sphere') {
+            if (step === 'awaiting_dimension') {
+                badge.textContent = 'PASSO 1 DE 2';
+                badge.className = 'cmd-badge';
+                if (icon) icon.textContent = '👉';
+                text.innerHTML = `Arraste o Raio da Esfera (<b>${p.r || 3}m</b>) para calcular o volume de gás.`;
+            } else if (step === 'power_expanded') {
+                badge.textContent = 'PASSO 2 DE 2';
+                badge.className = 'cmd-badge';
+                if (icon) icon.textContent = '⚡';
+                text.innerHTML = `Multiplique os 3 fatores cúbicos para calcular R³ (${p.r} × ${p.r} × ${p.r}).`;
+            } else {
+                badge.textContent = '🏆 CONCLUÍDO!';
+                badge.className = 'cmd-badge step-completed';
+                if (icon) icon.textContent = '🎉';
+                const vol = (4 / 3) * Math.PI * Math.pow(p.r || 3, 3);
+                text.innerHTML = `Volume de Gás = <b>${vol.toFixed(2)} m³</b>! Avance para a próxima fase.`;
+            }
+        } else {
+            if (step === 'awaiting_dimension') {
+                badge.textContent = 'PASSO 1';
+                badge.className = 'cmd-badge';
+                if (icon) icon.textContent = '👉';
+                text.innerHTML = `Arraste as medidas para a Lousa ao lado para calcular.`;
+            } else {
+                badge.textContent = '🏆 CONCLUÍDO!';
+                badge.className = 'cmd-badge step-completed';
+                if (icon) icon.textContent = '🎉';
+                text.innerHTML = `Cálculos concluídos com sucesso!`;
+            }
         }
     }
 
