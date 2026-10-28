@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GeoLab 3D - Estúdio de Geometria Espacial & Design Arquitetônico</title>
-    <link rel="stylesheet" href="css/style.css?v=4.0">
+    <link rel="stylesheet" href="css/style.css?v=4.1">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📐</text></svg>">
 </head>
 <body>
@@ -595,13 +595,15 @@
                          ========================================================== -->
                     <div id="interactiveBlackboardContainer" class="interactive-blackboard-container"></div>
 
-                    <!-- CONTEÚDO TRADICIONAL (OCULTO NO MODO FOCO DIDÁTICO) -->
-                    <div class="career-traditional-inputs">
-                        <div class="career-concept-box" id="careerConceptBox"></div>
-                        <div class="career-action-box" id="careerActionBox"></div>
-                        <div id="careerInputsContainer" style="display:flex; flex-direction:column; gap:8px; margin:10px 0;"></div>
-                        <button class="btn-action-primary" id="btnValidateCareer" style="width:100%;">
-                            🚀 Validar Respostas da Fase
+                    <!-- CAMPO DEDICADO PARA DIGITAR AS RESPOSTAS E TESTAR O APRENDIZADO -->
+                    <div class="career-answer-test-card" id="careerAnswerTestCard">
+                        <div class="test-card-header">
+                            <span class="test-card-title">✍️ Teste seu Aprendizado:</span>
+                            <span class="test-card-tag">Digite sua resposta</span>
+                        </div>
+                        <div id="careerInputsContainer" class="career-inputs-stack"></div>
+                        <button class="btn-action-primary" id="btnValidateCareer" style="width:100%; margin-top:8px; padding:10px; font-weight:700;">
+                            🚀 Validar Respostas e Testar
                         </button>
                     </div>
 
@@ -888,71 +890,78 @@
          MODAL DEDICADO DO DESAFIO DO MODO CARREIRA BNCC
          ========================================================================== -->
     <div id="modalCareerChallenge" class="modal-backdrop hidden">
-        <div class="modal-dialog" style="max-width:680px;">
-            <div class="modal-header">
+        <div class="modal-dialog modal-career-no-scroll">
+            <div class="modal-header" style="padding:10px 16px;">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, #f59e0b, #d97706); display:flex; align-items:center; justify-content:center; font-size:1.4rem; box-shadow:0 0 12px rgba(245,158,11,0.4);">
+                    <div class="modal-career-avatar-badge">
                         🎯
                     </div>
                     <div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <span class="team-badge" id="modalCareerStageBadge">Fase 1 de 6 · BNCC</span>
-                            <span class="challenge-status-chip">DESAFIO PROPOSTO</span>
+                            <span class="challenge-status-chip">MISSÃO ATIVA</span>
                         </div>
-                        <div id="modalCareerStageTitle" style="font-size:1.15rem; font-weight:800; color:#fff; margin-top:2px;">
+                        <div id="modalCareerStageTitle" style="font-size:1.1rem; font-weight:800; color:#fff;">
                             Fase 1: Fundação & Caixa d'Água Cúbica
                         </div>
                     </div>
                 </div>
-                <button class="btn-close-modal" id="btnCloseCareerModal" title="Fechar Desafio e Voltar ao 3D">✕</button>
+                <button class="btn-close-modal" id="btnCloseCareerModal" title="Fechar e Voltar ao 3D">✕</button>
             </div>
 
-            <div class="modal-content-body" style="padding:1.25rem; max-height:78vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
-                
-                <!-- NAVEGADOR RÁPIDO DE FASES NO TOPO DO MODAL -->
-                <div>
-                    <span style="font-size:0.75rem; color:var(--text-secondary); font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px;">Escolha ou navegue pelas fases:</span>
-                    <div class="career-phase-navigator" id="modalCareerPhaseNav"></div>
-                </div>
+            <div class="modal-career-body-no-scroll">
+                <!-- NAVEGADOR RÁPIDO DE FASES (SEM ROLAGEM) -->
+                <div class="career-phase-navigator-fixed" id="modalCareerPhaseNav"></div>
 
-                <!-- HISTÓRIA E CONTEXTUALIZAÇÃO DO MUNDO REAL -->
-                <div class="challenge-story-card">
-                    <div style="display:flex; align-items:center; gap:6px; color:var(--accent-amber); font-weight:700; font-size:0.85rem; margin-bottom:4px;">
-                        <span>📋 Contexto do Desafio Real:</span>
+                <!-- CONTEÚDO EM 2 COLUNAS COMPACTO (CABE 100% NA TELA SEM ROLAGEM) -->
+                <div class="career-modal-two-col">
+                    <!-- COLUNA ESQUERDA: HISTÓRIA E FÓRMULAS -->
+                    <div class="career-modal-left-col">
+                        <div class="challenge-story-compact">
+                            <div class="story-compact-header">📋 Contexto Real da Missão:</div>
+                            <div id="modalCareerStoryText" class="story-compact-body"></div>
+                        </div>
+
+                        <div class="challenge-formula-pill-box">
+                            <div class="formula-pill-title">💡 Fórmulas & Propriedades:</div>
+                            <div id="modalCareerConceptBox" class="formula-pill-text"></div>
+                        </div>
+
+                        <div class="challenge-action-compact" id="modalCareerActionBox"></div>
                     </div>
-                    <div id="modalCareerStoryText" style="font-size:0.85rem; color:var(--text-primary); line-height:1.5;"></div>
-                </div>
 
-                <!-- CONCEITO & FÓRMULAS PEDAGÓGICAS -->
-                <div class="career-concept-box" id="modalCareerConceptBox"></div>
+                    <!-- COLUNA DIREITA: ENTRADA DE RESPOSTAS E VALIDAÇÃO -->
+                    <div class="career-modal-right-col">
+                        <div class="challenge-test-card">
+                            <div class="test-card-header-bar">
+                                <span class="test-header-icon">✍️</span>
+                                <div>
+                                    <div class="test-header-title">Teste seu Aprendizado:</div>
+                                    <div class="test-header-sub">Digite os valores calculados</div>
+                                </div>
+                            </div>
 
-                <!-- PASSO A PASSO DA MISSÃO -->
-                <div class="career-action-box" id="modalCareerActionBox"></div>
+                            <div id="modalCareerInputsContainer" class="modal-inputs-compact-list"></div>
 
-                <!-- ENTRADA DE RESPOSTAS DO ALUNO -->
-                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius-md); padding:12px;">
-                    <div style="font-size:0.8rem; font-weight:700; color:#fff; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                        <span>✍️ Suas Respostas Técnicas:</span>
+                            <button class="btn-action-primary" id="btnModalValidateCareer" style="width:100%; margin-top:8px; padding:10px; font-weight:800; font-size:0.92rem;">
+                                🚀 Validar Respostas e Testar
+                            </button>
+
+                            <div id="modalCareerFeedbackBox" class="career-feedback-box hidden" style="margin-top:6px;"></div>
+                        </div>
                     </div>
-                    <div id="modalCareerInputsContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
-                    
-                    <button class="btn-action-primary" id="btnModalValidateCareer" style="width:100%; margin-top:10px; padding:12px; font-size:0.95rem; font-weight:700;">
-                        🚀 Validar Respostas do Desafio
-                    </button>
-                    
-                    <div id="modalCareerFeedbackBox" class="career-feedback-box hidden" style="margin-top:10px;"></div>
                 </div>
 
-                <!-- AÇÕES PÓS-VALIDAÇÃO -->
-                <div style="display:flex; gap:8px;">
-                    <button class="btn-action-secondary" id="btnModalCareerNext" style="flex:1; display:none; background:rgba(34,197,94,0.15); border-color:var(--accent-emerald); color:#4ade80; font-weight:700;">
+                <!-- AÇÕES DE RODAPÉ -->
+                <div class="career-modal-footer-actions">
+                    <button class="btn-action-secondary" id="btnModalCareerNext" style="flex:1; display:none; background:rgba(34,197,94,0.18); border-color:#22c55e; color:#4ade80; font-weight:700;">
                         Próxima Fase ▶
                     </button>
                     <button class="btn-action-secondary" id="btnModalCareerPhoto" style="flex:1;">
-                        📸 Salvar Conquista no Álbum
+                        📸 Salvar no Álbum
                     </button>
                     <button class="btn-action-secondary" id="btnModalCloseBackTo3D" style="flex:1;">
-                        👁️ Explorar Sólido 3D
+                        👁️ Praticar no 3D
                     </button>
                 </div>
             </div>
@@ -1080,26 +1089,26 @@
     <!-- SCRIPTS MODULARES -->
     <script src="js/three.min.js"></script>
     <script src="js/OrbitControls.js"></script>
-    <script src="js/audio.js?v=4.0"></script>
-    <script src="js/geometry-data.js?v=4.0"></script>
-    <script src="js/support-guide.js?v=4.0"></script>
-    <script src="js/scene-manager.js?v=4.0"></script>
-    <script src="js/dimensions-helper.js?v=4.0"></script>
-    <script src="js/solids-builder.js?v=4.0"></script>
-    <script src="js/vertex-deformer.js?v=4.0"></script>
-    <script src="js/building-builder.js?v=4.0"></script>
-    <script src="js/gallery-album.js?v=4.0"></script>
-    <script src="js/career-mode.js?v=4.0"></script>
-    <script src="js/unfolding-cartela.js?v=4.0"></script>
-    <script src="js/liquid-simulation.js?v=4.0"></script>
-    <script src="js/cross-section.js?v=4.0"></script>
-    <script src="js/unfolding.js?v=4.0"></script>
-    <script src="js/engineer-guide.js?v=4.0"></script>
-    <script src="js/interactive-blackboard.js?v=4.0"></script>
-    <script src="js/didactic-xray.js?v=4.0"></script>
-    <script src="js/game-mode.js?v=4.0"></script>
-    <script src="js/game-design-studio.js?v=4.0"></script>
-    <script src="js/main.js?v=4.0"></script>
+    <script src="js/audio.js?v=4.1"></script>
+    <script src="js/geometry-data.js?v=4.1"></script>
+    <script src="js/support-guide.js?v=4.1"></script>
+    <script src="js/scene-manager.js?v=4.1"></script>
+    <script src="js/dimensions-helper.js?v=4.1"></script>
+    <script src="js/solids-builder.js?v=4.1"></script>
+    <script src="js/vertex-deformer.js?v=4.1"></script>
+    <script src="js/building-builder.js?v=4.1"></script>
+    <script src="js/gallery-album.js?v=4.1"></script>
+    <script src="js/career-mode.js?v=4.1"></script>
+    <script src="js/unfolding-cartela.js?v=4.1"></script>
+    <script src="js/liquid-simulation.js?v=4.1"></script>
+    <script src="js/cross-section.js?v=4.1"></script>
+    <script src="js/unfolding.js?v=4.1"></script>
+    <script src="js/engineer-guide.js?v=4.1"></script>
+    <script src="js/interactive-blackboard.js?v=4.1"></script>
+    <script src="js/didactic-xray.js?v=4.1"></script>
+    <script src="js/game-mode.js?v=4.1"></script>
+    <script src="js/game-design-studio.js?v=4.1"></script>
+    <script src="js/main.js?v=4.1"></script>
 
 </body>
 </html>

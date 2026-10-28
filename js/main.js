@@ -729,25 +729,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentMode !== 'career') {
             switchMode('career');
         }
-        const stage = careerMode.getCurrentStage();
-        if (engineerGuide) {
-            const p = stage.targetParams || {};
-            const val = p.a || p.r || p.l || 3;
-            engineerGuide.showCenterBriefing({
-                title: `${stage.icon} ${stage.title}`,
-                story: stage.story,
-                directCommand: stage.actionPrompt,
-                step1: `Observe a aresta indicada no sólido 3D (ex: a = ${val} m).`,
-                step2: `Arraste ou clique no bloco de medida na Lousa para preencher a incógnita.`,
-                step3: `Acompanhe a expansão da fórmula e multiplique os fatores passo a passo!`,
-                ctaText: 'Entendi, Iniciar Missão! 🚀',
-                onStart: () => {
-                    const bb = document.getElementById('interactiveBlackboardContainer');
-                    if (bb) bb.scrollIntoView({ behavior: 'smooth' });
-                }
-            });
-            return;
-        }
         const modal = document.getElementById('modalCareerChallenge');
         if (!modal) return;
         renderModalCareerContent();
@@ -824,24 +805,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('btnCareerNext'),
             document.getElementById('btnModalCareerNext')
         ];
-
-        // Se bloqueado por não ter feito a dedução interativa da fórmula
-        if (res.blockedByDerivation) {
-            feedbackBoxes.forEach(fb => {
-                if (!fb) return;
-                fb.className = 'career-feedback-box error';
-                fb.innerHTML = res.message;
-                fb.classList.remove('hidden');
-            });
-            if (source === 'modal') {
-                closeCareerChallengeModal();
-            }
-            if (engineerGuide) {
-                engineerGuide.guideUserTo('#interactiveBlackboardContainer', 'Antes de validar a resposta final, deduza a fórmula na Lousa arrastando a medida aqui!', { position: 'left' });
-            }
-            if (window.sounds) window.sounds.playError();
-            return;
-        }
 
         if (res.success) {
             gameMgr.addXp(res.xpReward);

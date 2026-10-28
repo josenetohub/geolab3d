@@ -2575,16 +2575,9 @@ body.mode-career .math-summary-accordion {
     display: none !important;
 }
 
-body.mode-career .career-traditional-inputs {
-    display: none !important;
-}
-
-body.mode-career .canvas-hint {
-    display: none !important;
-}
-
-body.mode-career .btn-float-challenge-pulsing {
-    display: none !important;
+/* Campo de teste de aprendizado sempre visível para o aluno testar o que aprendeu */
+.career-answer-test-card {
+    display: flex !important;
 }
 
 /* Deixa o painel direito limpo, destacando a Lousa sem rolagem excessiva */
@@ -3164,4 +3157,267 @@ body.mode-career .career-mission-card {
     font-size: 1.2rem;
     display: block;
     margin-bottom: 2px;
+}
+
+/* =============================================================================
+   JANELA DE FASES DA CARREIRA SEM ROLAGEM (COMPACT TWO-COLUMN MODAL)
+   ============================================================================= */
+.modal-career-no-scroll {
+    max-width: 840px !important;
+    width: 92vw !important;
+    max-height: 90vh !important;
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-career-body-no-scroll {
+    padding: 10px 16px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden !important;
+}
+
+.modal-career-avatar-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);
+    flex-shrink: 0;
+}
+
+.career-phase-navigator-fixed {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.career-phase-navigator-fixed .career-nav-pill {
+    padding: 6px 2px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    min-width: 0;
+    text-align: center;
+    white-space: nowrap;
+    border-radius: 6px;
+}
+
+.career-modal-two-col {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 12px;
+    align-items: stretch;
+    overflow: hidden;
+}
+
+.career-modal-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.challenge-story-compact {
+    background: rgba(255, 255, 255, 0.04);
+    border-left: 3px solid var(--accent-amber);
+    padding: 8px 12px;
+    border-radius: 0 8px 8px 0;
+}
+
+.story-compact-header {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--accent-amber);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    letter-spacing: 0.5px;
+}
+
+.story-compact-body {
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    line-height: 1.35;
+}
+
+.challenge-formula-pill-box {
+    background: rgba(14, 165, 233, 0.08);
+    border: 1px solid rgba(14, 165, 233, 0.25);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.formula-pill-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #38bdf8;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    letter-spacing: 0.5px;
+}
+
+.formula-pill-text {
+    font-size: 0.78rem;
+    color: #f1f5f9;
+    line-height: 1.35;
+}
+
+.challenge-action-compact {
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    line-height: 1.3;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+.career-modal-right-col {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.challenge-test-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.95));
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+}
+
+.test-card-header-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 4px;
+}
+
+.test-header-icon {
+    font-size: 1.2rem;
+}
+
+.test-header-title {
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.test-header-sub {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.modal-inputs-compact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mission-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.mission-input-group label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.mission-input {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 7px 10px;
+    border-radius: 6px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.mission-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    background: rgba(15, 23, 42, 1);
+}
+
+.career-modal-footer-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+/* =============================================================================
+   PAINEL LATERAL DIREITO: CARD DE TESTE DE APRENDIZADO
+   ============================================================================= */
+.career-answer-test-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.96));
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.test-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 6px;
+}
+
+.test-card-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.test-card-tag {
+    font-size: 0.68rem;
+    color: var(--accent-cyan);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.career-inputs-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+@media (max-width: 680px) {
+    .career-modal-two-col {
+        grid-template-columns: 1fr;
+    }
+    .modal-career-no-scroll {
+        max-height: 95vh !important;
+        overflow-y: auto !important;
+    }
+    .career-phase-navigator-fixed {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }

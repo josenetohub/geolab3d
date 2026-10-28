@@ -190,15 +190,6 @@ class CareerMode {
     validateAnswers(inputValues) {
         const stage = this.getCurrentStage();
 
-        // REGRA PEDAGÓGICA MANDATÓRIA:
-        // A validação só é permitida APÓS o aluno passar pelo processo de arrastar e soltar da equação
-        if (!this.hasStageBeenDerived(this.currentStageIndex)) {
-            return {
-                blockedByDerivation: true,
-                message: '⚠️ <b>Etapa Pedagógica Obrigatória:</b> Antes de validar o resultado final, utilize a <b>Lousa Interativa</b> ao lado para deduzir a fórmula arrastando as medidas!'
-            };
-        }
-
         let allCorrect = true;
         const results = [];
 
