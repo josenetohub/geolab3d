@@ -94,13 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
         switchSolid('cube');
         switchMode('career');
         updateGameStatsUI();
-
-        // Inicia Onboarding guiado com o Engenheiro para novos estudantes
-        if (!engineerGuide.hasSeenOnboarding) {
-            setTimeout(() => {
-                engineerGuide.startOnboarding();
-            }, 1200);
-        }
     }
 
     // Preenche o seletor de sólidos
@@ -335,6 +328,9 @@ document.addEventListener('DOMContentLoaded', () => {
             btnClose.addEventListener('click', () => {
                 menu.classList.add('hidden');
                 if (window.sounds) window.sounds.playClick();
+                setTimeout(() => {
+                    if (engineerGuide) engineerGuide.speak('Olá! Sou o Engenheiro Leo. Arraste as medidas para a Lousa ou use o Raio-X Didático no topo!', { icon: '👷' });
+                }, 300);
             });
         }
 
@@ -347,8 +343,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 switch (action) {
                     case 'career':
                         switchMode('career');
-                        openCareerChallengeModal();
-                        if (engineerGuide) engineerGuide.speak('Bem-vindo ao Modo Carreira BNCC! Resolva as missões deduzindo as fórmulas na Lousa!', { icon: '👷' });
+                        setTimeout(() => {
+                            if (engineerGuide) engineerGuide.startOnboarding();
+                        }, 300);
                         break;
                     case 'lab':
                         switchMode('lab');
@@ -1111,6 +1108,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // EVENTOS GERAIS DA INTERFACE
     // ==========================================================================
     function setupEventListeners() {
+        // Botão de Tour do Engenheiro Leo na Topbar
+        const btnTourEngineer = document.getElementById('btnTourEngineer');
+        if (btnTourEngineer) {
+            btnTourEngineer.addEventListener('click', () => {
+                if (engineerGuide) {
+                    engineerGuide.startOnboarding();
+                }
+            });
+        }
+
         // Toolbar 3D: Cotas
         const btnToggleDimensions = document.getElementById('btnToggleDimensions');
         if (btnToggleDimensions) {
