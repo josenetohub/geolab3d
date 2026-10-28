@@ -2495,16 +2495,16 @@ input:checked + .switch-track:before {
    ============================================================================= */
 .direct-command-hud {
     position: absolute;
-    top: 58px;
+    top: 60px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 45;
-    background: rgba(15, 23, 42, 0.94);
-    border: 1px solid rgba(56, 189, 248, 0.45);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 18px rgba(56, 189, 248, 0.25);
-    backdrop-filter: blur(12px);
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.96));
+    border: 2px solid rgba(56, 189, 248, 0.75);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8), 0 0 24px rgba(56, 189, 248, 0.4);
+    backdrop-filter: blur(14px);
     border-radius: 40px;
-    padding: 6px 20px 6px 12px;
+    padding: 8px 22px 8px 14px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -2927,4 +2927,241 @@ body.mode-career .career-mission-card {
     justify-content: space-between;
     font-size: 0.74rem;
     color: var(--text-primary);
+}
+
+/* =============================================================================
+   MODAL DO ENGENHEIRO GRANDE NO CENTRO DA TELA (BRIEFING PEDAGÓGICO)
+   ============================================================================= */
+.engineer-center-dialog {
+    max-width: 680px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.96));
+    border: 2px solid rgba(56, 189, 248, 0.6);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.3);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+}
+
+.engineer-center-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.engineer-large-avatar-box {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+    animation: avatarPulseFloat 3s ease-in-out infinite;
+}
+
+@keyframes avatarPulseFloat {
+    0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5)); }
+    50% { transform: translateY(-5px); filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.8)); }
+}
+
+.engineer-center-titles {
+    flex: 1;
+}
+
+.engineer-center-role {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.engineer-center-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.25;
+    margin: 0;
+}
+
+.engineer-center-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 65vh;
+    overflow-y: auto;
+}
+
+.center-briefing-story {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    line-height: 1.55;
+    background: rgba(255, 255, 255, 0.04);
+    border-left: 4px solid var(--accent-amber);
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+}
+
+.center-briefing-command-card {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(245, 158, 11, 0.08));
+    border: 1px solid rgba(245, 158, 11, 0.5);
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.cmd-card-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #fde047;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.cmd-card-text {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.4;
+}
+
+.center-briefing-steps-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.briefing-step-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 10px 14px;
+    transition: all 0.2s;
+}
+
+.briefing-step-box:hover {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: rgba(15, 23, 42, 0.85);
+}
+
+.step-badge-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.4);
+}
+
+.step-box-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.step-box-content b {
+    font-size: 0.88rem;
+    color: #38bdf8;
+}
+
+.step-box-content span {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+.engineer-center-footer {
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* =============================================================================
+   INDICATIVOS VISUAIS DE ARRASTE E CLIQUE (ONDE CLICAR / SOLTAR)
+   ============================================================================= */
+.draggable-measure-chip.beacon-pulse-glow {
+    border-color: #facc15 !important;
+    background: rgba(250, 204, 21, 0.12) !important;
+    box-shadow: 0 0 16px rgba(250, 204, 21, 0.5) !important;
+    animation: beaconBorderPulse 1.8s infinite ease-in-out;
+    position: relative;
+}
+
+@keyframes beaconBorderPulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(250, 204, 21, 0.4), inset 0 0 6px rgba(250, 204, 21, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 22px rgba(250, 204, 21, 0.8), inset 0 0 12px rgba(250, 204, 21, 0.4);
+        transform: translateY(-2px);
+    }
+}
+
+.chip-beacon-badge {
+    background: #facc15;
+    color: #0f172a;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 0 8px rgba(250, 204, 21, 0.6);
+    margin-left: auto;
+    animation: beaconBadgePulse 1.2s infinite alternate;
+}
+
+@keyframes beaconBadgePulse {
+    0% { transform: scale(0.95); opacity: 0.9; }
+    100% { transform: scale(1.05); opacity: 1; }
+}
+
+.target-beacon-zone {
+    border: 2px dashed #38bdf8 !important;
+    background: rgba(56, 189, 248, 0.08) !important;
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.4) !important;
+    animation: targetZonePulse 1.8s infinite ease-in-out;
+    position: relative;
+    cursor: pointer;
+}
+
+@keyframes targetZonePulse {
+    0%, 100% {
+        border-color: #38bdf8;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+    50% {
+        border-color: #facc15;
+        box-shadow: 0 0 20px rgba(250, 204, 21, 0.6);
+    }
+}
+
+.zone-beacon-badge {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #fde047;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    animation: beaconBadgePulse 1.2s infinite alternate;
+}
+
+.beacon-drop-icon {
+    font-size: 1.2rem;
+    display: block;
+    margin-bottom: 2px;
 }

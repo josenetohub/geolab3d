@@ -344,8 +344,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'career':
                         switchMode('career');
                         setTimeout(() => {
-                            if (engineerGuide) engineerGuide.startOnboarding();
-                        }, 300);
+                            openCareerChallengeModal();
+                        }, 350);
                         break;
                     case 'lab':
                         switchMode('lab');
@@ -728,6 +728,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function openCareerChallengeModal() {
         if (currentMode !== 'career') {
             switchMode('career');
+        }
+        const stage = careerMode.getCurrentStage();
+        if (engineerGuide) {
+            const p = stage.targetParams || {};
+            const val = p.a || p.r || p.l || 3;
+            engineerGuide.showCenterBriefing({
+                title: `${stage.icon} ${stage.title}`,
+                story: stage.story,
+                directCommand: stage.actionPrompt,
+                step1: `Observe a aresta indicada no sólido 3D (ex: a = ${val} m).`,
+                step2: `Arraste ou clique no bloco de medida na Lousa para preencher a incógnita.`,
+                step3: `Acompanhe a expansão da fórmula e multiplique os fatores passo a passo!`,
+                ctaText: 'Entendi, Iniciar Missão! 🚀',
+                onStart: () => {
+                    const bb = document.getElementById('interactiveBlackboardContainer');
+                    if (bb) bb.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+            return;
         }
         const modal = document.getElementById('modalCareerChallenge');
         if (!modal) return;

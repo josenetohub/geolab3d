@@ -1,4 +1,8 @@
-// Sistema de Planificação 3D Interativa Completa (Net Unfolding BNCC)
+// =============================================================================
+// GEO LAB 3D - SISTEMA DE PLANIFICAÇÃO 3D INTERATIVA (NET UNFOLDING BNCC)
+// Decomposição de faces com medidas visuais explícitas e áreas calculadas em m²
+// =============================================================================
+
 class UnfoldingSystem {
     constructor(sceneManager) {
         this.sm = sceneManager;
@@ -28,7 +32,7 @@ class UnfoldingSystem {
         if (this.sm.clippingPlaneMesh) this.sm.clippingPlaneMesh.visible = false;
         if (this.sm.faucetGroup) this.sm.faucetGroup.visible = false;
 
-        // Oculta cotas de medição dimensional no modo de planificação para evitar silhuetas
+        // Oculta cotas de medição dimensional 3D durante planificação para não colidir
         if (window.dimensionsHelper) {
             window.dimensionsHelper.setVisible(!active);
         }
@@ -58,6 +62,58 @@ class UnfoldingSystem {
         this.dynamicMeshes = [];
     }
 
+    // Cria badge visual flutuante em 3D sobre a face com nome, medidas e área
+    createFaceBadge(name, dimStr, areaStr) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 110;
+        const ctx = canvas.getContext('2d');
+
+        // Card com cantos arredondados e borda neon
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 4;
+        const r = 16, w = 244, h = 98, x = 6, y = 6;
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 20px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(name, 128, 30);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 24px Inter, sans-serif';
+        ctx.fillText(dimStr, 128, 60);
+
+        ctx.fillStyle = '#facc15';
+        ctx.font = 'bold 22px Inter, sans-serif';
+        ctx.fillText(areaStr, 128, 90);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+
+        const spriteMat = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            depthTest: false
+        });
+        const sprite = new THREE.Sprite(spriteMat);
+        sprite.scale.set(1.5, 0.65, 1);
+        return sprite;
+    }
+
     buildNet() {
         this.clear();
         const id = this.currentSolidId;
@@ -73,9 +129,9 @@ class UnfoldingSystem {
         const colors = [0x3b82f6, 0x10b981, 0xf59e0b, 0xef4444, 0x8b5cf6, 0x06b6d4, 0xec4899, 0x14b8a6];
 
         if (id === 'cube' || id === 'rectangular_prism') {
-            const a = id === 'cube' ? (p.a || 4) : (p.a || 4);
-            const b = id === 'cube' ? (p.a || 4) : (p.b || 3);
-            const c = id === 'cube' ? (p.a || 4) : (p.c || 5);
+            const a = id === 'cube' ? (p.a || 3) : (p.a || 4);
+            const b = id === 'cube' ? (p.a || 3) : (p.b || 3);
+            const c = id === 'cube' ? (p.a || 3) : (p.c || 5);
 
             // 1. Base central deitada no plano y = 0.02
             const baseGeo = new THREE.PlaneGeometry(a, b);
@@ -83,6 +139,10 @@ class UnfoldingSystem {
             baseMesh.rotation.x = -Math.PI / 2;
             baseMesh.position.set(0, 0.02, 0);
             baseMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(baseGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeBase = this.createFaceBadge('Base', `${a.toFixed(1)}m × ${b.toFixed(1)}m`, `Área = ${(a*b).toFixed(1)} m²`);
+            badgeBase.position.set(0, 0, 0.1);
+            baseMesh.add(badgeBase);
             this.sm.unfoldGroup.add(baseMesh);
 
             // 2. Face Frente
@@ -93,6 +153,11 @@ class UnfoldingSystem {
             frontMesh.position.set(0, 0, c / 2);
             frontMesh.rotation.x = -Math.PI / 2;
             frontMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(frontGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeFront = this.createFaceBadge('Frente', `${a.toFixed(1)}m × ${c.toFixed(1)}m`, `Área = ${(a*c).toFixed(1)} m²`);
+            badgeFront.position.set(0, 0, 0.1);
+            frontMesh.add(badgeFront);
+
             frontHinge.add(frontMesh);
             this.sm.unfoldGroup.add(frontHinge);
             this.hinges.push({ obj: frontHinge, axis: 'x', closedRot: Math.PI / 2, openRot: 0 });
@@ -105,6 +170,11 @@ class UnfoldingSystem {
             backMesh.position.set(0, 0, -c / 2);
             backMesh.rotation.x = -Math.PI / 2;
             backMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(backGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeBack = this.createFaceBadge('Trás', `${a.toFixed(1)}m × ${c.toFixed(1)}m`, `Área = ${(a*c).toFixed(1)} m²`);
+            badgeBack.position.set(0, 0, 0.1);
+            backMesh.add(badgeBack);
+
             backHinge.add(backMesh);
             this.sm.unfoldGroup.add(backHinge);
             this.hinges.push({ obj: backHinge, axis: 'x', closedRot: -Math.PI / 2, openRot: 0 });
@@ -117,6 +187,11 @@ class UnfoldingSystem {
             rightMesh.position.set(c / 2, 0, 0);
             rightMesh.rotation.x = -Math.PI / 2;
             rightMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(rightGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeRight = this.createFaceBadge('Lateral Dir.', `${b.toFixed(1)}m × ${c.toFixed(1)}m`, `Área = ${(b*c).toFixed(1)} m²`);
+            badgeRight.position.set(0, 0, 0.1);
+            rightMesh.add(badgeRight);
+
             rightHinge.add(rightMesh);
 
             // Tampa superior anexada na ponta da face direita
@@ -127,6 +202,11 @@ class UnfoldingSystem {
             topMesh.position.set(a / 2, 0, 0);
             topMesh.rotation.x = -Math.PI / 2;
             topMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(topGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeTop = this.createFaceBadge('Tampa Superior', `${a.toFixed(1)}m × ${b.toFixed(1)}m`, `Área = ${(a*b).toFixed(1)} m²`);
+            badgeTop.position.set(0, 0, 0.1);
+            topMesh.add(badgeTop);
+
             topHinge.add(topMesh);
             rightHinge.add(topHinge);
 
@@ -142,12 +222,16 @@ class UnfoldingSystem {
             leftMesh.position.set(-c / 2, 0, 0);
             leftMesh.rotation.x = -Math.PI / 2;
             leftMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(leftGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeLeft = this.createFaceBadge('Lateral Esq.', `${b.toFixed(1)}m × ${c.toFixed(1)}m`, `Área = ${(b*c).toFixed(1)} m²`);
+            badgeLeft.position.set(0, 0, 0.1);
+            leftMesh.add(badgeLeft);
+
             leftHinge.add(leftMesh);
             this.sm.unfoldGroup.add(leftHinge);
             this.hinges.push({ obj: leftHinge, axis: 'z', closedRot: Math.PI / 2, openRot: 0 });
 
         } else if (id === 'square_pyramid') {
-            // Planificação da Pirâmide Quadrada (Base quadrada + 4 triângulos isósceles com apótema ap)
             const l = p.l || 4;
             const h = p.h || 5;
             const ap = Math.sqrt(h * h + (l / 2) * (l / 2));
@@ -158,15 +242,19 @@ class UnfoldingSystem {
             baseMesh.rotation.x = -Math.PI / 2;
             baseMesh.position.set(0, 0.02, 0);
             baseMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(baseGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeBase = this.createFaceBadge('Base Quadrada', `${l.toFixed(1)}m × ${l.toFixed(1)}m`, `Área = ${(l*l).toFixed(1)} m²`);
+            badgeBase.position.set(0, 0, 0.1);
+            baseMesh.add(badgeBase);
             this.sm.unfoldGroup.add(baseMesh);
 
             const closedAngle = Math.atan2(h, l / 2);
 
             const sides = [
-                { pos: [0, 0.02, l / 2], axis: 'x', dir: 1 },
-                { pos: [0, 0.02, -l / 2], axis: 'x', dir: -1 },
-                { pos: [l / 2, 0.02, 0], axis: 'z', dir: -1 },
-                { pos: [-l / 2, 0.02, 0], axis: 'z', dir: 1 }
+                { pos: [0, 0.02, l / 2], axis: 'x', dir: 1, name: 'Triângulo Frente' },
+                { pos: [0, 0.02, -l / 2], axis: 'x', dir: -1, name: 'Triângulo Trás' },
+                { pos: [l / 2, 0.02, 0], axis: 'z', dir: -1, name: 'Triângulo Dir.' },
+                { pos: [-l / 2, 0.02, 0], axis: 'z', dir: 1, name: 'Triângulo Esq.' }
             ];
 
             sides.forEach((side, idx) => {
@@ -191,6 +279,16 @@ class UnfoldingSystem {
 
                 const triMesh = new THREE.Mesh(triGeo, faceMat(colors[(idx + 1) % colors.length]));
                 triMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(triGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+                
+                const triArea = ((l * ap) / 2).toFixed(1);
+                const badgeTri = this.createFaceBadge(side.name, `Base ${l.toFixed(1)}m · Apót ${ap.toFixed(1)}m`, `Área = ${triArea} m²`);
+                if (side.axis === 'x') {
+                    badgeTri.position.set(0, 0.1, side.dir * (ap / 3));
+                } else {
+                    badgeTri.position.set(-side.dir * (ap / 3), 0.1, 0);
+                }
+                triMesh.add(badgeTri);
+
                 hinge.add(triMesh);
                 this.sm.unfoldGroup.add(hinge);
 
@@ -203,13 +301,10 @@ class UnfoldingSystem {
             });
 
         } else if (id === 'cylinder') {
-            // Planificação Completa do Cilindro:
-            // Lateral retangular desenrolável de dimensões (2*pi*r) x h + 2 tampas circulares de raio r
             const r = p.r || 2.5;
             const h = p.h || 5;
             const circumference = 2 * Math.PI * r;
 
-            // Retângulo lateral dividido em tiras articuladas para desenrolamento suave
             const numSegments = 24;
             const segWidth = circumference / numSegments;
             const segAngle = (2 * Math.PI) / numSegments;
@@ -229,6 +324,12 @@ class UnfoldingSystem {
                 cylinderSegments.push(segMesh);
             }
 
+            // Badge central sobre o manto lateral
+            const latArea = (2 * Math.PI * r * h).toFixed(1);
+            const badgeLat = this.createFaceBadge('Manto Lateral', `Comp 2πr: ${circumference.toFixed(1)}m × Alt ${h.toFixed(1)}m`, `Área Lateral = ${latArea} m²`);
+            badgeLat.position.set(0, 0.25, 0);
+            lateralRoot.add(badgeLat);
+
             // Tampa inferior circular articulada na borda
             const bottomHinge = new THREE.Group();
             bottomHinge.position.set(0, 0.02, -h / 2);
@@ -237,6 +338,12 @@ class UnfoldingSystem {
             bottomCircle.rotation.x = -Math.PI / 2;
             bottomCircle.position.set(0, 0, -r);
             bottomCircle.add(new THREE.LineSegments(new THREE.EdgesGeometry(circleGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const circleArea = (Math.PI * r * r).toFixed(1);
+            const badgeBot = this.createFaceBadge('Base Circular', `Raio r = ${r.toFixed(1)} m`, `Área = π·r² = ${circleArea} m²`);
+            badgeBot.position.set(0, 0, 0.1);
+            bottomCircle.add(badgeBot);
+
             bottomHinge.add(bottomCircle);
             this.sm.unfoldGroup.add(bottomHinge);
             this.hinges.push({ obj: bottomHinge, axis: 'x', closedRot: -Math.PI / 2, openRot: 0 });
@@ -248,20 +355,22 @@ class UnfoldingSystem {
             topCircle.rotation.x = -Math.PI / 2;
             topCircle.position.set(0, 0, r);
             topCircle.add(new THREE.LineSegments(new THREE.EdgesGeometry(circleGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeTop = this.createFaceBadge('Tampa Circular', `Raio r = ${r.toFixed(1)} m`, `Área = π·r² = ${circleArea} m²`);
+            badgeTop.position.set(0, 0, 0.1);
+            topCircle.add(badgeTop);
+
             topHinge.add(topCircle);
             this.sm.unfoldGroup.add(topHinge);
             this.hinges.push({ obj: topHinge, axis: 'x', closedRot: Math.PI / 2, openRot: 0 });
 
-            // Função dinâmica para desenrolar os segmentos do cilindro de curvo (fechado) para plano (aberto)
             this.dynamicMeshes.push((progress) => {
                 cylinderSegments.forEach((seg, i) => {
-                    // closed: i-th segment on cylinder of radius r
                     const closedAngleI = i * segAngle - Math.PI / 2;
                     const closedX = r * Math.cos(closedAngleI);
                     const closedZ = r * Math.sin(closedAngleI);
                     const closedRotY = -closedAngleI - Math.PI / 2;
 
-                    // open: flat on X-axis from -circumference/2 to +circumference/2
                     const openX = (i - numSegments / 2 + 0.5) * segWidth;
                     const openZ = 0;
                     const openRotY = 0;
@@ -275,14 +384,11 @@ class UnfoldingSystem {
             });
 
         } else if (id === 'cone') {
-            // Planificação Completa do Cone:
-            // 1 Círculo da Base + 1 Setor Circular de raio g (geratriz) e ângulo central theta = 360° * r / g
             const r = p.r || 2.0;
             const h = p.h || 4.5;
             const g = Math.sqrt(r * r + h * h);
-            const theta = (2 * Math.PI * r) / g; // em radianos
+            const theta = (2 * Math.PI * r) / g;
 
-            // Círculo da Base
             const baseHinge = new THREE.Group();
             baseHinge.position.set(0, 0.02, 0);
             const circleGeo = new THREE.CircleGeometry(r, 32);
@@ -290,11 +396,15 @@ class UnfoldingSystem {
             circleMesh.rotation.x = -Math.PI / 2;
             circleMesh.position.set(0, 0, -r);
             circleMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(circleGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeBase = this.createFaceBadge('Base Circular', `Raio r = ${r.toFixed(1)} m`, `Área = ${(Math.PI*r*r).toFixed(1)} m²`);
+            badgeBase.position.set(0, 0, 0.1);
+            circleMesh.add(badgeBase);
+
             baseHinge.add(circleMesh);
             this.sm.unfoldGroup.add(baseHinge);
             this.hinges.push({ obj: baseHinge, axis: 'x', closedRot: -Math.PI / 2, openRot: 0 });
 
-            // Setor Circular Planificado da Lateral
             const sectorHinge = new THREE.Group();
             sectorHinge.position.set(0, 0.02, 0);
             const sectorGeo = new THREE.RingGeometry(0.01, g, 36, 1, -theta / 2 + Math.PI / 2, theta);
@@ -302,25 +412,31 @@ class UnfoldingSystem {
             sectorMesh.rotation.x = -Math.PI / 2;
             sectorMesh.position.set(0, 0, g / 2);
             sectorMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(sectorGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeSector = this.createFaceBadge('Setor Circular Lateral', `Geratriz g = ${g.toFixed(1)} m`, `Área = ${(Math.PI*r*g).toFixed(1)} m²`);
+            badgeSector.position.set(0, 0, 0.1);
+            sectorMesh.add(badgeSector);
+
             sectorHinge.add(sectorMesh);
             this.sm.unfoldGroup.add(sectorHinge);
             this.hinges.push({ obj: sectorHinge, axis: 'x', closedRot: Math.PI / 2 - Math.atan2(h, r), openRot: 0 });
 
         } else if (id === 'triangular_prism') {
-            // Prisma Triangular: 3 retângulos laterais em fita + 2 triângulos nas pontas
             const l = p.l || 4;
             const h = p.h || 5;
             const hTri = (l * Math.sqrt(3)) / 2;
 
-            // Retângulo central
             const centralGeo = new THREE.PlaneGeometry(l, h);
             const centralMesh = new THREE.Mesh(centralGeo, faceMat(colors[0]));
             centralMesh.rotation.x = -Math.PI / 2;
             centralMesh.position.set(0, 0.02, 0);
             centralMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(centralGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeC = this.createFaceBadge('Face Central', `${l.toFixed(1)}m × ${h.toFixed(1)}m`, `Área = ${(l*h).toFixed(1)} m²`);
+            badgeC.position.set(0, 0, 0.1);
+            centralMesh.add(badgeC);
             this.sm.unfoldGroup.add(centralMesh);
 
-            // Retângulo direito
             const rightHinge = new THREE.Group();
             rightHinge.position.set(l / 2, 0.02, 0);
             const rGeo = new THREE.PlaneGeometry(l, h);
@@ -328,11 +444,15 @@ class UnfoldingSystem {
             rMesh.rotation.x = -Math.PI / 2;
             rMesh.position.set(l / 2, 0, 0);
             rMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(rGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeR = this.createFaceBadge('Face Direita', `${l.toFixed(1)}m × ${h.toFixed(1)}m`, `Área = ${(l*h).toFixed(1)} m²`);
+            badgeR.position.set(0, 0, 0.1);
+            rMesh.add(badgeR);
+
             rightHinge.add(rMesh);
             this.sm.unfoldGroup.add(rightHinge);
             this.hinges.push({ obj: rightHinge, axis: 'z', closedRot: -Math.PI / 3, openRot: 0 });
 
-            // Retângulo esquerdo
             const leftHinge = new THREE.Group();
             leftHinge.position.set(-l / 2, 0.02, 0);
             const lGeo = new THREE.PlaneGeometry(l, h);
@@ -340,11 +460,15 @@ class UnfoldingSystem {
             lMesh.rotation.x = -Math.PI / 2;
             lMesh.position.set(-l / 2, 0, 0);
             lMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(lGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
-            leftHinge.add(lMesh);
+            
+            const badgeL = this.createFaceBadge('Face Esquerda', `${l.toFixed(1)}m × ${h.toFixed(1)}m`, `Área = ${(l*h).toFixed(1)} m²`);
+            badgeL.position.set(0, 0, 0.1);
+            lMesh.add(badgeL);
+
+            leftHinge.add(leftMesh);
             this.sm.unfoldGroup.add(leftHinge);
             this.hinges.push({ obj: leftHinge, axis: 'z', closedRot: Math.PI / 3, openRot: 0 });
 
-            // Triângulo inferior
             const botHinge = new THREE.Group();
             botHinge.position.set(0, 0.02, -h / 2);
             const triGeo = new THREE.BufferGeometry();
@@ -357,11 +481,15 @@ class UnfoldingSystem {
             triGeo.computeVertexNormals();
             const triMesh = new THREE.Mesh(triGeo, faceMat(colors[3]));
             triMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(triGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeBot = this.createFaceBadge('Base Triangular', `Lado ${l.toFixed(1)} m`, `Área = ${((l*hTri)/2).toFixed(1)} m²`);
+            badgeBot.position.set(0, 0.1, -hTri / 2);
+            triMesh.add(badgeBot);
+
             botHinge.add(triMesh);
             this.sm.unfoldGroup.add(botHinge);
             this.hinges.push({ obj: botHinge, axis: 'x', closedRot: -Math.PI / 2, openRot: 0 });
 
-            // Triângulo superior
             const topHinge = new THREE.Group();
             topHinge.position.set(0, 0.02, h / 2);
             const triGeoTop = new THREE.BufferGeometry();
@@ -374,12 +502,16 @@ class UnfoldingSystem {
             triGeoTop.computeVertexNormals();
             const triMeshTop = new THREE.Mesh(triGeoTop, faceMat(colors[4]));
             triMeshTop.add(new THREE.LineSegments(new THREE.EdgesGeometry(triGeoTop), new THREE.LineBasicMaterial({ color: 0xffffff })));
+            
+            const badgeTop = this.createFaceBadge('Topo Triangular', `Lado ${l.toFixed(1)} m`, `Área = ${((l*hTri)/2).toFixed(1)} m²`);
+            badgeTop.position.set(0, 0.1, hTri / 2);
+            triMeshTop.add(badgeTop);
+
             topHinge.add(triMeshTop);
             this.sm.unfoldGroup.add(topHinge);
             this.hinges.push({ obj: topHinge, axis: 'x', closedRot: Math.PI / 2, openRot: 0 });
 
         } else {
-            // Outros sólidos: demonstração planificada proporcional
             const infoGeo = new THREE.PlaneGeometry(6, 6);
             const infoMesh = new THREE.Mesh(infoGeo, faceMat(0x3b82f6));
             infoMesh.rotation.x = -Math.PI / 2;

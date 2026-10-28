@@ -1,18 +1,20 @@
-// Manipulador de Deformação Tridimensional por Vértices (Vertex Deformer Robusto & Intuitivo)
+// =============================================================================
+// GEO LAB 3D - MANIPULADOR DE DEFORMAÇÃO TRIDIMENSIONAL POR VÉRTICES
+// Deforma o sólido em poliedros arbitrários, com rotação sincronizada 100%
+// =============================================================================
+
 class VertexDeformer {
     constructor(sceneManager, onDimensionsChanged) {
         this.sm = sceneManager;
         this.onDimensionsChanged = onDimensionsChanged;
-        this.active = true; // ATIVO POR PADRÃO para que o estudante possa empurrar os vértices imediatamente
+        this.active = true; // Ativo para permitir deformação intuitiva
         this.currentSolidId = 'cube';
         this.currentParams = {};
 
         this.handlesGroup = new THREE.Group();
         this.handlesGroup.name = 'vertexHandlesGroup';
-        this.sm.scene.add(this.handlesGroup);
 
         this.raycaster = new THREE.Raycaster();
-        this.raycaster.params.Line = { threshold: 0.3 };
         this.mouse = new THREE.Vector2();
         this.dragPlane = new THREE.Plane();
         this.planeIntersect = new THREE.Vector3();
@@ -22,6 +24,16 @@ class VertexDeformer {
         this.hoveredHandle = null;
 
         this.setupEvents();
+    }
+
+    getSolidMesh() {
+        let mesh = null;
+        if (this.sm && this.sm.solidGroup) {
+            this.sm.solidGroup.traverse(c => {
+                if (!mesh && c.isMesh && c.name === 'solidBody') mesh = c;
+            });
+        }
+        return mesh || this.sm.solidMesh;
     }
 
     setSolid(solidId, params) {
@@ -39,7 +51,7 @@ class VertexDeformer {
             this.rebuildHandles();
         } else {
             this.clearHandles();
-            if (this.sm.controls) this.sm.controls.enabled = true;
+            if (this.sm && this.sm.controls) this.sm.controls.enabled = true;
             this.isDragging = false;
             this.selectedHandle = null;
         }
@@ -54,7 +66,10 @@ class VertexDeformer {
         while (this.handlesGroup.children.length > 0) {
             const h = this.handlesGroup.children[0];
             if (h.geometry) h.geometry.dispose();
-            if (h.material) h.material.dispose();
+            if (h.material) {
+                if (Array.isArray(h.material)) h.material.forEach(m => m.dispose());
+                else h.material.dispose();
+            }
             this.handlesGroup.remove(h);
         }
     }
@@ -63,82 +78,72 @@ class VertexDeformer {
         this.clearHandles();
         if (!this.active) return;
 
-        const id = this.currentSolidId;
-        const p = this.currentParams;
-        const positions = [];
+        const solidMesh = this.getSolidMesh();
+        if (!solidMesh || !solidMesh.geometry || !solidMesh.geometry.attributes.position) return;
 
-        // Obtém as posições atuais dos vértices do sólido
-        switch (id) {
-            case 'cube': {
-                const a = p.a || 3;
-                const half = a / 2;
-                [
-                    [-half, 0, -half], [half, 0, -half], [half, 0, half], [-half, 0, half],
-                    [-half, a, -half], [half, a, -half], [half, a, half], [-half, a, half]
-                ].forEach((pt, i) => positions.push({ pos: new THREE.Vector3(...pt), type: 'box_vertex', index: i }));
-                break;
+        // Anexa handlesGroup DIRETAMENTE ao solidMesh para que gire em perfeito sincronismo
+        if (this.handlesGroup.parent !== solidMesh) {
+            if (this.handlesGroup.parent) {
+                this.handlesGroup.parent.remove(this.handlesGroup);
             }
+            solidMesh.add(this.handlesGroup);
+        }
+        this.handlesGroup.position.set(0, 0, 0);
+        this.handlesGroup.rotation.set(0, 0, 0);
+        this.handlesGroup.scale.set(1, 1, 1);
 
-            case 'rectangular_prism': {
-                const a = p.a || 4, b = p.b || 3, c = p.c || 5;
-                const ha = a / 2, hb = b / 2;
-                [
-                    [-ha, 0, -hb], [ha, 0, -hb], [ha, 0, hb], [-ha, 0, hb],
-                    [-ha, c, -hb], [ha, c, -hb], [ha, c, hb], [-ha, c, hb]
-                ].forEach((pt, i) => positions.push({ pos: new THREE.Vector3(...pt), type: 'box_vertex', index: i }));
-                break;
-            }
+        const posAttr = solidMesh.geometry.attributes.position;
+        const uniqueVertices = [];
+        const threshold = 0.08;
 
-            case 'cylinder': {
-                const r = p.r || 2.5, h = p.h || 5;
-                // Alças nos 4 quadrantes da base e do topo
-                for (let i = 0; i < 4; i++) {
-                    const ang = (i * Math.PI) / 2;
-                    positions.push({ pos: new THREE.Vector3(r * Math.cos(ang), h, r * Math.sin(ang)), type: 'cylinder_top', angle: ang });
-                    positions.push({ pos: new THREE.Vector3(r * Math.cos(ang), 0, r * Math.sin(ang)), type: 'cylinder_bottom', angle: ang });
+        // Agrupa vértices compartilhados nas quinas (mesma posição espacial com normais distintas)
+        for (let i = 0; i < posAttr.count; i++) {
+            const v = new THREE.Vector3(posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i));
+            let existing = null;
+            for (let u = 0; u < uniqueVertices.length; u++) {
+                if (uniqueVertices[u].pos.distanceTo(v) < threshold) {
+                    existing = uniqueVertices[u];
+                    break;
                 }
-                break;
             }
-
-            case 'cone': {
-                const r = p.r || 2.5, h = p.h || 5;
-                positions.push({ pos: new THREE.Vector3(0, h, 0), type: 'apex' });
-                for (let i = 0; i < 4; i++) {
-                    const ang = (i * Math.PI) / 2;
-                    positions.push({ pos: new THREE.Vector3(r * Math.cos(ang), 0, r * Math.sin(ang)), type: 'cone_base', angle: ang });
-                }
-                break;
+            if (existing) {
+                existing.indices.push(i);
+            } else {
+                uniqueVertices.push({
+                    pos: v.clone(),
+                    indices: [i]
+                });
             }
-
-            case 'square_pyramid': {
-                const l = p.l || 4, h = p.h || 5;
-                const hl = l / 2;
-                positions.push({ pos: new THREE.Vector3(0, h, 0), type: 'apex' });
-                [
-                    [-hl, 0, -hl], [hl, 0, -hl], [hl, 0, hl], [-hl, 0, hl]
-                ].forEach((pt, i) => positions.push({ pos: new THREE.Vector3(...pt), type: 'pyramid_base', index: i }));
-                break;
-            }
-
-            default:
-                break;
         }
 
-        // Esferas de controle maiores e visíveis com brilho neon
-        const handleGeo = new THREE.SphereGeometry(0.3, 16, 16);
-        positions.forEach(item => {
+        // Se for uma forma com muitos vértices (ex: cilindro/cone com 36 segmentos), seleciona pontos-chave
+        let handlesToCreate = uniqueVertices;
+        if (uniqueVertices.length > 16) {
+            // Seleciona ápice + 4 pontos da base ou 4 pontos do topo e 4 da base
+            handlesToCreate = uniqueVertices.filter((item, idx) => {
+                return idx === 0 || idx % Math.floor(uniqueVertices.length / 8) === 0;
+            }).slice(0, 9);
+        }
+
+        // Esferas douradas/neon de controle dos vértices
+        const handleGeo = new THREE.SphereGeometry(0.24, 16, 16);
+        handlesToCreate.forEach((item, idx) => {
             const handleMat = new THREE.MeshStandardMaterial({
-                color: 0xfacc15, // Amarelo vibrante de alta visibilidade
-                emissive: 0xd97706,
-                roughness: 0.1,
+                color: 0xfacc15,       // Dourado vibrante
+                emissive: 0xd97706,    // Brilho quente
+                roughness: 0.2,
                 metalness: 0.8
             });
             const handleMesh = new THREE.Mesh(handleGeo, handleMat);
             handleMesh.position.copy(item.pos);
-            handleMesh.userData = item;
+            handleMesh.userData = {
+                vertexIndex: idx,
+                indices: item.indices,
+                initialPos: item.pos.clone()
+            };
 
-            // Anel visual de destaque em torno do vértice
-            const ringGeo = new THREE.RingGeometry(0.35, 0.45, 16);
+            // Anel neon ciano ao redor da esfera
+            const ringGeo = new THREE.RingGeometry(0.28, 0.36, 16);
             const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe, side: THREE.DoubleSide });
             const ring = new THREE.Mesh(ringGeo, ringMat);
             ring.rotation.x = Math.PI / 2;
@@ -151,6 +156,7 @@ class VertexDeformer {
     }
 
     setupEvents() {
+        if (!this.sm || !this.sm.renderer) return;
         const dom = this.sm.renderer.domElement;
 
         const getCoords = (e) => {
@@ -188,19 +194,22 @@ class VertexDeformer {
                 if (target && target.userData) {
                     this.selectedHandle = target;
                     this.isDragging = true;
-                    this.sm.controls.enabled = false;
+                    if (this.sm.controls) this.sm.controls.enabled = false;
 
                     if (e.cancelable && e.type.startsWith('touch')) {
                         e.preventDefault();
                     }
 
-                    // Cria o plano de arraste paralelo à tela passando pelo vértice
-                    const normal = this.sm.camera.getWorldDirection(new THREE.Vector3()).negate();
-                    this.dragPlane.setFromNormalAndCoplanarPoint(normal, this.selectedHandle.position);
+                    // Posição mundial da alça para ancorar o plano de arraste
+                    const worldPos = new THREE.Vector3();
+                    this.selectedHandle.getWorldPosition(worldPos);
+
+                    const cameraDir = this.sm.camera.getWorldDirection(new THREE.Vector3()).negate();
+                    this.dragPlane.setFromNormalAndCoplanarPoint(cameraDir, worldPos);
 
                     this.selectedHandle.material.color.setHex(0x00f2fe);
                     this.selectedHandle.material.emissive.setHex(0x0284c7);
-                    this.selectedHandle.scale.set(1.6, 1.6, 1.6);
+                    this.selectedHandle.scale.set(1.5, 1.5, 1.5);
                     dom.style.cursor = 'grabbing';
                 }
             }
@@ -217,8 +226,40 @@ class VertexDeformer {
                     e.preventDefault();
                 }
                 if (this.raycaster.ray.intersectPlane(this.dragPlane, this.planeIntersect)) {
-                    const newPos = this.planeIntersect.clone();
-                    this.applyDeformation(this.selectedHandle.userData, newPos);
+                    const solidMesh = this.getSolidMesh();
+                    if (solidMesh) {
+                        // Converte o ponto do plano (mundo) para coordenadas locais do solidMesh
+                        const localPos = solidMesh.worldToLocal(this.planeIntersect.clone());
+
+                        // Limita para evitar inversão excessiva
+                        localPos.clamp(new THREE.Vector3(-8, -8, -8), new THREE.Vector3(8, 8, 8));
+
+                        // 1. Move a alça visualmente
+                        this.selectedHandle.position.copy(localPos);
+
+                        // 2. Atualiza os vértices reais da geometria 3D
+                        const posAttr = solidMesh.geometry.attributes.position;
+                        const indices = this.selectedHandle.userData.indices || [];
+                        indices.forEach(idx => {
+                            posAttr.setXYZ(idx, localPos.x, localPos.y, localPos.z);
+                        });
+                        posAttr.needsUpdate = true;
+
+                        // 3. Recalcula normais e bounding box
+                        solidMesh.geometry.computeVertexNormals();
+                        solidMesh.geometry.computeBoundingBox();
+                        solidMesh.geometry.computeBoundingSphere();
+
+                        // 4. Recalcula as arestas neon em tempo real
+                        const edgesMesh = solidMesh.getObjectByName('solidEdgesBase');
+                        if (edgesMesh) {
+                            if (edgesMesh.geometry) edgesMesh.geometry.dispose();
+                            edgesMesh.geometry = new THREE.EdgesGeometry(solidMesh.geometry);
+                        }
+
+                        // 5. Notifica recálculo pedagógico
+                        this.notifyDeformation(solidMesh);
+                    }
                 }
             } else {
                 // Hover highlight
@@ -259,10 +300,9 @@ class VertexDeformer {
                     this.selectedHandle.scale.set(1, 1, 1);
                     this.selectedHandle = null;
                 }
-                this.sm.controls.enabled = true;
+                if (this.sm.controls) this.sm.controls.enabled = true;
                 dom.style.cursor = 'default';
                 if (window.sounds) window.sounds.playClick();
-                this.rebuildHandles();
             }
         };
 
@@ -275,66 +315,24 @@ class VertexDeformer {
         window.addEventListener('touchend', onPointerUp);
     }
 
-    applyDeformation(userData, newPos) {
-        const id = this.currentSolidId;
-        const p = { ...this.currentParams };
+    notifyDeformation(solidMesh) {
+        if (!solidMesh || !solidMesh.geometry.boundingBox) return;
+        const bbox = solidMesh.geometry.boundingBox;
+        const w = parseFloat((bbox.max.x - bbox.min.x).toFixed(1));
+        const h = parseFloat((bbox.max.y - bbox.min.y).toFixed(1));
+        const d = parseFloat((bbox.max.z - bbox.min.z).toFixed(1));
 
-        switch (id) {
-            case 'cube': {
-                // Ao puxar qualquer vértice do cubo, redimensiona simetricamente
-                const distFromCenter = Math.max(Math.abs(newPos.x), Math.abs(newPos.z), newPos.y / 2);
-                const newA = Math.max(1.0, Math.min(8.0, distFromCenter * 2));
-                p.a = parseFloat(newA.toFixed(2));
-                break;
-            }
+        const updatedParams = {
+            ...this.currentParams,
+            a: Math.max(1, w),
+            b: Math.max(1, d),
+            c: Math.max(1, h),
+            isArbitraryPolyhedron: true
+        };
+        this.currentParams = updatedParams;
 
-            case 'rectangular_prism': {
-                // Achatamento ou ampliação independente por eixo
-                if (Math.abs(newPos.x) > 0.4) p.a = parseFloat((Math.max(1.0, Math.min(10.0, Math.abs(newPos.x) * 2))).toFixed(2));
-                if (Math.abs(newPos.z) > 0.4) p.b = parseFloat((Math.max(1.0, Math.min(10.0, Math.abs(newPos.z) * 2))).toFixed(2));
-                if (newPos.y > 0.4) p.c = parseFloat((Math.max(1.0, Math.min(10.0, newPos.y))).toFixed(2));
-                break;
-            }
-
-            case 'cylinder': {
-                if (userData.type === 'cylinder_top') {
-                    if (newPos.y > 0.4) p.h = parseFloat(Math.max(1.0, Math.min(10.0, newPos.y)).toFixed(2));
-                    const newR = Math.sqrt(newPos.x * newPos.x + newPos.z * newPos.z);
-                    if (newR > 0.4) p.r = parseFloat(Math.max(0.8, Math.min(5.0, newR)).toFixed(2));
-                } else {
-                    const newR = Math.sqrt(newPos.x * newPos.x + newPos.z * newPos.z);
-                    if (newR > 0.4) p.r = parseFloat(Math.max(0.8, Math.min(5.0, newR)).toFixed(2));
-                }
-                break;
-            }
-
-            case 'cone': {
-                if (userData.type === 'apex') {
-                    if (newPos.y > 0.4) p.h = parseFloat(Math.max(1.0, Math.min(10.0, newPos.y)).toFixed(2));
-                } else {
-                    const newR = Math.sqrt(newPos.x * newPos.x + newPos.z * newPos.z);
-                    if (newR > 0.4) p.r = parseFloat(Math.max(0.8, Math.min(5.0, newR)).toFixed(2));
-                }
-                break;
-            }
-
-            case 'square_pyramid': {
-                if (userData.type === 'apex') {
-                    if (newPos.y > 0.4) p.h = parseFloat(Math.max(1.0, Math.min(10.0, newPos.y)).toFixed(2));
-                } else {
-                    const maxCoord = Math.max(Math.abs(newPos.x), Math.abs(newPos.z));
-                    if (maxCoord > 0.4) p.l = parseFloat((Math.max(1.0, Math.min(8.0, maxCoord * 2))).toFixed(2));
-                }
-                break;
-            }
-
-            default:
-                break;
-        }
-
-        this.currentParams = p;
         if (typeof this.onDimensionsChanged === 'function') {
-            this.onDimensionsChanged(p);
+            this.onDimensionsChanged(updatedParams);
         }
     }
 }

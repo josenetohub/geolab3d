@@ -1,6 +1,6 @@
 // =============================================================================
 // GEO LAB 3D - ASSISTENTE VIRTUAL: O ENGENHEIRO GUIA (LEO)
-// Avatar Cartoon/Flat Design, Onboarding Guiado, Dicas Contextuais e Setas Animadas
+// Avatar Cartoon/Flat Design, Apresentação Grande no Centro, Dicas e Setas
 // =============================================================================
 
 class EngineerGuide {
@@ -47,7 +47,7 @@ class EngineerGuide {
             </div>
 
             <!-- AVATAR DO ENGENHEIRO (FLAT DESIGN / CARTOON SVG) -->
-            <div class="engineer-avatar-badge" id="engineerAvatarBadge" title="Clique para falar com o Engenheiro Leo">
+            <div class="engineer-avatar-badge" id="engineerAvatarBadge" title="Clique para abrir as instruções do Engenheiro Leo">
                 <div class="engineer-avatar-glow"></div>
                 <div class="engineer-status-beacon" id="engineerStatusBeacon">💡</div>
                 <div class="engineer-svg-wrapper" id="engineerSvgWrapper">
@@ -61,6 +61,36 @@ class EngineerGuide {
 
         document.body.appendChild(container);
 
+        // MODAL DO ENGENHEIRO GRANDE NO CENTRO DA TELA
+        const centerModal = document.createElement('div');
+        centerModal.id = 'engineerCenterModal';
+        centerModal.className = 'modal-backdrop hidden';
+        centerModal.innerHTML = `
+            <div class="modal-dialog engineer-center-dialog">
+                <div class="engineer-center-header">
+                    <div class="engineer-large-avatar-box">
+                        ${this.getEngineerSvg()}
+                    </div>
+                    <div class="engineer-center-titles">
+                        <span class="engineer-center-role">👷 SEU GUIA TÉCNICO · ENGENHEIRO LEO</span>
+                        <h2 id="centerModalTitle" class="engineer-center-title">Instruções da Missão</h2>
+                    </div>
+                    <button class="btn-close-modal" id="btnCloseCenterModal" title="Fechar e ir para a prática">✕</button>
+                </div>
+
+                <div class="engineer-center-body" id="centerModalBody">
+                    <!-- Conteúdo pedagógico dinâmico -->
+                </div>
+
+                <div class="engineer-center-footer">
+                    <button class="btn-action-primary" id="btnCenterModalAction">
+                        Iniciar Desafio Agora 🚀
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(centerModal);
+
         // Container global para setas e holofotes guiados
         const spotlightOverlay = document.createElement('div');
         spotlightOverlay.id = 'guidedSpotlightOverlay';
@@ -69,7 +99,6 @@ class EngineerGuide {
     }
 
     getEngineerSvg() {
-        // Avatar vetorial profissional de Engenheiro (Capacete amarelo de segurança, óculos de proteção, colete azul)
         return `
         <svg viewBox="0 0 120 120" width="100%" height="100%" class="engineer-svg" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -92,7 +121,7 @@ class EngineerGuide {
             </defs>
             
             <g filter="url(#avatarShadow)">
-                <!-- Círculo de fundo / Moldura -->
+                <!-- Círculo de moldura -->
                 <circle cx="60" cy="60" r="54" fill="#0f172a" stroke="#38bdf8" stroke-width="3" />
                 
                 <!-- Camisa / Colete do Engenheiro -->
@@ -132,11 +161,8 @@ class EngineerGuide {
 
                 <!-- Capacete Amarelo de Engenheiro -->
                 <path d="M34 50 C 34 26, 86 26, 86 50 Z" fill="url(#helmetGrad)" />
-                <!-- Aba do Capacete -->
                 <ellipse cx="60" cy="50" rx="30" ry="5.5" fill="#eab308" stroke="#a16207" stroke-width="1" />
-                <!-- Crista Central do Capacete -->
                 <path d="M56 28 L64 28 L63 48 L57 48 Z" fill="#ca8a04" />
-                <!-- Emblema de Lápis/Compasso no capacete -->
                 <circle cx="60" cy="38" r="5" fill="#ffffff" />
                 <path d="M58 35 L62 35 L60 41 Z" fill="#0284c7" />
 
@@ -151,11 +177,30 @@ class EngineerGuide {
         const badge = document.getElementById('engineerAvatarBadge');
         if (badge) {
             badge.addEventListener('click', () => {
-                if (this.isSpeechBubbleVisible()) {
+                if (window.careerMode) {
+                    const stage = window.careerMode.getCurrentStage();
+                    this.showCenterBriefing({
+                        title: `${stage.icon} ${stage.title}`,
+                        story: stage.story,
+                        directCommand: `Arraste a medida da aresta [a = ${stage.targetParams.a || 3}m] para a Lousa!`,
+                        step1: `Observe a aresta no modelo 3D (a = ${stage.targetParams.a || 3} m).`,
+                        step2: `Arraste o bloco [ a = ${stage.targetParams.a || 3}m ] para a fórmula na Lousa.`,
+                        step3: `Acompanhe a expansão de potências e faça a multiplicação passo a passo.`,
+                        ctaText: 'Entendi! Ir para a Lousa 🚀'
+                    });
+                } else if (this.isSpeechBubbleVisible()) {
                     this.hideSpeechBubble();
                 } else {
                     this.showRandomTip();
                 }
+                if (window.sounds) window.sounds.playClick();
+            });
+        }
+
+        const btnCloseCenter = document.getElementById('btnCloseCenterModal');
+        if (btnCloseCenter) {
+            btnCloseCenter.addEventListener('click', () => {
+                this.hideCenterBriefing();
                 if (window.sounds) window.sounds.playClick();
             });
         }
@@ -193,6 +238,73 @@ class EngineerGuide {
         }
     }
 
+    // =========================================================================
+    // MODAL DE APRESENTAÇÃO GRANDE DO ENGENHEIRO NO CENTRO DA TELA
+    // =========================================================================
+    showCenterBriefing(options = {}) {
+        const modal = document.getElementById('engineerCenterModal');
+        const titleEl = document.getElementById('centerModalTitle');
+        const bodyEl = document.getElementById('centerModalBody');
+        const btnAction = document.getElementById('btnCenterModalAction');
+        if (!modal || !titleEl || !bodyEl) return;
+
+        titleEl.innerHTML = options.title || 'Missão com o Engenheiro Leo';
+        bodyEl.innerHTML = `
+            <div class="center-briefing-story">
+                ${options.story || 'Bem-vindo ao desafio prático de geometria espacial!'}
+            </div>
+
+            <div class="center-briefing-command-card">
+                <div class="cmd-card-badge">🎯 SEU OBJETIVO PRINCIPAL:</div>
+                <div class="cmd-card-text">${options.directCommand || 'Arraste a medida para a fórmula correspondente na Lousa de Dedução.'}</div>
+            </div>
+
+            <div class="center-briefing-steps-grid">
+                <div class="briefing-step-box">
+                    <div class="step-badge-circle">1</div>
+                    <div class="step-box-content">
+                        <b>Localize a Medida:</b>
+                        <span>${options.step1 || 'Observe a aresta indicada no sólido 3D ou na bandeja de chips.'}</span>
+                    </div>
+                </div>
+
+                <div class="briefing-step-box">
+                    <div class="step-badge-circle">2</div>
+                    <div class="step-box-content">
+                        <b>Solte na Fórmula:</b>
+                        <span>${options.step2 || 'Arraste ou clique no bloco de medida para preencher a incógnita.'}</span>
+                    </div>
+                </div>
+
+                <div class="briefing-step-box">
+                    <div class="step-badge-circle">3</div>
+                    <div class="step-box-content">
+                        <b>Multiplique Passo a Passo:</b>
+                        <span>${options.step3 || 'Veja a potência se expandir e clique em [ × ] para deduzir o resultado!'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        if (btnAction) {
+            btnAction.textContent = options.ctaText || 'Iniciar Desafio Agora 🚀';
+            btnAction.onclick = () => {
+                this.hideCenterBriefing();
+                if (typeof options.onStart === 'function') {
+                    options.onStart();
+                }
+            };
+        }
+
+        modal.classList.remove('hidden');
+        if (window.sounds) window.sounds.playClick();
+    }
+
+    hideCenterBriefing() {
+        const modal = document.getElementById('engineerCenterModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
     speak(message, options = {}) {
         const bubble = document.getElementById('engineerSpeechBubble');
         const textEl = document.getElementById('engineerSpeechText');
@@ -202,21 +314,17 @@ class EngineerGuide {
 
         if (!bubble || !textEl) return;
 
-        // Limpa timers anteriores
         if (this.speechTimeout) clearTimeout(this.speechTimeout);
         if (this.typingInterval) clearInterval(this.typingInterval);
 
-        // Define status beacon (💡 dica, ⚠️ alerta, 🎉 sucesso, 👷 instrução)
         if (beacon) {
             beacon.textContent = options.icon || '💡';
             beacon.classList.add('pulse');
         }
 
-        // Animação de fala do avatar
         const mouth = document.getElementById('engineerMouth');
         if (mouth) mouth.setAttribute('d', 'M50 67 Q 60 79, 70 67');
 
-        // Configuração de botões
         if (nextBtn) {
             nextBtn.textContent = options.btnText || 'Entendi! 👍';
         }
@@ -225,33 +333,19 @@ class EngineerGuide {
         }
         this.onNextStepCallback = options.onNext || null;
 
-        // Exibe o balão
         bubble.classList.remove('hidden');
-        textEl.innerHTML = '';
+        textEl.innerHTML = message;
 
-        // Efeito de digitação suave
-        let i = 0;
-        const speed = options.instant ? 0 : 12;
-
-        if (speed === 0) {
-            textEl.innerHTML = message;
-            if (mouth) mouth.setAttribute('d', 'M52 68 Q 60 76, 68 68');
-        } else {
-            // Suporta tags HTML mantendo a digitação rápida
-            const rawText = message;
-            textEl.innerHTML = rawText;
-            if (mouth) {
-                setTimeout(() => {
-                    mouth.setAttribute('d', 'M52 68 Q 60 76, 68 68');
-                }, 400);
-            }
+        if (mouth) {
+            setTimeout(() => {
+                mouth.setAttribute('d', 'M52 68 Q 60 76, 68 68');
+            }, 400);
         }
 
         if (window.sounds && !options.silent) {
             window.sounds.playClick();
         }
 
-        // Auto-dispensa se configurado
         if (options.duration) {
             this.speechTimeout = setTimeout(() => {
                 this.hideSpeechBubble();
@@ -272,7 +366,7 @@ class EngineerGuide {
     }
 
     // =========================================================================
-    // APONTAMENTO VISUAL E HOLOFOTE GUIADO (SETAS ANIMADAS)
+    // APONTAMENTO VISUAL E SETAS ANIMADAS
     // =========================================================================
     guideUserTo(targetSelector, message, options = {}) {
         const targetEl = document.querySelector(targetSelector);
@@ -286,7 +380,6 @@ class EngineerGuide {
         const overlay = document.getElementById('guidedSpotlightOverlay');
         const rect = targetEl.getBoundingClientRect();
 
-        // Cria a seta animada apontando para o elemento
         const arrow = document.createElement('div');
         arrow.className = `guided-floating-arrow arrow-${options.position || 'top'}`;
         
@@ -302,7 +395,7 @@ class EngineerGuide {
         } else if (options.position === 'bottom') {
             arrowX = rect.left + rect.width / 2;
             arrowY = rect.bottom + 20;
-        } else { // top
+        } else {
             arrowX = rect.left + rect.width / 2;
             arrowY = rect.top - 20;
         }
@@ -312,7 +405,7 @@ class EngineerGuide {
         arrow.innerHTML = `
             <div class="arrow-pulsing-badge">
                 <span class="arrow-symbol">👇</span>
-                <span class="arrow-label">${options.arrowLabel || 'CLIQUE AQUI'}</span>
+                <span class="arrow-label">${options.arrowLabel || 'CLIQUE OU ARRASTE AQUI'}</span>
             </div>
         `;
 
@@ -322,11 +415,9 @@ class EngineerGuide {
             this.currentArrow = arrow;
         }
 
-        // Destaca o elemento alvo
         targetEl.classList.add('guided-target-pulse');
         this.currentTargetEl = targetEl;
 
-        // Fala a mensagem correspondente
         this.speak(message, {
             ...options,
             onNext: () => {
@@ -350,9 +441,6 @@ class EngineerGuide {
         this.currentArrow = null;
     }
 
-    // =========================================================================
-    // ONBOARDING GUIADO (TUTORIAL EM ETAPAS COM O ENGENHEIRO)
-    // =========================================================================
     startOnboarding() {
         const steps = [
             {
@@ -368,7 +456,7 @@ class EngineerGuide {
                 position: 'bottom',
                 arrowLabel: 'RAIO-X 1D · 2D · 3D',
                 icon: '🔬',
-                text: 'Aqui em cima temos os botões de <b>Raio-X Didático</b>. Eles mostram a diferença real entre <b>Perímetro (1D)</b>, <b>Área (2D)</b> e <b>Volume (3D)</b>!',
+                text: 'Aqui em cima temos os botões de <b>Raio-X Didático</b>: <b>Perímetro (1D)</b>, <b>Área (2D)</b> e <b>Volume (3D)</b> com líquido real!',
                 btnText: 'Muito legal!'
             },
             {
@@ -376,25 +464,16 @@ class EngineerGuide {
                 position: 'left',
                 arrowLabel: 'LOUSA DE CÁLCULO',
                 icon: '📐',
-                text: 'Esqueça decoreba de fórmulas! Na nossa <b>Lousa Interativa</b>, você vai <b>arrastar as medidas do 3D</b> para dentro das incógnitas e ver potências como <b>3³</b> se expandirem em <b>3 × 3 × 3</b>!',
+                text: 'Esqueça decoreba de fórmulas! Na nossa <b>Lousa Interativa</b>, você vai <b>arrastar as medidas</b> para dentro das incógnitas e ver potências como <b>3³</b> se expandirem em <b>3 × 3 × 3</b>!',
                 btnText: 'Entendi!'
-            },
-            {
-                target: '#btnToggleDeform',
-                position: 'bottom',
-                arrowLabel: 'DEFORMAR VÉRTICES',
-                icon: '✋',
-                text: 'Você pode puxar os vértices dourados no 3D para achatar ou ampliar qualquer sólido. A fórmula recalcula na hora!',
-                btnText: 'Vamos Começar! 🚀'
             }
         ];
 
         let currentStep = 0;
-
         const runStep = () => {
             if (currentStep >= steps.length) {
                 this.completeOnboarding();
-                this.speak('Pronto! Agora você está pronto para iniciar sua carreira técnica. Arraste a primeira medida na Lousa ao lado!', {
+                this.speak('Pronto! Agora arraste a primeira medida na Lousa ao lado para calcular o Volume!', {
                     icon: '🎉',
                     btnText: 'Bora lá!',
                     duration: 5000
@@ -425,9 +504,6 @@ class EngineerGuide {
         this.removeGuideSpotlight();
     }
 
-    // =========================================================================
-    // DICAS PEDAGÓGICAS CONTEXTUAIS SOBRE LETRAMENTO MATEMÁTICO
-    // =========================================================================
     explainPowerMisconception(base, exp) {
         this.speak(`
             ⚠️ <b>Atenção com a Potência!</b><br>
@@ -444,7 +520,7 @@ class EngineerGuide {
         if (dim === '1d') {
             this.speak(`
                 📏 <b>Medida Linear (1D - Metros):</b><br>
-                O <b>perímetro</b> e as arestas são unidimensionais. É o comprimento de uma linha reta, como esticar uma trena ou fita métrica!
+                O <b>perímetro</b> e as arestas são unidimensionais. É o comprimento de uma linha reta, como esticar uma fita métrica!
             `, { icon: '📏', btnText: 'Entendi!' });
         } else if (dim === '2d') {
             this.speak(`
@@ -454,8 +530,8 @@ class EngineerGuide {
         } else if (dim === '3d') {
             this.speak(`
                 💧 <b>Volume e Capacidade (3D - Metros Cúbicos m³ e Litros):</b><br>
-                O <b>Volume</b> é todo o espaço tridimensional que o sólido ocupa por dentro. 
-                <br>💡 <b>Lembre-se sempre:</b> <b>1 m³ = 1.000 Litros de água</b>!
+                O <b>Volume</b> é todo o espaço tridimensional interno que o sólido comporta. 
+                <br>💡 <b>Lembre-se sempre:</b> <b>1 m³ = exatamente 1.000 Litros de água</b>!
             `, { icon: '💧', btnText: 'Show de bola!' });
         }
     }

@@ -150,7 +150,7 @@ class InteractiveBlackboard {
         }
 
         return chips.map(c => `
-            <div class="draggable-measure-chip" 
+            <div class="draggable-measure-chip ${this.state.step === 'awaiting_dimension' ? 'beacon-pulse-glow' : ''}" 
                  draggable="true" 
                  data-key="${c.key}" 
                  data-val="${c.val}" 
@@ -159,6 +159,7 @@ class InteractiveBlackboard {
                 <span class="chip-drag-handle">⠿</span>
                 <span class="chip-name">${c.name}:</span>
                 <span class="chip-val">${c.val.toFixed(1)} ${c.unit}</span>
+                ${this.state.step === 'awaiting_dimension' ? '<span class="chip-beacon-badge">👉 CLIQUE OU ARRASTE</span>' : ''}
             </div>
         `).join('');
     }
@@ -217,13 +218,15 @@ class InteractiveBlackboard {
             return `
                 <div class="equation-row">
                     <span class="eq-symbol highlight-symbol">V =</span>
-                    <div class="formula-drop-zone drop-pulse" data-target-key="a" id="dropZoneA">
-                        <span class="drop-hint-text">Arraste a aresta (a = ${a.toFixed(1)}m) aqui</span>
+                    <div class="formula-drop-zone drop-pulse target-beacon-zone" data-target-key="a" id="dropZoneA">
+                        <span class="beacon-drop-icon">📥</span>
+                        <span class="drop-hint-text">SOLTE AQUI (a = ${a.toFixed(1)}m)</span>
+                        <span class="zone-beacon-badge">👇 SOLTE OU CLIQUE AQUI</span>
                     </div>
                     <span class="eq-exponent">³</span>
                 </div>
                 <div class="equation-subcaption">
-                    💡 O expoente <b>³ (ao cubo)</b> significa que vamos calcular em <b>3 Dimensões</b> (Volume)!
+                    👉 <b>O que fazer agora:</b> Clique ou arraste o bloco <b>[ Aresta a: ${a.toFixed(1)} m ]</b> acima para dentro da caixa <b>[ ? ]³</b>!
                 </div>
             `;
         }
@@ -433,20 +436,23 @@ class InteractiveBlackboard {
             return `
                 <div class="equation-row">
                     <span class="eq-symbol highlight-symbol">V =</span>
-                    <div class="formula-drop-zone ${hasA ? 'filled' : 'drop-pulse'}" data-target-key="a">
-                        ${hasA ? this.state.droppedValues.a : 'a'}
+                    <div class="formula-drop-zone ${hasA ? 'filled' : 'drop-pulse target-beacon-zone'}" data-target-key="a">
+                        ${hasA ? this.state.droppedValues.a : '📥 a (' + a + 'm)'}
+                        ${!hasA ? '<span class="zone-beacon-badge">👇 SOLTE OU CLIQUE</span>' : ''}
                     </div>
                     <span class="eq-symbol">·</span>
-                    <div class="formula-drop-zone ${hasB ? 'filled' : 'drop-pulse'}" data-target-key="b">
-                        ${hasB ? this.state.droppedValues.b : 'b'}
+                    <div class="formula-drop-zone ${hasB ? 'filled' : 'drop-pulse target-beacon-zone'}" data-target-key="b">
+                        ${hasB ? this.state.droppedValues.b : '📥 b (' + b + 'm)'}
+                        ${!hasB && hasA ? '<span class="zone-beacon-badge">👇 SOLTE OU CLIQUE</span>' : ''}
                     </div>
                     <span class="eq-symbol">·</span>
-                    <div class="formula-drop-zone ${hasC ? 'filled' : 'drop-pulse'}" data-target-key="c">
-                        ${hasC ? this.state.droppedValues.c : 'c'}
+                    <div class="formula-drop-zone ${hasC ? 'filled' : 'drop-pulse target-beacon-zone'}" data-target-key="c">
+                        ${hasC ? this.state.droppedValues.c : '📥 c (' + c + 'm)'}
+                        ${!hasC && hasA && hasB ? '<span class="zone-beacon-badge">👇 SOLTE OU CLIQUE</span>' : ''}
                     </div>
                 </div>
                 <div class="equation-subcaption">
-                    Arraste o Comprimento (a), Largura (b) e Altura (c) para a fórmula!
+                    👉 <b>O que fazer:</b> Arraste ou clique nos blocos de <b>Comprimento (a)</b>, <b>Largura (b)</b> e <b>Altura (c)</b> na bandeja acima!
                 </div>
             `;
         }
@@ -957,6 +963,23 @@ class InteractiveBlackboard {
                     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
                     this.handleValueInserted(data.key, data.val);
                 } catch (err) {}
+            });
+
+            // Clique na caixa vazia busca o valor correspondente para preenchimento imediato
+            zone.addEventListener('click', () => {
+                const targetKey = zone.dataset.targetKey;
+                if (!targetKey) return;
+                const p = this.currentParams;
+                let val = p[targetKey];
+                if (val === undefined && targetKey === 'a') val = p.a || 3;
+                if (val === undefined && targetKey === 'b') val = p.b || 2.5;
+                if (val === undefined && targetKey === 'c') val = p.c || 2.6;
+                if (val === undefined && targetKey === 'r') val = p.r || 2;
+                if (val === undefined && targetKey === 'h') val = p.h || 6;
+                if (val === undefined && targetKey === 'l') val = p.l || 4;
+                if (val !== undefined) {
+                    this.handleValueInserted(targetKey, parseFloat(val));
+                }
             });
         });
 

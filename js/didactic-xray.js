@@ -1,6 +1,6 @@
 // =============================================================================
 // GEO LAB 3D - RAIO-X DIDÁTICO: PERÍMETRO (1D) vs ÁREA (2D) vs VOLUME (3D)
-// Letramento Matemático Visual com Rolo de Pintura, Neon e Água Hidráulica
+// Letramento Matemático Visual: Sólido Transparente para Água, Neon e Rolo de Pintura
 // =============================================================================
 
 class DidacticXRay {
@@ -16,6 +16,16 @@ class DidacticXRay {
         this.rollerAnimationRunning = false;
 
         this.initDOM();
+    }
+
+    getSolidMesh() {
+        let mesh = null;
+        if (this.sm && this.sm.solidGroup) {
+            this.sm.solidGroup.traverse(c => {
+                if (!mesh && c.isMesh && c.name === 'solidBody') mesh = c;
+            });
+        }
+        return mesh || (this.sm ? this.sm.solidMesh : null);
     }
 
     initDOM() {
@@ -135,21 +145,19 @@ class DidacticXRay {
         this.hidePaintRoller();
 
         // 1. Torna o sólido 3D quase transparente (fantasma)
-        if (this.sm.solidMesh && this.sm.solidMesh.material) {
-            this.sm.solidMesh.material.transparent = true;
-            this.sm.solidMesh.material.opacity = 0.08;
-            this.sm.solidMesh.material.needsUpdate = true;
+        const solidMesh = this.getSolidMesh();
+        if (solidMesh && solidMesh.material) {
+            solidMesh.material.transparent = true;
+            solidMesh.material.opacity = 0.08;
+            solidMesh.material.depthWrite = false;
+            solidMesh.material.needsUpdate = true;
         }
 
         // 2. Acende as arestas em neon elétrico ciano brilhante
-        if (this.sm.edgeLine && this.sm.edgeLine.material) {
-            this.sm.edgeLine.visible = true;
-            this.sm.edgeLine.material.color.set(0x00f2fe);
-            this.sm.edgeLine.material.linewidth = 4;
-            this.sm.edgeLine.material.opacity = 1.0;
-        }
+        this.sm.setEdgeColor('#00f2fe');
+        this.sm.setElementsVisibility(false, true, false);
 
-        // 3. Garante que as cotas lineares fiquem visíveis
+        // 3. Garante que as cotas lineares com medidas fiquem visíveis
         if (window.dimensionsHelper) {
             window.dimensionsHelper.setVisible(true);
         }
@@ -160,8 +168,14 @@ class DidacticXRay {
         this.sm.faucetGroup.visible = false;
         this.liquidSim.empty();
 
-        // 5. Exibe HUD 1D
-        this.showDimHUD('1D · PERÍMETRO & ARESTAS', 'Medida linear (metros). Imagine contornar o sólido com uma linha ou fita métrica!', '#00f2fe');
+        // 5. Exibe HUD 1D com cálculo do perímetro das arestas
+        const p = this.liquidSim.currentParams || {};
+        let perimText = "Medida linear (1D em metros). Contorne as arestas para medir o perímetro total!";
+        if (p.a) {
+            const perimTotal = (12 * p.a).toFixed(1);
+            perimText = `12 arestas de ${p.a.toFixed(1)} m cada ➔ Perímetro Linear Total = 12 × ${p.a.toFixed(1)}m = <b>${perimTotal} metros</b>!`;
+        }
+        this.showDimHUD('1D · PERÍMETRO & ARESTAS LINEARES', perimText, '#00f2fe');
 
         // 6. Explicação do Engenheiro
         if (this.engineer) {
@@ -174,9 +188,12 @@ class DidacticXRay {
     // =========================================================================
     activateAreaMode() {
         // Restaura opacidade do sólido para quando voltar
-        if (this.sm.solidMesh && this.sm.solidMesh.material) {
-            this.sm.solidMesh.material.opacity = 0.95;
-            this.sm.solidMesh.material.transparent = false;
+        const solidMesh = this.getSolidMesh();
+        if (solidMesh && solidMesh.material) {
+            solidMesh.material.opacity = 0.95;
+            solidMesh.material.transparent = false;
+            solidMesh.material.depthWrite = true;
+            solidMesh.material.needsUpdate = true;
         }
 
         this.sm.faucetGroup.visible = false;
@@ -201,8 +218,15 @@ class DidacticXRay {
         };
         animateUnfold();
 
-        // 2. Exibe HUD 2D
-        this.showDimHUD('2D · ÁREA TOTAL (CASCA)', 'Superfície plana (metros quadrados m²). É a quantidade de tinta ou papel para pintar todas as faces!', '#f59e0b');
+        // 2. Exibe HUD 2D com a soma das áreas das faces
+        const p = this.liquidSim.currentParams || {};
+        let areaText = "Superfície plana (2D em m²). Quantidade de material necessária para cobrir todas as faces!";
+        if (p.a) {
+            const faceArea = (p.a * p.a).toFixed(1);
+            const totalArea = (6 * p.a * p.a).toFixed(1);
+            areaText = `6 faces de ${p.a.toFixed(1)}m × ${p.a.toFixed(1)}m = ${faceArea} m² cada ➔ Área Total = 6 × ${faceArea}m² = <b>${totalArea} m²</b>!`;
+        }
+        this.showDimHUD('2D · ÁREA TOTAL DE SUPERFÍCIE (CASCA)', areaText, '#f59e0b');
 
         // 3. Explicação do Engenheiro
         if (this.engineer) {
@@ -247,7 +271,7 @@ class DidacticXRay {
     }
 
     // =========================================================================
-    // 3. VOLUME (3D): ESPAÇO INTERNO PREENCHIDO COM ÁGUA (LITROS)
+    // 3. VOLUME (3D): SÓLIDO TRANSPARENTE COM ÁGUA VISÍVEL (LITROS)
     // =========================================================================
     activateVolumeMode() {
         this.hidePaintRoller();
@@ -256,21 +280,34 @@ class DidacticXRay {
         this.unfoldSys.setActive(false);
         this.sm.solidGroup.visible = true;
 
-        if (this.sm.solidMesh && this.sm.solidMesh.material) {
-            this.sm.solidMesh.material.opacity = 0.85;
-            this.sm.solidMesh.material.transparent = true;
+        // CRUCIAL: Sólido fica TRANSPARENTE (Raio-X vidro) para o líquido ser 100% visível
+        const solidMesh = this.getSolidMesh();
+        if (solidMesh && solidMesh.material) {
+            solidMesh.material.transparent = true;
+            solidMesh.material.opacity = 0.20; // 80% translúcido: enxerga perfeitamente o líquido subindo
+            solidMesh.material.depthWrite = false;
+            solidMesh.material.roughness = 0.1;
+            solidMesh.material.metalness = 0.1;
+            solidMesh.material.needsUpdate = true;
         }
 
-        // 2. Ativa torneira/tubulação e enche com água
+        // 2. Ativa torneira/tubulação e enche com água azul vibrante
         this.sm.faucetGroup.visible = true;
         this.liquidSim.empty();
         
         setTimeout(() => {
             this.liquidSim.startFilling();
-        }, 300);
+        }, 250);
 
-        // 3. Exibe HUD 3D com litragem
-        this.showDimHUD('3D · VOLUME & CAPACIDADE', 'Espaço interno (metros cúbicos m³ e Litros). 1 m³ = 1.000 Litros de água potável!', '#38bdf8');
+        // 3. Exibe HUD 3D com litragem exata (1m³ = 1000L)
+        const p = this.liquidSim.currentParams || {};
+        let volText = "Espaço interno tridimensional (m³ e Litros). 1 m³ = exatamente 1.000 Litros de água!";
+        if (p.a) {
+            const vol = Math.pow(p.a, 3);
+            const litros = Math.round(vol * 1000);
+            volText = `V = a³ = (${p.a.toFixed(1)}m)³ = <b>${vol.toFixed(1)} m³</b> ➔ Capacidade Total: <b>${litros.toLocaleString('pt-BR')} Litros</b> de água!`;
+        }
+        this.showDimHUD('3D · VOLUME & CAPACIDADE HIDRÁULICA', volText, '#38bdf8');
 
         // 4. Explicação do Engenheiro
         if (this.engineer) {
@@ -291,15 +328,16 @@ class DidacticXRay {
         this.liquidSim.stopFilling();
         this.liquidSim.empty();
 
-        if (this.sm.solidMesh && this.sm.solidMesh.material) {
-            this.sm.solidMesh.material.opacity = 0.95;
-            this.sm.solidMesh.material.transparent = false;
-            this.sm.solidMesh.material.needsUpdate = true;
+        const solidMesh = this.getSolidMesh();
+        if (solidMesh && solidMesh.material) {
+            solidMesh.material.opacity = 0.95;
+            solidMesh.material.transparent = false;
+            solidMesh.material.depthWrite = true;
+            solidMesh.material.needsUpdate = true;
         }
 
-        if (this.sm.edgeLine && this.sm.edgeLine.material) {
-            this.sm.edgeLine.material.color.set(0x00f2fe);
-        }
+        this.sm.setEdgeColor('#00f2fe');
+        this.sm.setElementsVisibility(false, false, false);
 
         if (window.dimensionsHelper) {
             window.dimensionsHelper.setVisible(true);
