@@ -535,11 +535,6 @@
 
             <div class="canvas-hint">👆 Toque e arraste para girar · 2 dedos para zoom · Arraste as esferas amarelas para deformar!</div>
             
-            <!-- BOTÃO FLUTUANTE PULSANTE NO CANVAS (LADO ESQUERDO) -->
-            <button class="btn-float-challenge-pulsing" id="btnFloatChallenge" title="Visualizar desafio da Carreira">
-                <span style="font-size:1.15rem;">🎯</span> Visualizar Desafio
-            </button>
-            
             <!-- TOOLBAR MODERNA DO CANVAS -->
             <div class="canvas-toolbar">
                 <button class="toolbar-btn active" id="btnToggleDimensions">📏 Cotas (Medidas)</button>
@@ -562,9 +557,21 @@
         <aside class="panel right-panel">
 
             <!-- TÍTULO DO SÓLIDO SELECIONADO -->
-            <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--border-subtle); padding-bottom:6px;">
                 <div id="solidTitle" style="font-size:1.15rem; font-weight:700; color:var(--text-primary);">Cubo</div>
                 <span id="solidCategoryBadge" style="font-size:0.75rem; color:var(--primary-light); font-weight:600;">Prisma Reto</span>
+            </div>
+
+            <!-- DIMENSÕES DO MODELO 3D NO LADO DIREITO DO SITE -->
+            <div class="right-dimensions-card" id="rightModelDimensionsCard">
+                <div class="right-dim-header">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="right-dim-icon">📐</span>
+                        <span class="right-dim-title">Dimensões do Modelo</span>
+                    </div>
+                    <span class="right-dim-badge" id="rightDimSolidBadge">Cubo</span>
+                </div>
+                <div class="right-dim-chips" id="rightDimChipsContainer"></div>
             </div>
 
             <!-- ==================================================================
@@ -915,8 +922,20 @@
 
                 <!-- CONTEÚDO EM 2 COLUNAS COMPACTO (CABE 100% NA TELA SEM ROLAGEM) -->
                 <div class="career-modal-two-col">
-                    <!-- COLUNA ESQUERDA: HISTÓRIA E FÓRMULAS -->
+                    <!-- COLUNA ESQUERDA: REFERÊNCIA VISUAL COM MÉTRICAS, HISTÓRIA E FÓRMULAS -->
                     <div class="career-modal-left-col">
+                        <!-- FOTINHA / DIAGRAMA ESTÁTICO DO SÓLIDO COM MÉTRICAS -->
+                        <div class="challenge-visual-reference-card" id="modalCareerVisualCard">
+                            <div class="visual-reference-header">
+                                <div style="display:flex; align-items:center; gap:5px;">
+                                    <span style="font-size:0.95rem;">📐</span>
+                                    <span class="visual-reference-title">Referência Visual & Métricas:</span>
+                                </div>
+                                <span class="visual-reference-solid-name" id="modalThumbSolidName">Cubo</span>
+                            </div>
+                            <div id="modalCareerSolidThumbnail" class="modal-solid-thumbnail-container"></div>
+                        </div>
+
                         <div class="challenge-story-compact">
                             <div class="story-compact-header">📋 Contexto Real da Missão:</div>
                             <div id="modalCareerStoryText" class="story-compact-body"></div>
@@ -926,8 +945,6 @@
                             <div class="formula-pill-title">💡 Fórmulas & Propriedades:</div>
                             <div id="modalCareerConceptBox" class="formula-pill-text"></div>
                         </div>
-
-                        <div class="challenge-action-compact" id="modalCareerActionBox"></div>
                     </div>
 
                     <!-- COLUNA DIREITA: ENTRADA DE RESPOSTAS E VALIDAÇÃO -->
@@ -1089,26 +1106,26 @@
     <!-- SCRIPTS MODULARES -->
     <script src="js/three.min.js"></script>
     <script src="js/OrbitControls.js"></script>
-    <script src="js/audio.js?v=4.1"></script>
-    <script src="js/geometry-data.js?v=4.1"></script>
-    <script src="js/support-guide.js?v=4.1"></script>
-    <script src="js/scene-manager.js?v=4.1"></script>
-    <script src="js/dimensions-helper.js?v=4.1"></script>
-    <script src="js/solids-builder.js?v=4.1"></script>
-    <script src="js/vertex-deformer.js?v=4.1"></script>
-    <script src="js/building-builder.js?v=4.1"></script>
-    <script src="js/gallery-album.js?v=4.1"></script>
-    <script src="js/career-mode.js?v=4.1"></script>
-    <script src="js/unfolding-cartela.js?v=4.1"></script>
-    <script src="js/liquid-simulation.js?v=4.1"></script>
-    <script src="js/cross-section.js?v=4.1"></script>
-    <script src="js/unfolding.js?v=4.1"></script>
-    <script src="js/engineer-guide.js?v=4.1"></script>
-    <script src="js/interactive-blackboard.js?v=4.1"></script>
-    <script src="js/didactic-xray.js?v=4.1"></script>
-    <script src="js/game-mode.js?v=4.1"></script>
-    <script src="js/game-design-studio.js?v=4.1"></script>
-    <script src="js/main.js?v=4.1"></script>
+    <script src="js/audio.js?v=4.2"></script>
+    <script src="js/geometry-data.js?v=4.2"></script>
+    <script src="js/support-guide.js?v=4.2"></script>
+    <script src="js/scene-manager.js?v=4.2"></script>
+    <script src="js/dimensions-helper.js?v=4.2"></script>
+    <script src="js/solids-builder.js?v=4.2"></script>
+    <script src="js/vertex-deformer.js?v=4.2"></script>
+    <script src="js/building-builder.js?v=4.2"></script>
+    <script src="js/gallery-album.js?v=4.2"></script>
+    <script src="js/career-mode.js?v=4.2"></script>
+    <script src="js/unfolding-cartela.js?v=4.2"></script>
+    <script src="js/liquid-simulation.js?v=4.2"></script>
+    <script src="js/cross-section.js?v=4.2"></script>
+    <script src="js/unfolding.js?v=4.2"></script>
+    <script src="js/engineer-guide.js?v=4.2"></script>
+    <script src="js/interactive-blackboard.js?v=4.2"></script>
+    <script src="js/didactic-xray.js?v=4.2"></script>
+    <script src="js/game-mode.js?v=4.2"></script>
+    <script src="js/game-design-studio.js?v=4.2"></script>
+    <script src="js/main.js?v=4.2"></script>
 
 </body>
 </html>

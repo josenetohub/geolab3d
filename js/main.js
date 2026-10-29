@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         interactiveBlackboard.setSolid(currentSolidId, currentParams);
         if (buildingStudio.active) buildingStudio.buildBuilding(currentParams);
         updateUnfoldingCartela();
+        updateRightDimensionsCard(currentSolidId, currentParams);
     });
 
     const buildingStudio = new BuildingBuilder(sceneMgr);
@@ -163,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAuxiliaryDrawerContent();
         updateUnfoldingCartela();
         interactiveBlackboard.setSolid(solidId, currentParams);
+        updateRightDimensionsCard(solidId, currentParams);
     }
 
     // Constrói os sliders com medidas legíveis
@@ -208,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderAuxiliaryDrawerContent();
                 updateUnfoldingCartela();
                 interactiveBlackboard.setSolid(currentSolidId, currentParams);
+                updateRightDimensionsCard(currentSolidId, currentParams);
             });
 
             row.appendChild(header);
@@ -742,6 +745,275 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.sounds) window.sounds.playClick();
     }
 
+    // ==========================================================================
+    // DIAGRAMA ESTÁTICO DO SÓLIDO COM MÉTRICAS PARA O MODAL DA CARREIRA
+    // ==========================================================================
+    function getStageStaticSvg(stage) {
+        const sId = stage.solidId;
+        const p = stage.targetParams || {};
+
+        if (sId === 'cube') {
+            const a = p.a !== undefined ? p.a : 3.0;
+            return `
+            <svg viewBox="0 0 280 135" class="solid-static-svg" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="cubeTop" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.38"/>
+                        <stop offset="100%" stop-color="#0284c7" stop-opacity="0.22"/>
+                    </linearGradient>
+                    <linearGradient id="cubeFront" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#0284c7" stop-opacity="0.48"/>
+                        <stop offset="100%" stop-color="#0f172a" stop-opacity="0.75"/>
+                    </linearGradient>
+                    <linearGradient id="cubeRight" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#0369a1" stop-opacity="0.4"/>
+                        <stop offset="100%" stop-color="#0f172a" stop-opacity="0.8"/>
+                    </linearGradient>
+                </defs>
+                <polygon points="90,16 138,30 102,54 54,40" fill="url(#cubeTop)" stroke="#38bdf8" stroke-width="1.8"/>
+                <polygon points="54,40 102,54 102,108 54,94" fill="url(#cubeFront)" stroke="#38bdf8" stroke-width="1.8"/>
+                <polygon points="102,54 138,30 138,84 102,108" fill="url(#cubeRight)" stroke="#38bdf8" stroke-width="1.8"/>
+                
+                <line x1="44" y1="43" x2="44" y2="92" stroke="#facc15" stroke-width="1.5" stroke-dasharray="2,2"/>
+                <line x1="40" y1="43" x2="48" y2="43" stroke="#facc15" stroke-width="1.5"/>
+                <line x1="40" y1="92" x2="48" y2="92" stroke="#facc15" stroke-width="1.5"/>
+                <text x="36" y="71" fill="#facc15" font-size="10.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="end">a = ${a.toFixed(1)}m</text>
+                
+                <line x1="56" y1="102" x2="100" y2="116" stroke="#facc15" stroke-width="1.5" stroke-dasharray="2,2"/>
+                <text x="78" y="125" fill="#facc15" font-size="10.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">a = ${a.toFixed(1)}m</text>
+
+                <rect x="156" y="15" width="116" height="25" rx="5" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.4)"/>
+                <text x="214" y="31" fill="#38bdf8" font-size="10" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">Aresta a = ${a.toFixed(1)} m</text>
+
+                <rect x="156" y="47" width="116" height="25" rx="5" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)"/>
+                <text x="214" y="63" fill="#facc15" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace" text-anchor="middle">6 Faces Quadradas</text>
+
+                <rect x="156" y="79" width="116" height="25" rx="5" fill="rgba(34,197,94,0.15)" stroke="rgba(34,197,94,0.4)"/>
+                <text x="214" y="95" fill="#4ade80" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace" text-anchor="middle">1 m³ = 1.000 Litros</text>
+            </svg>`;
+        }
+
+        if (sId === 'rectangular_prism') {
+            if (stage.isBuildingMission) {
+                const a = p.a !== undefined ? p.a : 6.0, b = p.b !== undefined ? p.b : 5.0, c = p.c !== undefined ? p.c : 8.0;
+                return `
+                <svg viewBox="0 0 280 135" class="solid-static-svg" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="85,12 132,22 104,41 57,31" fill="#38bdf8" fill-opacity="0.32" stroke="#38bdf8" stroke-width="1.8"/>
+                    <polygon points="57,31 104,41 104,115 57,105" fill="#0284c7" fill-opacity="0.45" stroke="#38bdf8" stroke-width="1.8"/>
+                    <polygon points="104,41 132,22 132,96 104,115" fill="#0369a1" fill-opacity="0.35" stroke="#38bdf8" stroke-width="1.8"/>
+                    
+                    <rect x="64" y="40" width="8" height="9" rx="1" fill="#38bdf8" opacity="0.8"/>
+                    <rect x="78" y="42" width="8" height="9" rx="1" fill="#38bdf8" opacity="0.8"/>
+                    <rect x="92" y="44" width="8" height="9" rx="1" fill="#38bdf8" opacity="0.8"/>
+                    
+                    <rect x="64" y="56" width="8" height="9" rx="1" fill="#38bdf8" opacity="0.8"/>
+                    <rect x="78" y="58" width="8" height="9" rx="1" fill="#38bdf8" opacity="0.8"/>
+                    <rect x="92" y="60" width="8" height="9" rx="1" fill="#38bdf8" opacity="0.8"/>
+
+                    <rect x="64" y="72" width="8" height="9" rx="1" fill="#38bdf8" opacity="0.8"/>
+                    <rect x="78" y="74" width="8" height="9" rx="1" fill="#38bdf8" opacity="0.8"/>
+                    <rect x="92" y="76" width="8" height="9" rx="1" fill="#38bdf8" opacity="0.8"/>
+
+                    <rect x="75" y="93" width="14" height="12" rx="1" fill="#f59e0b" stroke="#facc15" stroke-width="1"/>
+
+                    <line x1="46" y1="33" x2="46" y2="103" stroke="#facc15" stroke-width="1.5" stroke-dasharray="2,2"/>
+                    <text x="42" y="72" fill="#facc15" font-size="10" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="end">H=${c}m</text>
+
+                    <rect x="150" y="15" width="124" height="25" rx="5" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.4)"/>
+                    <text x="212" y="31" fill="#38bdf8" font-size="9" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">L=${a}m · P=${b}m · H=${c}m</text>
+
+                    <rect x="150" y="47" width="124" height="25" rx="5" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)"/>
+                    <text x="212" y="63" fill="#facc15" font-size="9" font-weight="700" font-family="'JetBrains Mono', monospace" text-anchor="middle">4 Andares · 24 Janelas</text>
+
+                    <rect x="150" y="79" width="124" height="25" rx="5" fill="rgba(34,197,94,0.15)" stroke="rgba(34,197,94,0.4)"/>
+                    <text x="212" y="95" fill="#4ade80" font-size="9" font-weight="700" font-family="'JetBrains Mono', monospace" text-anchor="middle">Alvenaria = At - Vidro</text>
+                </svg>`;
+            } else {
+                const a = p.a !== undefined ? p.a : 6.0, b = p.b !== undefined ? p.b : 2.5, c = p.c !== undefined ? p.c : 2.6;
+                return `
+                <svg viewBox="0 0 280 135" class="solid-static-svg" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="70,22 148,32 120,54 42,44" fill="#38bdf8" fill-opacity="0.32" stroke="#38bdf8" stroke-width="1.8"/>
+                    <polygon points="42,44 120,54 120,104 42,94" fill="#0284c7" fill-opacity="0.45" stroke="#38bdf8" stroke-width="1.8"/>
+                    <polygon points="120,54 148,32 148,82 120,104" fill="#0369a1" fill-opacity="0.32" stroke="#38bdf8" stroke-width="1.8"/>
+
+                    <line x1="42" y1="101" x2="120" y2="111" stroke="#facc15" stroke-width="1.5" stroke-dasharray="2,2"/>
+                    <text x="81" y="122" fill="#facc15" font-size="10" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">a = ${a.toFixed(1)}m</text>
+
+                    <line x1="34" y1="46" x2="34" y2="92" stroke="#facc15" stroke-width="1.5" stroke-dasharray="2,2"/>
+                    <text x="30" y="72" fill="#facc15" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="end">c=${c.toFixed(1)}m</text>
+
+                    <text x="138" y="98" fill="#facc15" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace">b=${b.toFixed(1)}m</text>
+
+                    <rect x="160" y="15" width="114" height="25" rx="5" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.4)"/>
+                    <text x="217" y="31" fill="#38bdf8" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">a=${a}m · b=${b}m</text>
+
+                    <rect x="160" y="47" width="114" height="25" rx="5" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)"/>
+                    <text x="217" y="63" fill="#facc15" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">Altura c = ${c.toFixed(1)}m</text>
+
+                    <rect x="160" y="79" width="114" height="25" rx="5" fill="rgba(34,197,94,0.15)" stroke="rgba(34,197,94,0.4)"/>
+                    <text x="217" y="95" fill="#4ade80" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">V = a · b · c</text>
+                </svg>`;
+            }
+        }
+
+        if (sId === 'cylinder') {
+            const r = p.r !== undefined ? p.r : 2.0, h = p.h !== undefined ? p.h : 6.0;
+            return `
+            <svg viewBox="0 0 280 135" class="solid-static-svg" xmlns="http://www.w3.org/2000/svg">
+                <path d="M55,30 L55,100 A38,14 0 0,0 131,100 L131,30 Z" fill="#0284c7" fill-opacity="0.38" stroke="#38bdf8" stroke-width="1.8"/>
+                <ellipse cx="93" cy="30" rx="38" ry="14" fill="#38bdf8" fill-opacity="0.45" stroke="#38bdf8" stroke-width="1.8"/>
+                <path d="M55,100 A38,14 0 0,1 131,100" fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3,3"/>
+                <path d="M55,100 A38,14 0 0,0 131,100" fill="none" stroke="#38bdf8" stroke-width="1.8"/>
+
+                <line x1="93" y1="30" x2="131" y2="30" stroke="#facc15" stroke-width="1.8"/>
+                <circle cx="93" cy="30" r="2.5" fill="#facc15"/>
+                <text x="112" y="25" fill="#facc15" font-size="10" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">r = ${r.toFixed(1)}m</text>
+
+                <line x1="44" y1="32" x2="44" y2="98" stroke="#facc15" stroke-width="1.5" stroke-dasharray="2,2"/>
+                <text x="40" y="68" fill="#facc15" font-size="10" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="end">h = ${h.toFixed(1)}m</text>
+
+                <rect x="150" y="15" width="122" height="25" rx="5" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.4)"/>
+                <text x="211" y="31" fill="#38bdf8" font-size="9" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">Raio r = ${r.toFixed(1)}m (d=${(r*2).toFixed(1)}m)</text>
+
+                <rect x="150" y="47" width="122" height="25" rx="5" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)"/>
+                <text x="211" y="63" fill="#facc15" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">Altura h = ${h.toFixed(1)} m</text>
+
+                <rect x="150" y="79" width="122" height="25" rx="5" fill="rgba(34,197,94,0.15)" stroke="rgba(34,197,94,0.4)"/>
+                <text x="211" y="95" fill="#4ade80" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">V = π · r² · h</text>
+            </svg>`;
+        }
+
+        if (sId === 'square_pyramid') {
+            const l = p.l !== undefined ? p.l : 6.0, h = p.h !== undefined ? p.h : 4.0;
+            return `
+            <svg viewBox="0 0 280 135" class="solid-static-svg" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="46,105 104,115 138,96 80,88" fill="#0369a1" fill-opacity="0.25" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="2,2"/>
+                <polygon points="46,105 104,115 90,22" fill="#0284c7" fill-opacity="0.45" stroke="#38bdf8" stroke-width="1.8"/>
+                <polygon points="104,115 138,96 90,22" fill="#0369a1" fill-opacity="0.32" stroke="#38bdf8" stroke-width="1.8"/>
+                
+                <line x1="90" y1="22" x2="90" y2="100" stroke="#f87171" stroke-width="1.5" stroke-dasharray="3,3"/>
+                <text x="86" y="60" fill="#f87171" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="end">h=${h}m</text>
+
+                <line x1="90" y1="22" x2="75" y2="110" stroke="#facc15" stroke-width="1.5"/>
+                <text x="78" y="75" fill="#facc15" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="end">ap=5m</text>
+
+                <line x1="46" y1="120" x2="104" y2="130" stroke="#facc15" stroke-width="1.5"/>
+                <text x="75" y="132" fill="#facc15" font-size="10" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">L = ${l.toFixed(1)}m</text>
+
+                <rect x="150" y="15" width="122" height="25" rx="5" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.4)"/>
+                <text x="211" y="31" fill="#38bdf8" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">Lado Base L = ${l.toFixed(1)} m</text>
+
+                <rect x="150" y="47" width="122" height="25" rx="5" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)"/>
+                <text x="211" y="63" fill="#facc15" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">h = ${h}m · ap = 5.0m</text>
+
+                <rect x="150" y="79" width="122" height="25" rx="5" fill="rgba(34,197,94,0.15)" stroke="rgba(34,197,94,0.4)"/>
+                <text x="211" y="95" fill="#4ade80" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">V = (Ab · h) / 3</text>
+            </svg>`;
+        }
+
+        if (sId === 'sphere') {
+            const r = p.r !== undefined ? p.r : 3.0;
+            return `
+            <svg viewBox="0 0 280 135" class="solid-static-svg" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="sphereGradStatic" cx="35%" cy="35%" r="65%">
+                        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.85"/>
+                        <stop offset="40%" stop-color="#0284c7" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="#0b1329" stop-opacity="0.9"/>
+                    </radialGradient>
+                </defs>
+                <circle cx="90" cy="68" r="42" fill="url(#sphereGradStatic)" stroke="#38bdf8" stroke-width="1.8"/>
+                <ellipse cx="90" cy="68" rx="42" ry="11" fill="none" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3,3"/>
+                
+                <line x1="90" y1="68" x2="132" y2="68" stroke="#facc15" stroke-width="1.8"/>
+                <circle cx="90" cy="68" r="2.5" fill="#facc15"/>
+                <text x="111" y="62" fill="#facc15" font-size="10" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">R = ${r.toFixed(1)}m</text>
+
+                <rect x="150" y="15" width="122" height="25" rx="5" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.4)"/>
+                <text x="211" y="31" fill="#38bdf8" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">Raio R = ${r.toFixed(1)} m</text>
+
+                <rect x="150" y="47" width="122" height="25" rx="5" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)"/>
+                <text x="211" y="63" fill="#facc15" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">Diâmetro D = ${(r*2).toFixed(1)} m</text>
+
+                <rect x="150" y="79" width="122" height="25" rx="5" fill="rgba(34,197,94,0.15)" stroke="rgba(34,197,94,0.4)"/>
+                <text x="211" y="95" fill="#4ade80" font-size="9.5" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">V = (4/3) · π · R³</text>
+            </svg>`;
+        }
+
+        return `<div style="padding:10px; text-align:center; color:#38bdf8; font-weight:700;">📐 ${stage.title}</div>`;
+    }
+
+    function renderModalSolidThumbnail(stage) {
+        const container = document.getElementById('modalCareerSolidThumbnail');
+        if (!container) return;
+        const nameBadge = document.getElementById('modalThumbSolidName');
+        const solidDef = SOLIDS_DATA[stage.solidId];
+        if (nameBadge) nameBadge.textContent = stage.shortName || (solidDef ? solidDef.name : stage.title);
+        container.innerHTML = getStageStaticSvg(stage);
+    }
+
+    // ==========================================================================
+    // DIMENSÕES DO MODELO NO PAINEL DIREITO DO SITE
+    // ==========================================================================
+    function updateRightDimensionsCard(solidId, params) {
+        const card = document.getElementById('rightModelDimensionsCard');
+        if (!card) return;
+
+        const badge = document.getElementById('rightDimSolidBadge');
+        const container = document.getElementById('rightDimChipsContainer');
+        if (!container) return;
+
+        const solidDef = SOLIDS_DATA[solidId];
+        if (badge) badge.textContent = solidDef ? solidDef.name : solidId;
+
+        const p = params || (solidDef ? solidDef.defaultParams : {});
+        let html = '';
+
+        if (solidId === 'cube') {
+            const a = p.a !== undefined ? p.a : 3.0;
+            html += `<span class="right-dim-chip"><b>Aresta (a):</b> <span class="dim-val">${a.toFixed(1)} m</span></span>`;
+            html += `<span class="right-dim-chip"><b>Faces:</b> <span class="dim-val">6 quadradas</span></span>`;
+        } else if (solidId === 'rectangular_prism') {
+            const a = p.a !== undefined ? p.a : 6.0;
+            const b = p.b !== undefined ? p.b : 2.5;
+            const c = p.c !== undefined ? p.c : 2.6;
+            html += `<span class="right-dim-chip"><b>Largura (a):</b> <span class="dim-val">${a.toFixed(1)} m</span></span>`;
+            html += `<span class="right-dim-chip"><b>Profundidade (b):</b> <span class="dim-val">${b.toFixed(1)} m</span></span>`;
+            html += `<span class="right-dim-chip"><b>Altura (c):</b> <span class="dim-val">${c.toFixed(1)} m</span></span>`;
+        } else if (solidId === 'cylinder') {
+            const r = p.r !== undefined ? p.r : 2.0;
+            const h = p.h !== undefined ? p.h : 6.0;
+            html += `<span class="right-dim-chip"><b>Raio Base (r):</b> <span class="dim-val">${r.toFixed(1)} m</span></span>`;
+            html += `<span class="right-dim-chip"><b>Diâmetro (d):</b> <span class="dim-val">${(r * 2).toFixed(1)} m</span></span>`;
+            html += `<span class="right-dim-chip"><b>Altura (h):</b> <span class="dim-val">${h.toFixed(1)} m</span></span>`;
+        } else if (solidId === 'square_pyramid') {
+            const l = p.l !== undefined ? p.l : 6.0;
+            const h = p.h !== undefined ? p.h : 4.0;
+            const ap = Math.sqrt(h * h + (l / 2) * (l / 2));
+            html += `<span class="right-dim-chip"><b>Lado Base (L):</b> <span class="dim-val">${l.toFixed(1)} m</span></span>`;
+            html += `<span class="right-dim-chip"><b>Altura (h):</b> <span class="dim-val">${h.toFixed(1)} m</span></span>`;
+            html += `<span class="right-dim-chip"><b>Apótema (ap):</b> <span class="dim-val">${ap.toFixed(1)} m</span></span>`;
+        } else if (solidId === 'sphere') {
+            const r = p.r !== undefined ? p.r : 3.0;
+            html += `<span class="right-dim-chip"><b>Raio (R):</b> <span class="dim-val">${r.toFixed(1)} m</span></span>`;
+            html += `<span class="right-dim-chip"><b>Diâmetro (D):</b> <span class="dim-val">${(r * 2).toFixed(1)} m</span></span>`;
+        } else if (solidId === 'cone') {
+            const r = p.r !== undefined ? p.r : 2.5;
+            const h = p.h !== undefined ? p.h : 5.0;
+            const g = Math.sqrt(r * r + h * h);
+            html += `<span class="right-dim-chip"><b>Raio Base (r):</b> <span class="dim-val">${r.toFixed(1)} m</span></span>`;
+            html += `<span class="right-dim-chip"><b>Altura (h):</b> <span class="dim-val">${h.toFixed(1)} m</span></span>`;
+            html += `<span class="right-dim-chip"><b>Geratriz (g):</b> <span class="dim-val">${g.toFixed(1)} m</span></span>`;
+        } else {
+            Object.keys(p).forEach(k => {
+                const val = typeof p[k] === 'number' ? p[k].toFixed(1) : p[k];
+                html += `<span class="right-dim-chip"><b>${k}:</b> <span class="dim-val">${val} m</span></span>`;
+            });
+        }
+
+        container.innerHTML = html;
+    }
+
     function renderModalCareerContent() {
         const stage = careerMode.getCurrentStage();
         const modalBadge = document.getElementById('modalCareerStageBadge');
@@ -749,6 +1021,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const modalTitle = document.getElementById('modalCareerStageTitle');
         if (modalTitle) modalTitle.textContent = stage.title;
+
+        // Renderiza fotinha estática do sólido com métricas
+        renderModalSolidThumbnail(stage);
 
         const modalStory = document.getElementById('modalCareerStoryText');
         if (modalStory) modalStory.textContent = stage.story;
@@ -840,12 +1115,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupCareerUI() {
         renderCareerStage();
 
-        // Botões para abrir o Desafio no lado esquerdo
+        // Botão para abrir o Desafio no lado esquerdo (único)
         const btnLeftView = document.getElementById('btnLeftViewChallenge');
         if (btnLeftView) btnLeftView.addEventListener('click', openCareerChallengeModal);
-
-        const btnFloatView = document.getElementById('btnFloatChallenge');
-        if (btnFloatView) btnFloatView.addEventListener('click', openCareerChallengeModal);
 
         const btnCloseModal = document.getElementById('btnCloseCareerModal');
         if (btnCloseModal) btnCloseModal.addEventListener('click', closeCareerChallengeModal);
@@ -944,6 +1216,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Aplica o sólido no 3D
         switchSolid(stage.solidId, stage.targetParams);
+        updateRightDimensionsCard(stage.solidId, stage.targetParams);
 
         // Se for missão arquitetônica (Fase 6: Edifício), ativa o estúdio de prédios no 3D
         if (stage.isBuildingMission) {
