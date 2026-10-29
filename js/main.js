@@ -57,6 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const galleryAlbum = new GalleryAlbum(sceneMgr);
 
+    // 1.5 Estúdio de Funções Matemáticas & Sólidos 3D (Exponencial e Logarítmica)
+    const functionsStudio = new FunctionsStudio(sceneMgr, engineerGuide, gameMgr, liquidSim, buildingStudio);
+    window.functionsStudio = functionsStudio;
+
     // Modo Carreira BNCC
     const careerMode = new CareerMode(
         sceneMgr,
@@ -166,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         interactiveBlackboard.setSolid(solidId, currentParams);
         updateRightDimensionsCard(solidId, currentParams);
     }
+    window.switchSolidGlobal = (solidId, params) => switchSolid(solidId, params);
 
     // Constrói os sliders com medidas legíveis
     function buildParamSliders(solidDef) {
@@ -357,6 +362,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'building':
                         switchMode('building');
                         if (engineerGuide) engineerGuide.speak('Bem-vindo ao Estúdio de Arquitetura 3D! Pinte as fachadas e puxe os vértices do prédio para ver o volume mudar!', { icon: '🏢' });
+                        break;
+                    case 'exp_func':
+                        switchMode('exp_func');
+                        if (engineerGuide) engineerGuide.speak('Módulo Função Exponencial ativado! Manipule a base b e veja como o volume do reservatório cilíndrico responde!', { icon: '📈' });
+                        break;
+                    case 'log_func':
+                        switchMode('log_func');
+                        if (engineerGuide) engineerGuide.speak('Módulo Função Logarítmica ativado! Explore a inversa da exponencial e teste a magnitude sísmica no Edifício 3D!', { icon: '📉' });
                         break;
                     case 'album':
                         openAlbumModal();
@@ -1261,6 +1274,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Atualiza o pill do modo no topo
         const modeTextMap = {
             career: '🚀 Carreira BNCC',
+            exp_func: '📈 Função Exponencial & Sólidos',
+            log_func: '📉 Função Logarítmica & Sólidos',
             lab: '🔬 Laboratório Livre',
             building: '🏢 Estúdio de Arquitetura',
             studio: '👥 Projetos em Grupo',
@@ -1358,6 +1373,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const gameArea = document.getElementById('gameChallengeArea');
             if (gameArea) gameArea.classList.remove('hidden');
             renderChallenge(gameMgr.generateChallenge('euler'));
+        }
+
+        // Módulos de Funções Matemáticas & Sólidos 3D
+        if (mode === 'exp_func') {
+            functionsStudio.activate('exponential');
+        } else if (mode === 'log_func') {
+            functionsStudio.activate('logarithmic');
+        } else {
+            functionsStudio.deactivate();
         }
     }
 

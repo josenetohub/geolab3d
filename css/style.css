@@ -3535,6 +3535,587 @@ body.mode-career .career-mission-card {
     font-weight: 800;
 }
 
+/* =============================================================================
+   ESTÚDIO DE FUNÇÕES MATEMÁTICAS & SÓLIDOS 3D (EXPONENCIAL & LOGARÍTMICA)
+   ============================================================================= */
+
+/* Regras de Visibilidade dos Modos de Funções */
+body.mode-exp_func .lab-only-control,
+body.mode-log_func .lab-only-control,
+body.mode-exp_func #careerLeftBanner,
+body.mode-log_func #careerLeftBanner,
+body.mode-exp_func #careerPhaseTrackerCard,
+body.mode-log_func #careerPhaseTrackerCard,
+body.mode-exp_func #rightModelDimensionsCard,
+body.mode-log_func #rightModelDimensionsCard {
+    display: none !important;
+}
+
+body.mode-exp_func .direct-command-hud,
+body.mode-log_func .direct-command-hud {
+    display: none !important;
+}
+
+/* OVERLAY DO GRÁFICO CARTESIANO */
+.function-graph-overlay {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    width: 440px;
+    max-width: calc(100% - 28px);
+    background: rgba(15, 23, 42, 0.94);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 12px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    z-index: 35;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.25s ease;
+}
+
+.function-graph-overlay.minimized {
+    width: 280px;
+}
+
+.function-graph-overlay.minimized .graph-canvas-wrapper,
+.function-graph-overlay.minimized .graph-overlay-footer {
+    display: none !important;
+}
+
+.graph-overlay-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.graph-function-title {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.graph-function-formula {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+}
+
+.graph-header-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.btn-graph-tool {
+    padding: 3px 7px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-graph-tool:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.btn-graph-tool.active {
+    background: rgba(14, 165, 233, 0.25);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    box-shadow: 0 0 8px rgba(14, 165, 233, 0.35);
+}
+
+.graph-canvas-wrapper {
+    position: relative;
+    width: 100%;
+    background: #090d16;
+}
+
+#functionPlotCanvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    cursor: crosshair;
+}
+
+.graph-overlay-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.graph-stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.66rem;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 5px;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+}
+
+.stat-val {
+    font-weight: 700;
+    color: #ffffff;
+}
+
+/* PAINEL ESQUERDO DE FUNÇÕES */
+.functions-module-header {
+    padding: 8px 10px;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(15, 23, 42, 0.8));
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.func-module-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.func-module-subtitle {
+    font-size: 0.68rem;
+    color: var(--accent-cyan);
+    font-weight: 600;
+}
+
+.functions-step-nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.func-step-btn {
+    padding: 5px 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.func-step-btn .step-num {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--text-secondary);
+}
+
+.func-step-btn .step-label {
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.func-step-btn.active {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.3), rgba(2, 132, 199, 0.4));
+    border-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+}
+
+.func-step-btn.active .step-num,
+.func-step-btn.active .step-label {
+    color: #ffffff;
+}
+
+.func-presets-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.preset-pill-btn {
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    border-radius: 12px;
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #38bdf8;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.preset-pill-btn:hover {
+    background: rgba(14, 165, 233, 0.25);
+    border-color: #38bdf8;
+}
+
+.param-behavior-tag {
+    font-size: 0.68rem;
+    font-weight: 800;
+    margin-top: 2px;
+    display: inline-block;
+}
+
+.func-didactic-tip {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    background: rgba(245, 158, 11, 0.08);
+    border-left: 3px solid var(--accent-amber);
+    padding: 6px 8px;
+    border-radius: 0 6px 6px 0;
+    margin-top: 8px;
+    line-height: 1.35;
+}
+
+/* EXERCÍCIOS ELEMENTARES */
+.func-exercises-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.exercise-item-card {
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+}
+
+.exercise-question {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.35;
+    margin-bottom: 6px;
+}
+
+.exercise-input-row {
+    display: flex;
+    gap: 6px;
+}
+
+.exercise-input {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #ffffff;
+    font-size: 0.84rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    padding: 5px 8px;
+    border-radius: 6px;
+    outline: none;
+}
+
+.btn-check-exercise {
+    padding: 5px 12px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    border-radius: 6px;
+    background: #0284c7;
+    border: 1px solid #38bdf8;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.btn-check-exercise:hover {
+    background: #0ea5e9;
+}
+
+.exercise-feedback {
+    font-size: 0.72rem;
+    padding: 5px 8px;
+    border-radius: 6px;
+    margin-top: 6px;
+    line-height: 1.35;
+}
+
+.exercise-feedback.success {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid #22c55e;
+    color: #4ade80;
+}
+
+.exercise-feedback.error {
+    background: rgba(244, 63, 94, 0.15);
+    border: 1px solid #f43f5e;
+    color: #fb7185;
+}
+
+/* CASOS REAIS & HIPÓTESES */
+.func-reality-card,
+.func-hypothesis-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.reality-case-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 6px;
+}
+
+.reality-case-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.reality-case-sub {
+    font-size: 0.68rem;
+    color: var(--accent-cyan);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.reality-case-body p {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    margin-bottom: 8px;
+}
+
+.reality-sim-box {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.reality-metric-readout {
+    display: flex;
+    justify-content: space-between;
+    margin: 6px 0;
+}
+
+.metric-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.metric-label {
+    font-size: 0.66rem;
+    color: var(--text-secondary);
+}
+
+.metric-val {
+    font-size: 0.84rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.hypothesis-card-item {
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+}
+
+.hypothesis-title {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: #facc15;
+}
+
+.hypothesis-desc {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    margin: 4px 0;
+}
+
+.btn-hypothesis-action {
+    padding: 4px 8px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    border-radius: 6px;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    cursor: pointer;
+}
+
+.btn-hypothesis-validate {
+    padding: 4px 10px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    border-radius: 6px;
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid #22c55e;
+    color: #4ade80;
+    cursor: pointer;
+}
+
+.hypothesis-result-box {
+    font-size: 0.74rem;
+    padding: 6px 8px;
+    border-radius: 6px;
+    margin-top: 6px;
+    line-height: 1.35;
+}
+
+.hypothesis-result-box.success {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid #22c55e;
+    color: #4ade80;
+}
+
+/* PAINEL DIREITO DE FUNÇÕES */
+.function-law-card {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(15, 23, 42, 0.9));
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.law-card-badge {
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+}
+
+.law-card-formula {
+    font-size: 1.25rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 3px 0;
+}
+
+.law-card-name {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+.function-properties-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 8px;
+}
+
+.prop-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.74rem;
+}
+
+.prop-key {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.prop-val {
+    font-weight: 700;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.function-table-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+.table-card-title {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 6px;
+}
+
+.func-values-table-wrapper {
+    overflow-x: auto;
+}
+
+.func-values-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.func-values-table th {
+    color: var(--accent-cyan);
+    font-weight: 700;
+    text-align: left;
+    padding: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.func-values-table td {
+    padding: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.func-values-table tr.active-row {
+    background: rgba(56, 189, 248, 0.15);
+    color: #ffffff;
+}
+
+.coord-tag {
+    color: var(--accent-cyan);
+    font-weight: 700;
+}
+
+.function-solid-link-card {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(15, 23, 42, 0.85));
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.solid-link-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.solid-link-title {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--accent-amber);
+    text-transform: uppercase;
+}
+
+.text-cyan { color: var(--accent-cyan) !important; }
+.text-amber { color: var(--accent-amber) !important; }
+.text-rose { color: var(--accent-rose) !important; }
+
 @media (max-width: 680px) {
     .career-modal-two-col {
         grid-template-columns: 1fr;
