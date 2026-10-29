@@ -197,6 +197,27 @@ class FunctionsStudio {
                 if (!this.isGraphMinimized) this.renderGraph();
             });
         }
+
+        // Botões para reabrir a explicação didática do Engenheiro Leo no centro da tela
+        const btnBriefing = document.getElementById('btnFuncEngineerBriefing');
+        if (btnBriefing) {
+            btnBriefing.addEventListener('click', () => {
+                if (this.engineerGuide && typeof this.engineerGuide.showFunctionBriefing === 'function') {
+                    this.engineerGuide.showFunctionBriefing(this.activeType);
+                }
+                if (window.sounds) window.sounds.playClick();
+            });
+        }
+
+        const btnGraphHelp = document.getElementById('btnGraphEngineerHelp');
+        if (btnGraphHelp) {
+            btnGraphHelp.addEventListener('click', () => {
+                if (this.engineerGuide && typeof this.engineerGuide.showFunctionBriefing === 'function') {
+                    this.engineerGuide.showFunctionBriefing(this.activeType);
+                }
+                if (window.sounds) window.sounds.playClick();
+            });
+        }
     }
 
     setupCanvasEvents() {
@@ -375,6 +396,13 @@ class FunctionsStudio {
             this.resizeCanvas();
             this.renderGraph();
         }, 60);
+
+        // Apresentação didática do Engenheiro Leo no centro da tela com calma
+        if (this.engineerGuide && typeof this.engineerGuide.showFunctionBriefing === 'function') {
+            setTimeout(() => {
+                this.engineerGuide.showFunctionBriefing(type);
+            }, 120);
+        }
     }
 
     deactivate() {
@@ -389,6 +417,10 @@ class FunctionsStudio {
 
         const rightSub = document.getElementById('subpanel-functions-right');
         if (rightSub) rightSub.classList.add('hidden');
+
+        if (this.engineerGuide && typeof this.engineerGuide.hideCenterBriefing === 'function') {
+            this.engineerGuide.hideCenterBriefing();
+        }
 
         if (this.seismicAnimationId) {
             cancelAnimationFrame(this.seismicAnimationId);

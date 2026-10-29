@@ -177,7 +177,11 @@ class EngineerGuide {
         const badge = document.getElementById('engineerAvatarBadge');
         if (badge) {
             badge.addEventListener('click', () => {
-                if (window.careerMode) {
+                if (document.body.classList.contains('mode-exp_func')) {
+                    this.showFunctionBriefing('exponential');
+                } else if (document.body.classList.contains('mode-log_func')) {
+                    this.showFunctionBriefing('logarithmic');
+                } else if (document.body.classList.contains('mode-career') && window.careerMode) {
                     const stage = window.careerMode.getCurrentStage();
                     this.showCenterBriefing({
                         title: `${stage.icon} ${stage.title}`,
@@ -300,9 +304,412 @@ class EngineerGuide {
         if (window.sounds) window.sounds.playClick();
     }
 
+    // =========================================================================
+    // APRESENTAÇÃO DIDÁTICA DO ENGENHEIRO PARA AS FUNÇÕES MATEMÁTICAS
+    // Explica com calma: Conceitos, Como se Calcula, Para que Serve e Roteiro
+    // =========================================================================
+    showFunctionBriefing(type = 'exponential', onStart = null) {
+        const modal = document.getElementById('engineerCenterModal');
+        const titleEl = document.getElementById('centerModalTitle');
+        const bodyEl = document.getElementById('centerModalBody');
+        const btnAction = document.getElementById('btnCenterModalAction');
+        if (!modal || !titleEl || !bodyEl) return;
+
+        const isExp = type === 'exponential';
+        const dialog = modal.querySelector('.engineer-center-dialog');
+        if (dialog) {
+            dialog.classList.add('functions-briefing');
+        }
+
+        titleEl.innerHTML = isExp 
+            ? '📈 Função Exponencial: O Poder da Multiplicação' 
+            : '📉 Função Logarítmica: A Inversa & Domando Grandezas';
+
+        const storyText = isExp
+            ? `Olá! Eu sou o <b>Engenheiro Leo</b>. Respire fundo e venha comigo com calma! Vamos descomplicar a <b>Função Exponencial</b> passo a passo: o que ela é, como se calcula e como ela é usada para transformar o mundo real e os nossos sólidos 3D.`
+            : `Olá! Eu sou o <b>Engenheiro Leo</b>. O <b>Logaritmo</b> não é nenhum bicho de sete cabeças! Ele é simplesmente a operação inversa da exponencial. Venha com calma entender o que ele faz, como se calcula e como medimos desde sons até terremotos em edifícios 3D!`;
+
+        const conceptContent = isExp
+            ? `
+                <div class="briefing-card briefing-card-concept" data-category="concept">
+                    <div class="briefing-card-badge cyan">💡 CONCEITO INTUITIVO & ESSENCIAL</div>
+                    <div class="briefing-card-title">Crescimento por Multiplicações Sucessivas</div>
+                    <div class="briefing-card-text">
+                        <p>Imagine uma única célula de bactéria em um tanque de biocombustível. A cada 1 hora, ela se divide em duas: no instante zero temos <b>1</b>; após 1 hora temos <b>2</b>; após 2 horas temos <b>4</b>; após 3 horas temos <b>8</b>; e após 10 horas já são <b>1.024</b> células!</p>
+                        <p>No crescimento linear comum, nós <b>somamos</b> um valor fixo a cada passo (+2, +2, +2...). Já no crescimento exponencial, nós <b>multiplicamos</b> pela mesma base a cada passo (×2, ×2, ×2...). Por isso, no início a curva parece calma e quase plana, mas de repente ela <b>decola como um foguete</b> para o alto!</p>
+                        <div class="concept-comparison-pill">
+                            <span class="pill-item"><b>Crescimento Linear:</b> f(10) = 2 × 10 = <b>20</b></span>
+                            <span class="pill-vs">vs</span>
+                            <span class="pill-item highlight"><b>Crescimento Exponencial:</b> f(10) = 2¹⁰ = <b>1.024</b>! 🚀</span>
+                        </div>
+                    </div>
+                </div>
+            `
+            : `
+                <div class="briefing-card briefing-card-concept" data-category="concept">
+                    <div class="briefing-card-badge cyan">💡 CONCEITO INTUITIVO & ESSENCIAL</div>
+                    <div class="briefing-card-title">A Operação Inversa da Exponencial: Desfazendo Potências</div>
+                    <div class="briefing-card-text">
+                        <p>O logaritmo responde a uma pergunta direta: <b>"A que expoente devo elevar a base para obter este número?"</b></p>
+                        <p>Por exemplo: Se <b>2³ = 8</b>, então <b>log₂(8) = 3</b>! O logaritmo é a operação matemática que "desfaz" o expoente e descobre quantos passos multiplicativos foram dados.</p>
+                        <p>Enquanto a função exponencial explode com velocidade vertiginosa para cima, a função logarítmica faz o inverso: ela <b>cresce com muita serenidade e calma</b>. Ela funciona como um poderoso amortecedor que compacta números astronômicos em uma régua simples de 1 a 10!</p>
+                        <div class="concept-comparison-pill">
+                            <span class="pill-item"><b>Variação Astronômica:</b> 1.000.000.000 (1 bilhão)</span>
+                            <span class="pill-vs">➡</span>
+                            <span class="pill-item highlight"><b>Logaritmo (Base 10):</b> log₁₀(1 bilhão) = <b>9</b>! 📏</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        const calcContent = isExp
+            ? `
+                <div class="briefing-card briefing-card-calc" data-category="calc">
+                    <div class="briefing-card-badge emerald">🧮 COMO SE CALCULA PASSO A PASSO</div>
+                    <div class="briefing-card-title">A Lei de Formação Geral e o Papel de Cada Termo</div>
+                    <div class="formula-hero-box">f(x) = a · bˣ + c</div>
+                    
+                    <div class="formula-terms-grid">
+                        <div class="formula-term-item">
+                            <b>b (Base da Potência):</b> O fator multiplicador a cada passo (deve ser <b>b &gt; 0</b> e <b>b ≠ 1</b>). Se <b>b &gt; 1</b>, a função é <b>Crescente</b>. Se <b>0 &lt; b &lt; 1</b>, ela é <b>Decrescente</b> (decaimento).
+                        </div>
+                        <div class="formula-term-item">
+                            <b>x (Expoente):</b> A variável independente no expoente (tempo, gerações de bactérias, etapas de duplicação).
+                        </div>
+                        <div class="formula-term-item">
+                            <b>a (Multiplicador):</b> O valor inicial quando x = 0 (se c = 0). Estica ou inverte a curva verticalmente.
+                        </div>
+                        <div class="formula-term-item">
+                            <b>c (Assíntota Horizontal):</b> A reta horizontal <b>y = c</b>. A curva chega infinitamente perto dela, mas <b>nunca toca nem ultrapassa</b>!
+                        </div>
+                    </div>
+
+                    <div style="font-size:0.85rem; font-weight:700; color:#38bdf8; margin-top:6px;">
+                        📝 Exemplo Prático Guiado: Calculando f(x) = 2ˣ passo a passo
+                    </div>
+
+                    <div class="briefing-calc-table-box">
+                        <table class="briefing-calc-table">
+                            <thead>
+                                <tr>
+                                    <th>Valor de x</th>
+                                    <th>Como Calcular a Potência</th>
+                                    <th>Resultado f(x)</th>
+                                    <th>Ponto no Gráfico (x, y)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><b>x = -1</b></td>
+                                    <td>2⁻¹ = 1 / 2¹ = 0.50</td>
+                                    <td><span class="coord-tag">0.50</span></td>
+                                    <td>P(-1.0, 0.5) <small style="color:#94a3b8;">(aproxima da assíntota)</small></td>
+                                </tr>
+                                <tr>
+                                    <td><b>x = 0</b></td>
+                                    <td>2⁰ = 1 (todo nº elevado a 0 vale 1)</td>
+                                    <td><span class="coord-tag">1.00</span></td>
+                                    <td>P(0.0, 1.0) <small style="color:#38bdf8;">(corta o eixo Y)</small></td>
+                                </tr>
+                                <tr>
+                                    <td><b>x = 1</b></td>
+                                    <td>2¹ = 2</td>
+                                    <td><span class="coord-tag">2.00</span></td>
+                                    <td>P(1.0, 2.0)</td>
+                                </tr>
+                                <tr>
+                                    <td><b>x = 2</b></td>
+                                    <td>2² = 2 × 2 = 4</td>
+                                    <td><span class="coord-tag">4.00</span></td>
+                                    <td>P(2.0, 4.0)</td>
+                                </tr>
+                                <tr>
+                                    <td><b>x = 3</b></td>
+                                    <td>2³ = 2 × 2 × 2 = 8</td>
+                                    <td><span class="coord-tag">8.00</span></td>
+                                    <td>P(3.0, 8.0) <small style="color:#fde047;">(dispara rápido!)</small></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `
+            : `
+                <div class="briefing-card briefing-card-calc" data-category="calc">
+                    <div class="briefing-card-badge emerald">🧮 COMO SE CALCULA PASSO A PASSO</div>
+                    <div class="briefing-card-title">A Lei de Formação Geral e a Condição de Existência</div>
+                    <div class="formula-hero-box">f(x) = a · log_b(x - h) + c</div>
+                    
+                    <div class="formula-terms-grid">
+                        <div class="formula-term-item">
+                            <b>b (Base do Logaritmo):</b> A base da potência correspondente (<b>b &gt; 0</b> e <b>b ≠ 1</b>). As mais usadas no mundo são a base <b>10</b> (sismologia/som) e a base de Euler <b>e ≈ 2.718</b> (logaritmo natural ln).
+                        </div>
+                        <div class="formula-term-item">
+                            <b>h (Assíntota Vertical):</b> A reta vertical <b>x = h</b> que serve como barreira intransponível na esquerda.
+                        </div>
+                        <div class="formula-term-item">
+                            <b>⚠️ Condição de Existência Obrigatória:</b> O interior <b>(x - h)</b> DEVE ser estritamente maior que zero: <b>x &gt; h</b>. <b>Não existe logaritmo de zero nem de números negativos nos números reais!</b>
+                        </div>
+                        <div class="formula-term-item">
+                            <b>c (Deslocamento Vertical):</b> Desloca o gráfico inteiro verticalmente para cima ou para baixo.
+                        </div>
+                    </div>
+
+                    <div style="font-size:0.85rem; font-weight:700; color:#38bdf8; margin-top:6px;">
+                        📝 Exemplo Prático Guiado: Calculando f(x) = log₂(x) (com h = 0)
+                    </div>
+
+                    <div class="briefing-calc-table-box">
+                        <table class="briefing-calc-table">
+                            <thead>
+                                <tr>
+                                    <th>Valor de x</th>
+                                    <th>A Pergunta do Logaritmo</th>
+                                    <th>Resultado f(x)</th>
+                                    <th>Ponto no Gráfico (x, y)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><b>x = 0.5</b></td>
+                                    <td>"Qual expoente faz 2 virar 0.5?" ➡ 2⁻¹ = 0.5</td>
+                                    <td><span class="coord-tag">-1.00</span></td>
+                                    <td>P(0.5, -1.0) <small style="color:#94a3b8;">(mergulha para -∞)</small></td>
+                                </tr>
+                                <tr>
+                                    <td><b>x = 1</b></td>
+                                    <td>"Qual expoente faz 2 virar 1?" ➡ 2⁰ = 1</td>
+                                    <td><span class="coord-tag">0.00</span></td>
+                                    <td>P(1.0, 0.0) <small style="color:#38bdf8;">(corta o eixo X em 1)</small></td>
+                                </tr>
+                                <tr>
+                                    <td><b>x = 2</b></td>
+                                    <td>"Qual expoente faz 2 virar 2?" ➡ 2¹ = 2</td>
+                                    <td><span class="coord-tag">1.00</span></td>
+                                    <td>P(2.0, 1.0)</td>
+                                </tr>
+                                <tr>
+                                    <td><b>x = 4</b></td>
+                                    <td>"Qual expoente faz 2 virar 4?" ➡ 2² = 4</td>
+                                    <td><span class="coord-tag">2.00</span></td>
+                                    <td>P(4.0, 2.0)</td>
+                                </tr>
+                                <tr>
+                                    <td><b>x = 8</b></td>
+                                    <td>"Qual expoente faz 2 virar 8?" ➡ 2³ = 8</td>
+                                    <td><span class="coord-tag">3.00</span></td>
+                                    <td>P(8.0, 3.0) <small style="color:#34d399;">(cresce com serenidade)</small></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+        const utilityContent = isExp
+            ? `
+                <div class="briefing-card briefing-card-utility" data-category="utility">
+                    <div class="briefing-card-badge amber">🌍 PARA QUE SERVE NO MUNDO REAL & SÓLIDOS 3D</div>
+                    <div class="briefing-card-title">Aplicações Práticas na Engenharia e na Vida Real</div>
+                    
+                    <div class="real-world-grid">
+                        <div class="real-world-item">
+                            <div class="real-world-item-title">💧 Reservatórios Cilíndricos & Biomassa</div>
+                            <div class="real-world-item-desc">
+                                Em biorreatores industriais, culturas de leveduras e bactérias dobram de volume a cada hora: <b>V(t) = 125 · 2ᵗ Litros</b>. Em apenas 3 horas, o volume salta de 125 L para <b>1.000 Litros (1 m³)</b>, enchendo por completo o tanque cilíndrico do laboratório!
+                            </div>
+                        </div>
+                        <div class="real-world-item">
+                            <div class="real-world-item-title">💰 Economia & Juros Compostos</div>
+                            <div class="real-world-item-desc">
+                                O crescimento de investimentos financeiros segue a regra <b>M = C · (1 + i)ᵗ</b>, onde cada rendimento gera novos rendimentos nas etapas seguintes.
+                            </div>
+                        </div>
+                        <div class="real-world-item">
+                            <div class="real-world-item-title">🧪 Farmacologia & Decaimento</div>
+                            <div class="real-world-item-desc">
+                                A eliminação de antibióticos pelo organismo segue um <b>decaimento exponencial</b> (base b &lt; 1), assim como a meia-vida do Carbono-14 usada por cientistas para datar fósseis.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+            : `
+                <div class="briefing-card briefing-card-utility" data-category="utility">
+                    <div class="briefing-card-badge amber">🌍 PARA QUE SERVE NO MUNDO REAL & SÓLIDOS 3D</div>
+                    <div class="briefing-card-title">Aplicações Práticas na Engenharia e na Vida Real</div>
+                    
+                    <div class="real-world-grid">
+                        <div class="real-world-item">
+                            <div class="real-world-item-title">🏢 Terremotos & Edifício 3D</div>
+                            <div class="real-world-item-desc">
+                                A <b>Escala Richter</b> mede a energia sísmica através de <b>M = ⅔ · log₁₀(E / 10³)</b>. Como a energia varia na casa dos bilhões de Joules, cada 1 grau a mais significa <b>31,6 vezes mais energia destrutiva</b>! No laboratório 3D, você poderá simular a vibração no Edifício.
+                            </div>
+                        </div>
+                        <div class="real-world-item">
+                            <div class="real-world-item-title">🔊 Acústica & Som (Decibéis)</div>
+                            <div class="real-world-item-desc">
+                                O ouvido humano escuta desde o cair de uma folha até uma turbina de avião (uma variação de mais de 1 trilhão de vezes!). A fórmula de decibéis usa logaritmo decimal para comprimir isso de <b>0 a 120 dB</b>.
+                            </div>
+                        </div>
+                        <div class="real-world-item">
+                            <div class="real-world-item-title">💧 Química da Água (Escala de pH)</div>
+                            <div class="real-world-item-desc">
+                                A acidez da água é calculada por <b>pH = -log₁₀[H⁺]</b>. Um pH 3 tem 10 vezes mais acidez que pH 4 e 100 vezes mais que pH 5.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        const todoContent = isExp
+            ? `
+                <div class="briefing-card briefing-card-todo" data-category="todo">
+                    <div class="briefing-card-badge purple">🎯 ROTEIRO PRÁTICO: O QUE VOCÊ DEVE FAZER AGORA</div>
+                    <div class="briefing-card-title">4 Passos Simples para Construir Seu Conhecimento</div>
+                    
+                    <div class="center-briefing-steps-grid">
+                        <div class="briefing-step-box">
+                            <div class="step-badge-circle">1</div>
+                            <div class="step-box-content">
+                                <b>Mova o Slider da Base (b):</b>
+                                <span>No painel esquerdo, arraste a base de 0.2 até 4.0. Veja como a curva empina quando b &gt; 1 ou vira decaimento quando b &lt; 1.</span>
+                            </div>
+                        </div>
+                        <div class="briefing-step-box">
+                            <div class="step-badge-circle">2</div>
+                            <div class="step-box-content">
+                                <b>Arraste o Ponto P no Gráfico:</b>
+                                <span>Clique e arraste diretamente sobre a linha da curva para inspecionar os pares (x, y) calculados em tempo real na barra inferior.</span>
+                            </div>
+                        </div>
+                        <div class="briefing-step-box">
+                            <div class="step-badge-circle">3</div>
+                            <div class="step-box-content">
+                                <b>Resolva os Exercícios na Aba 2:</b>
+                                <span>Clique na aba "2. Exercícios" para fixar o cálculo de potências e ganhar XP de carreira!</span>
+                            </div>
+                        </div>
+                        <div class="briefing-step-box">
+                            <div class="step-badge-circle">4</div>
+                            <div class="step-box-content">
+                                <b>Explore a Realidade 3D & Hipóteses:</b>
+                                <span>Nas abas 3 e 4, simule a biomassa enchendo o cilindro 3D e teste hipóteses sobre a assíntota horizontal.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+            : `
+                <div class="briefing-card briefing-card-todo" data-category="todo">
+                    <div class="briefing-card-badge purple">🎯 ROTEIRO PRÁTICO: O QUE VOCÊ DEVE FAZER AGORA</div>
+                    <div class="briefing-card-title">4 Passos Simples para Construir Seu Conhecimento</div>
+                    
+                    <div class="center-briefing-steps-grid">
+                        <div class="briefing-step-box">
+                            <div class="step-badge-circle">1</div>
+                            <div class="step-box-content">
+                                <b>Altere a Base (b) e a Assíntota (h):</b>
+                                <span>No painel esquerdo, altere a base e observe a barreira vertical x = h se deslocando pelo gráfico.</span>
+                            </div>
+                        </div>
+                        <div class="briefing-step-box">
+                            <div class="step-badge-circle">2</div>
+                            <div class="step-box-content">
+                                <b>Ative o Botão "🪞 Inversa (y = x)":</b>
+                                <span>No cabeçalho do gráfico, clique em Inversa para ver o espelho perfeito entre o logaritmo e a exponencial refletidos na diagonal!</span>
+                            </div>
+                        </div>
+                        <div class="briefing-step-box">
+                            <div class="step-badge-circle">3</div>
+                            <div class="step-box-content">
+                                <b>Resolva os Exercícios na Aba 2:</b>
+                                <span>Responda às questões numéricas e conceituais de logaritmo para acumular XP no GeoLab!</span>
+                            </div>
+                        </div>
+                        <div class="briefing-step-box">
+                            <div class="step-badge-circle">4</div>
+                            <div class="step-box-content">
+                                <b>Dispare o Tremor Sísmico no Prédio 3D:</b>
+                                <span>Na aba "3. Realidade 3D", ajuste a energia sísmica e veja os amortecedores do Edifício 3D reagindo à magnitude Richter!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        bodyEl.innerHTML = `
+            <div class="center-briefing-story">
+                ${storyText}
+            </div>
+
+            <div class="briefing-tab-bar">
+                <button class="briefing-tab-btn active" data-tab="all">📖 Visão Completa</button>
+                <button class="briefing-tab-btn" data-tab="concept">💡 O que é?</button>
+                <button class="briefing-tab-btn" data-tab="calc">🧮 Como se Calcula?</button>
+                <button class="briefing-tab-btn" data-tab="utility">🌍 Para que Serve?</button>
+                <button class="briefing-tab-btn" data-tab="todo">🎯 O que Fazer?</button>
+            </div>
+
+            <div class="briefing-cards-container" style="display:flex; flex-direction:column; gap:14px; margin-top:10px;">
+                ${conceptContent}
+                ${calcContent}
+                ${utilityContent}
+                ${todoContent}
+            </div>
+        `;
+
+        // Interação com as abas internas do modal
+        const tabBtns = bodyEl.querySelectorAll('.briefing-tab-btn');
+        const cards = bodyEl.querySelectorAll('.briefing-card');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const targetTab = btn.dataset.tab;
+
+                cards.forEach(card => {
+                    if (targetTab === 'all' || card.dataset.category === targetTab) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                bodyEl.scrollTop = 0;
+                if (window.sounds) window.sounds.playClick();
+            });
+        });
+
+        if (btnAction) {
+            btnAction.textContent = 'Entendi Perfeitamente! Vamos Praticar no Gráfico 🚀';
+            btnAction.onclick = () => {
+                this.hideCenterBriefing();
+                if (typeof onStart === 'function') {
+                    onStart();
+                }
+                this.speak(
+                    isExp 
+                        ? 'Excelente! Agora ajuste o slider da <b>Base (b)</b> à esquerda ou arraste o <b>Ponto P</b> no gráfico!' 
+                        : 'Muito bem! Experimente ligar a <b>🪞 Inversa (y=x)</b> no topo do gráfico ou simular o tremor no Edifício 3D!',
+                    { icon: '👷', duration: 6000 }
+                );
+                if (window.sounds) window.sounds.playSuccess();
+            };
+        }
+
+        modal.classList.remove('hidden');
+        if (window.sounds) window.sounds.playClick();
+    }
+
     hideCenterBriefing() {
         const modal = document.getElementById('engineerCenterModal');
-        if (modal) modal.classList.add('hidden');
+        if (modal) {
+            modal.classList.add('hidden');
+            const dialog = modal.querySelector('.engineer-center-dialog');
+            if (dialog) dialog.classList.remove('functions-briefing');
+        }
     }
 
     speak(message, options = {}) {

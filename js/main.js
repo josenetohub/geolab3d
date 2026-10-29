@@ -1385,6 +1385,7 @@ document.addEventListener('DOMContentLoaded', () => {
             functionsStudio.deactivate();
         }
     }
+    window.switchModeGlobal = switchMode;
 
     // ==========================================================================
     // EVENTOS GERAIS DA INTERFACE
