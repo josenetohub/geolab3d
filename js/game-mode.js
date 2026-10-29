@@ -22,6 +22,9 @@ class GameManager {
                 this.unlockedBadges = data.badges || [];
             }
         } catch (e) {}
+
+        const xpEl = document.getElementById('xpCount');
+        if (xpEl) xpEl.textContent = this.xp;
     }
 
     saveProgress() {
@@ -31,6 +34,9 @@ class GameManager {
                 badges: this.unlockedBadges
             }));
         } catch (e) {}
+
+        const xpEl = document.getElementById('xpCount');
+        if (xpEl) xpEl.textContent = this.xp;
     }
 
     calculateLevel(xp) {
@@ -57,6 +63,9 @@ class GameManager {
         this.xp += amount;
         this.level = this.calculateLevel(this.xp);
 
+        const xpEl = document.getElementById('xpCount');
+        if (xpEl) xpEl.textContent = this.xp;
+
         if (this.level > oldLevel) {
             if (window.sounds) window.sounds.playLevelUp();
             this.showNotification(`🎉 PARABÉNS! Você subiu para o Nível ${this.level}: ${this.getLevelTitle(this.level)}!`);
@@ -64,6 +73,10 @@ class GameManager {
         }
 
         this.saveProgress();
+    }
+
+    addXp(amount) {
+        this.addXP(amount);
     }
 
     checkBadge(badgeId) {

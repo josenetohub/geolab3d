@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GeoLab 3D - Estúdio de Geometria Espacial & Design Arquitetônico</title>
-    <link rel="stylesheet" href="css/style.css?v=4.1">
+    <link rel="stylesheet" href="css/style.css?v=4.2">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📐</text></svg>">
 </head>
 <body>
@@ -712,6 +712,7 @@
                         </div>
                     </div>
                     <div class="graph-header-actions">
+                        <button class="btn-graph-tool" id="btnToggleSplit3D" title="Alternar visualização dividida com o Sólido 3D">👁️ Sólido 3D</button>
                         <button class="btn-graph-tool active" id="btnToggleGraphZoomReset" title="Resetar eixos para visão padrão (1:1)">🎯 Eixos</button>
                         <button class="btn-graph-tool" id="btnToggleInverseCurve" title="Exibir Reta y = x e Função Inversa">🪞 Inversa (y=x)</button>
                         <button class="btn-graph-tool" id="btnMinimizeGraph" title="Minimizar / Expandir Gráfico">🗕</button>
@@ -765,7 +766,7 @@
         <aside class="panel right-panel">
 
             <!-- TÍTULO DO SÓLIDO SELECIONADO -->
-            <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--border-subtle); padding-bottom:6px;">
+            <div id="rightPanelSolidHeader" style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--border-subtle); padding-bottom:6px;">
                 <div id="solidTitle" style="font-size:1.15rem; font-weight:700; color:var(--text-primary);">Cubo</div>
                 <span id="solidCategoryBadge" style="font-size:0.75rem; color:var(--primary-light); font-weight:600;">Prisma Reto</span>
             </div>
@@ -1393,10 +1394,10 @@
     <script src="js/engineer-guide.js?v=4.3"></script>
     <script src="js/interactive-blackboard.js?v=4.3"></script>
     <script src="js/didactic-xray.js?v=4.3"></script>
-    <script src="js/game-mode.js?v=4.3"></script>
+    <script src="js/game-mode.js?v=4.4"></script>
     <script src="js/game-design-studio.js?v=4.3"></script>
-    <script src="js/functions-studio.js?v=4.3"></script>
-    <script src="js/main.js?v=4.3"></script>
+    <script src="js/functions-studio.js?v=4.4"></script>
+    <script src="js/main.js?v=4.4"></script>
 
 </body>
 </html>

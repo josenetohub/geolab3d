@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const unfoldSys = new UnfoldingSystem(sceneMgr);
     const unfoldingCartela = new UnfoldingCartela(unfoldSys, sceneMgr);
     const gameMgr = new GameManager();
+    window.gameMgr = gameMgr;
 
     // 1.1 Sistema de Tutoria Ativa: O Engenheiro Guia (Leo)
     const engineerGuide = new EngineerGuide();
@@ -1304,8 +1305,8 @@ document.addEventListener('DOMContentLoaded', () => {
         unfoldSys.setActive(mode === 'unfold');
         buildingStudio.setActive(mode === 'building');
 
-        // Se planificação estiver ativa, oculta cotas para eliminar silhuetas
-        if (mode === 'unfold') {
+        // Se planificação ou estúdio de funções estiver ativo, oculta cotas para visão limpa
+        if (mode === 'unfold' || mode === 'exp_func' || mode === 'log_func') {
             dimensionsHelper.setVisible(false);
             const btnDim = document.getElementById('btnToggleDimensions');
             if (btnDim) btnDim.classList.remove('active');

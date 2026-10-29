@@ -3547,7 +3547,19 @@ body.mode-log_func #careerLeftBanner,
 body.mode-exp_func #careerPhaseTrackerCard,
 body.mode-log_func #careerPhaseTrackerCard,
 body.mode-exp_func #rightModelDimensionsCard,
-body.mode-log_func #rightModelDimensionsCard {
+body.mode-log_func #rightModelDimensionsCard,
+body.mode-exp_func #rightPanelSolidHeader,
+body.mode-log_func #rightPanelSolidHeader,
+body.mode-exp_func #subpanel-career,
+body.mode-log_func #subpanel-career,
+body.mode-exp_func .canvas-toolbar,
+body.mode-log_func .canvas-toolbar,
+body.mode-exp_func .canvas-hint,
+body.mode-log_func .canvas-hint,
+body.mode-exp_func .didactic-xray-toolbar,
+body.mode-log_func .didactic-xray-toolbar,
+body.mode-exp_func #didacticXRayToolbar,
+body.mode-log_func #didacticXRayToolbar {
     display: none !important;
 }
 
@@ -3556,18 +3568,18 @@ body.mode-log_func .direct-command-hud {
     display: none !important;
 }
 
-/* OVERLAY DO GRÁFICO CARTESIANO */
+/* O GRÁFICO CARTESIANO É O PAINEL PRINCIPAL DO ESTÚDIO DE FUNÇÕES */
 .function-graph-overlay {
     position: absolute;
-    top: 14px;
-    left: 14px;
-    width: 440px;
-    max-width: calc(100% - 28px);
-    background: rgba(15, 23, 42, 0.94);
-    border: 1px solid rgba(56, 189, 248, 0.35);
-    border-radius: 12px;
+    inset: 12px;
+    width: auto;
+    max-width: none;
+    height: calc(100% - 24px);
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 14px;
     backdrop-filter: blur(14px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
     z-index: 35;
     display: flex;
     flex-direction: column;
@@ -3575,8 +3587,17 @@ body.mode-log_func .direct-command-hud {
     transition: all 0.25s ease;
 }
 
+/* Modo Split / Dividido quando o aluno aciona a visualização do Sólido 3D */
+.function-graph-overlay.split-3d {
+    width: 48%;
+    right: auto;
+    inset: 12px auto 12px 12px;
+}
+
 .function-graph-overlay.minimized {
-    width: 280px;
+    width: 300px;
+    height: auto;
+    inset: 12px auto auto 12px;
 }
 
 .function-graph-overlay.minimized .graph-canvas-wrapper,
@@ -3638,14 +3659,46 @@ body.mode-log_func .direct-command-hud {
 .graph-canvas-wrapper {
     position: relative;
     width: 100%;
+    flex: 1;
+    min-height: 220px;
     background: #090d16;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
 #functionPlotCanvas {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
     cursor: crosshair;
+}
+
+.exercise-progress-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(15, 23, 42, 0.8));
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.74rem;
+    color: #e2e8f0;
+}
+
+.exercise-progress-banner span {
+    font-weight: 800;
+    color: var(--accent-cyan);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.btn-check-exercise.btn-solved {
+    background: rgba(34, 197, 94, 0.2) !important;
+    border-color: #22c55e !important;
+    color: #4ade80 !important;
+    cursor: default !important;
 }
 
 .graph-overlay-footer {

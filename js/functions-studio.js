@@ -38,7 +38,12 @@ class FunctionsStudio {
         this.showInverse = false;
         this.isGraphMinimized = false;
         this.isDraggingPoint = false;
+        this.isSplit3D = false;
         this.seismicAnimationId = null;
+
+        // Progresso e gamificação de exercícios e hipóteses
+        this.solvedExercises = new Set();
+        this.solvedHypotheses = new Set();
 
         // Limites dos eixos cartesianos
         this.viewBounds = {
@@ -51,11 +56,47 @@ class FunctionsStudio {
         this.initDOM();
     }
 
+    awardXP(amount, reason = '') {
+        if (!this.gameMgr && window.gameMgr) {
+            this.gameMgr = window.gameMgr;
+        }
+        if (this.gameMgr) {
+            if (typeof this.gameMgr.addXP === 'function') {
+                this.gameMgr.addXP(amount);
+            } else if (typeof this.gameMgr.addXp === 'function') {
+                this.gameMgr.addXp(amount);
+            }
+            const xpEl = document.getElementById('xpCount');
+            if (xpEl) xpEl.textContent = this.gameMgr.xp;
+
+            if (reason && typeof this.gameMgr.showNotification === 'function') {
+                this.gameMgr.showNotification(`🎉 +${amount} XP! ${reason}`);
+            }
+        }
+    }
+
     initDOM() {
         this.canvas = document.getElementById('functionPlotCanvas');
         if (this.canvas) {
             this.ctx = this.canvas.getContext('2d');
             this.setupCanvasEvents();
+        }
+
+        // Redimensionamento responsivo do Canvas cartesiano
+        window.addEventListener('resize', () => {
+            if (this.canvas && (document.body.classList.contains('mode-exp_func') || document.body.classList.contains('mode-log_func'))) {
+                this.resizeCanvas();
+                this.renderGraph();
+            }
+        });
+
+        // Alternar visualização dividida com o sólido 3D
+        const btnSplit3D = document.getElementById('btnToggleSplit3D');
+        if (btnSplit3D) {
+            btnSplit3D.addEventListener('click', () => {
+                this.toggleSplit3D();
+                if (window.sounds) window.sounds.playClick();
+            });
         }
 
         // Navegador de etapas (1 a 4)
@@ -163,10 +204,10 @@ class FunctionsStudio {
 
         const handlePointer = (e) => {
             const rect = this.canvas.getBoundingClientRect();
+            if (rect.width <= 0) return;
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const xPixel = clientX - rect.left;
-            const scaleX = (this.viewBounds.maxX - this.viewBounds.minX) / this.canvas.width;
-            let mathX = this.viewBounds.minX + xPixel * scaleX;
+            const xPercent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+            let mathX = this.viewBounds.minX + xPercent * (this.viewBounds.maxX - this.viewBounds.minX);
 
             if (this.activeType === 'exponential') {
                 this.expParams.xPoint = parseFloat(mathX.toFixed(2));
@@ -208,22 +249,95 @@ class FunctionsStudio {
         });
     }
 
+    resizeCanvas() {
+        if (!this.canvas) return;
+        const rect = this.canvas.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+            const dpr = window.devicePixelRatio || 1;
+            const targetW = Math.round(rect.width * dpr);
+            const targetH = Math.round(rect.height * dpr);
+            if (this.canvas.width !== targetW || this.canvas.height !== targetH) {
+                this.canvas.width = targetW;
+                this.canvas.height = targetH;
+            }
+        }
+    }
+
+    toggleSplit3D() {
+        this.isSplit3D = !this.isSplit3D;
+        if (this.isSplit3D) {
+            this.setupRealitySolid();
+        }
+        this.updateSplit3DMode();
+    }
+
+    setupRealitySolid() {
+        if (this.activeType === 'exponential') {
+            if (window.switchSolidGlobal) {
+                window.switchSolidGlobal('cylinder', { r: 2.0, h: 6.0 });
+            }
+        } else {
+            if (window.switchSolidGlobal) {
+                window.switchSolidGlobal('rectangular_prism', { a: 6.0, b: 5.0, c: 8.0 });
+                if (this.buildingStudio) {
+                    this.buildingStudio.setActive(true);
+                    this.buildingStudio.buildBuilding({ a: 6.0, b: 5.0, c: 8.0 });
+                }
+            }
+        }
+        if (this.sceneMgr && this.sceneMgr.solidGroup) {
+            this.sceneMgr.solidGroup.visible = true;
+        }
+    }
+
+    updateSplit3DMode() {
+        const overlay = document.getElementById('functionGraphOverlay');
+        const btnSplit = document.getElementById('btnToggleSplit3D');
+
+        if (overlay) {
+            overlay.classList.toggle('split-3d', !!this.isSplit3D);
+        }
+        if (btnSplit) {
+            btnSplit.classList.toggle('active', !!this.isSplit3D);
+            btnSplit.innerHTML = this.isSplit3D ? '📊 Gráfico Cheio' : '👁️ Sólido 3D';
+        }
+
+        if (this.sceneMgr && this.sceneMgr.solidGroup) {
+            this.sceneMgr.solidGroup.visible = !!this.isSplit3D;
+        }
+
+        setTimeout(() => {
+            this.resizeCanvas();
+            this.renderGraph();
+        }, 50);
+    }
+
     /**
      * Ativa o módulo específico (exponencial ou logarítmica)
+     * Foco 100% no gráfico cartesiano sem abrir os sólidos tridimensionais
      */
     activate(type = 'exponential') {
         this.activeType = type;
         this.showInverse = false;
         this.currentStep = 1;
+        this.isSplit3D = false;
 
         const overlay = document.getElementById('functionGraphOverlay');
-        if (overlay) overlay.classList.remove('hidden');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            overlay.classList.remove('split-3d');
+        }
 
         const leftSub = document.getElementById('subpanel-functions-left');
         if (leftSub) leftSub.classList.remove('hidden');
 
         const rightSub = document.getElementById('subpanel-functions-right');
         if (rightSub) rightSub.classList.remove('hidden');
+
+        // Garante que o sólido 3D não apareça em segundo plano durante o estudo do gráfico
+        if (this.sceneMgr && this.sceneMgr.solidGroup) {
+            this.sceneMgr.solidGroup.visible = false;
+        }
 
         // Configura visuais do módulo
         const iconEl = document.getElementById('funcModuleIcon');
@@ -233,42 +347,42 @@ class FunctionsStudio {
         const btnInverse = document.getElementById('btnToggleInverseCurve');
         if (btnInverse) btnInverse.classList.remove('active');
 
+        const btnSplit = document.getElementById('btnToggleSplit3D');
+        if (btnSplit) {
+            btnSplit.classList.remove('active');
+            btnSplit.innerHTML = '👁️ Sólido 3D';
+        }
+
         if (type === 'exponential') {
             if (iconEl) iconEl.textContent = '📈';
             if (titleEl) titleEl.textContent = 'Função Exponencial';
             if (subEl) subEl.textContent = 'Crescimento Rápido, Potências & Volume 3D';
             if (shiftLabel) shiftLabel.innerHTML = 'Assíntota Horizontal <b>(c)</b>:';
             this.viewBounds = { minX: -4, maxX: 4, minY: -2, maxY: 8 };
-            
-            // Sólido 3D padrão para exponencial: Cilindro Hidráulico com água
-            if (window.switchSolidGlobal) {
-                window.switchSolidGlobal('cylinder', { r: 2.0, h: 6.0 });
-            }
         } else {
             if (iconEl) iconEl.textContent = '📉';
             if (titleEl) titleEl.textContent = 'Função Logarítmica';
             if (subEl) subEl.textContent = 'A Inversa, Escala Richter & Abalo Sísmico 3D';
             if (shiftLabel) shiftLabel.innerHTML = 'Assíntota Vertical <b>(h)</b>:';
             this.viewBounds = { minX: -2, maxX: 8, minY: -4, maxY: 5 };
-
-            // Sólido 3D padrão para logarítmica: Edifício Arquitetônico 3D
-            if (window.switchSolidGlobal) {
-                window.switchSolidGlobal('rectangular_prism', { a: 6.0, b: 5.0, c: 8.0 });
-                if (this.buildingStudio) {
-                    this.buildingStudio.setActive(true);
-                    this.buildingStudio.buildBuilding({ a: 6.0, b: 5.0, c: 8.0 });
-                }
-            }
         }
 
         this.renderPresets();
         this.setStep(1);
         this.updateUI();
+
+        setTimeout(() => {
+            this.resizeCanvas();
+            this.renderGraph();
+        }, 60);
     }
 
     deactivate() {
         const overlay = document.getElementById('functionGraphOverlay');
-        if (overlay) overlay.classList.add('hidden');
+        if (overlay) {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('split-3d');
+        }
 
         const leftSub = document.getElementById('subpanel-functions-left');
         if (leftSub) leftSub.classList.add('hidden');
@@ -281,7 +395,9 @@ class FunctionsStudio {
             this.seismicAnimationId = null;
         }
 
+        // Restaura o sólido 3D para os outros modos normais do laboratório e carreira
         if (this.sceneMgr && this.sceneMgr.solidGroup) {
+            this.sceneMgr.solidGroup.visible = true;
             this.sceneMgr.solidGroup.position.set(0, 0, 0);
             this.sceneMgr.solidGroup.rotation.set(0, 0, 0);
             this.sceneMgr.solidGroup.scale.set(1, 1, 1);
@@ -302,8 +418,23 @@ class FunctionsStudio {
             if (el) el.classList.toggle('hidden', i !== stepNum);
         }
 
+        // Se for a etapa 3 (Aplicação à Realidade / Sólido 3D), ativa o sólido 3D em modo dividido
+        if (stepNum === 3) {
+            this.isSplit3D = true;
+            this.setupRealitySolid();
+            this.updateSplit3DMode();
+            this.renderRealityCase();
+        } else {
+            // Nas etapas 1 (Gráfico), 2 (Exercícios) e 4 (Hipóteses), foco 100% no gráfico cartesiano
+            this.isSplit3D = false;
+            this.updateSplit3DMode();
+            if (this.seismicAnimationId) {
+                cancelAnimationFrame(this.seismicAnimationId);
+                this.seismicAnimationId = null;
+            }
+        }
+
         if (stepNum === 2) this.renderExercises();
-        if (stepNum === 3) this.renderRealityCase();
         if (stepNum === 4) this.renderHypothesisLab();
 
         this.updateUI();
@@ -571,6 +702,7 @@ class FunctionsStudio {
      */
     renderGraph() {
         if (!this.canvas || !this.ctx || this.isGraphMinimized) return;
+        this.resizeCanvas();
         const ctx = this.ctx;
         const w = this.canvas.width;
         const h = this.canvas.height;
@@ -794,7 +926,7 @@ class FunctionsStudio {
      * Sincronização 3D da função matemática com o modelo Three.js
      */
     syncSolidWithFunction() {
-        if (!this.sceneMgr || !this.sceneMgr.solidGroup) return;
+        if (!this.sceneMgr || !this.sceneMgr.solidGroup || !this.isSplit3D) return;
 
         const curX = this.activeType === 'exponential' ? this.expParams.xPoint : this.logParams.xPoint;
         const curY = this.evaluate(curX);
@@ -825,80 +957,117 @@ class FunctionsStudio {
         const container = document.getElementById('funcExercisesContainer');
         if (!container) return;
 
+        this.solvedExercises = this.solvedExercises || new Set();
+
         const isExp = this.activeType === 'exponential';
         const exercises = isExp ? [
             {
                 id: 'exp_ex1',
                 question: '1. Dada a função <b>f(x) = 2ˣ</b>, qual é o valor da imagem para <b>x = 3</b>?',
-                expected: 8,
-                hint: '2³ = 2 × 2 × 2 = 8'
+                expected: 8
             },
             {
                 id: 'exp_ex2',
-                question: '2. Para <b>f(x) = 3ˣ - 4</b>, qual é a equação da assíntota horizontal quando x tende a -∞?',
-                expected: -4,
-                hint: 'Quando x tende a -∞, 3ˣ se aproxima de 0, sobrando y = -4'
+                question: '2. Para <b>f(x) = 3ˣ - 4</b>, qual é o valor de <b>y</b> da assíntota horizontal quando x tende a -∞?',
+                expected: -4
             },
             {
                 id: 'exp_ex3',
-                question: '3. Se a base for <b>b = 0.5</b> (meia-vida), f(2) vale quanto em relação a f(0) = 1?',
-                expected: 0.25,
-                hint: '(0.5)² = 0.25 (um quarto do valor inicial)'
+                question: '3. Se a base for <b>b = 0.5</b> (meia-vida), f(2) vale quanto? (Ex: 0.25)',
+                expected: 0.25
             }
         ] : [
             {
                 id: 'log_ex1',
                 question: '1. Calcule o valor de <b>log₂(16)</b> (a potência à qual 2 deve ser elevado para resultar em 16):',
-                expected: 4,
-                hint: '2⁴ = 16, logo log₂(16) = 4'
+                expected: 4
             },
             {
                 id: 'log_ex2',
                 question: '2. Qual é a raiz da função canônica <b>f(x) = log₁₀(x)</b> (ou seja, quando f(x) = 0)?',
-                expected: 1,
-                hint: 'Qualquer base elevada a 0 resulta em 1, portanto log(1) = 0'
+                expected: 1
             },
             {
                 id: 'log_ex3',
-                question: '3. Na função <b>f(x) = log₂(x - 3)</b>, qual é a coordenada x da assíntota vertical?',
-                expected: 3,
-                hint: 'A condição de existência é x - 3 > 0, logo a assíntota fica exatamente em x = 3'
+                question: '3. Na função <b>f(x) = log₂(x - 3)</b>, qual é o valor de <b>x</b> da assíntota vertical?',
+                expected: 3
             }
         ];
 
-        container.innerHTML = exercises.map(ex => `
-            <div class="exercise-item-card" id="card_${ex.id}">
-                <div class="exercise-question">${ex.question}</div>
-                <div class="exercise-input-row">
-                    <input type="number" step="0.01" class="exercise-input" id="inp_${ex.id}" placeholder="Digite sua resposta">
-                    <button class="btn-check-exercise" data-ex-id="${ex.id}">Conferir</button>
-                </div>
-                <div class="exercise-feedback hidden" id="fb_${ex.id}"></div>
+        const solvedCount = exercises.filter(ex => this.solvedExercises.has(ex.id)).length;
+
+        let html = `
+            <div class="exercise-progress-banner">
+                <span>🏆 Progresso dos Exercícios: <b>${solvedCount} de ${exercises.length} Concluídos</b></span>
+                <span class="text-cyan font-mono" style="font-weight:700;">+${solvedCount * 50} XP</span>
             </div>
-        `).join('');
+        `;
+
+        html += exercises.map(ex => {
+            const isSolved = this.solvedExercises.has(ex.id);
+            return `
+                <div class="exercise-item-card" id="card_${ex.id}">
+                    <div class="exercise-question">${ex.question}</div>
+                    <div class="exercise-input-row">
+                        <input type="number" step="0.01" class="exercise-input" id="inp_${ex.id}" 
+                            placeholder="Digite sua resposta" ${isSolved ? `disabled value="${ex.expected}"` : ''}>
+                        <button class="btn-check-exercise ${isSolved ? 'btn-solved' : ''}" data-ex-id="${ex.id}" ${isSolved ? 'disabled' : ''}>
+                            ${isSolved ? '✓ Resolvido' : 'Conferir'}
+                        </button>
+                    </div>
+                    <div class="exercise-feedback ${isSolved ? 'success' : 'hidden'}" id="fb_${ex.id}">
+                        ${isSolved ? '🎉 <b>Resposta correta! Parabéns!</b> (+50 XP)' : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = html;
 
         container.querySelectorAll('.btn-check-exercise').forEach((btn, idx) => {
             btn.addEventListener('click', () => {
                 const ex = exercises[idx];
+                if (this.solvedExercises.has(ex.id)) return;
+
                 const input = document.getElementById(`inp_${ex.id}`);
                 const fb = document.getElementById(`fb_${ex.id}`);
                 const val = parseFloat(input ? input.value : '');
 
-                if (isNaN(val)) return;
+                if (isNaN(val)) {
+                    fb.className = 'exercise-feedback error';
+                    fb.innerHTML = '⚠️ Digite um valor numérico antes de conferir.';
+                    fb.classList.remove('hidden');
+                    return;
+                }
 
                 if (Math.abs(val - ex.expected) < 0.05) {
                     fb.className = 'exercise-feedback success';
-                    fb.innerHTML = `✓ <b>Correto! (+50 XP)</b> ${ex.hint}`;
+                    fb.innerHTML = '🎉 <b>Resposta correta! Parabéns!</b> (+50 XP)';
                     fb.classList.remove('hidden');
-                    if (this.gameMgr) {
-                        this.gameMgr.addXp(50);
-                        const xpEl = document.getElementById('xpCount');
-                        if (xpEl) xpEl.textContent = this.gameMgr.xp;
-                    }
+
+                    this.solvedExercises.add(ex.id);
+                    if (input) input.disabled = true;
+                    btn.disabled = true;
+                    btn.classList.add('btn-solved');
+                    btn.textContent = '✓ Resolvido';
+
+                    // Contabiliza pontuação XP sem falhas
+                    this.awardXP(50, 'Exercício de fixação concluído!');
                     if (window.sounds) window.sounds.playSuccess();
+
+                    // Atualiza banner de progresso
+                    const progressBanner = container.querySelector('.exercise-progress-banner');
+                    if (progressBanner) {
+                        const newSolved = exercises.filter(e => this.solvedExercises.has(e.id)).length;
+                        progressBanner.innerHTML = `
+                            <span>🏆 Progresso dos Exercícios: <b>${newSolved} de ${exercises.length} Concluídos</b></span>
+                            <span class="text-cyan font-mono" style="font-weight:700;">+${newSolved * 50} XP</span>
+                        `;
+                    }
                 } else {
+                    // Exibe estritamente a indicação de erro, SEM revelar a explicação ou resposta
                     fb.className = 'exercise-feedback error';
-                    fb.innerHTML = `❌ <b>Tente novamente!</b> Dica: ${ex.hint}`;
+                    fb.innerHTML = '❌ <b>Resposta incorreta.</b> Tente novamente!';
                     fb.classList.remove('hidden');
                     if (window.sounds) window.sounds.playError();
                 }
@@ -1129,9 +1298,13 @@ class FunctionsStudio {
         const container = document.getElementById('funcHypothesisContainer');
         if (!container) return;
 
+        this.solvedHypotheses = this.solvedHypotheses || new Set();
         const isExp = this.activeType === 'exponential';
 
         if (isExp) {
+            const hyp1Done = this.solvedHypotheses.has('exp_hyp1');
+            const hyp2Done = this.solvedHypotheses.has('exp_hyp2');
+
             container.innerHTML = `
                 <div class="hypothesis-card-item">
                     <div class="hypothesis-title">🔬 Hipótese 1: A Inversão da Base (b = 2 vs b = 0.5)</div>
@@ -1141,9 +1314,13 @@ class FunctionsStudio {
                     <div style="display:flex; gap:6px; margin-top:6px;">
                         <button class="btn-hypothesis-action" id="btnTestHyp1A">Testar b = 2</button>
                         <button class="btn-hypothesis-action" id="btnTestHyp1B">Testar b = 0.5</button>
-                        <button class="btn-hypothesis-validate" id="btnValidateHyp1">✓ Validar Hipótese</button>
+                        <button class="btn-hypothesis-validate ${hyp1Done ? 'btn-solved' : ''}" id="btnValidateHyp1" ${hyp1Done ? 'disabled' : ''}>
+                            ${hyp1Done ? '✓ Validada (+100 XP)' : '✓ Validar Hipótese'}
+                        </button>
                     </div>
-                    <div class="hypothesis-result-box hidden" id="resHyp1"></div>
+                    <div class="hypothesis-result-box ${hyp1Done ? 'success' : 'hidden'}" id="resHyp1">
+                        ${hyp1Done ? '🎉 <b>Hipótese 1 Confirmada com Rigor Científico!</b><br>Como (1/2)ˣ = 2⁻ˣ, a curva de decaimento é a reflexão exata de 2ˣ sobre o eixo vertical Y (+100 XP)!' : ''}
+                    </div>
                 </div>
 
                 <div class="hypothesis-card-item" style="margin-top:10px;">
@@ -1152,10 +1329,14 @@ class FunctionsStudio {
                         "Para qualquer base positiva b > 0, é matematicamente impossível bˣ ser menor ou igual a zero (a curva nunca cruza a assíntota y = 0)."
                     </div>
                     <div style="display:flex; gap:6px; margin-top:6px;">
-                        <button class="btn-hypothesis-action" id="btnTestHyp2Ext">Testar x = -10 (Extremo)</button>
-                        <button class="btn-hypothesis-validate" id="btnValidateHyp2">✓ Validar Hipótese</button>
+                        <button class="btn-hypothesis-action" id="btnTestHyp2Ext">Testar x = -4 (Extremo)</button>
+                        <button class="btn-hypothesis-validate ${hyp2Done ? 'btn-solved' : ''}" id="btnValidateHyp2" ${hyp2Done ? 'disabled' : ''}>
+                            ${hyp2Done ? '✓ Validada (+100 XP)' : '✓ Validar Hipótese'}
+                        </button>
                     </div>
-                    <div class="hypothesis-result-box hidden" id="resHyp2"></div>
+                    <div class="hypothesis-result-box ${hyp2Done ? 'success' : 'hidden'}" id="resHyp2">
+                        ${hyp2Done ? '🎉 <b>Hipótese 2 Confirmada!</b><br>Mesmo para x = -10, 2⁻¹⁰ = 1/1024 ≈ 0,000976 > 0. O valor aproxima-se infinitamente de zero mas jamais o atinge (+100 XP)!' : ''}
+                    </div>
                 </div>
             `;
 
@@ -1173,7 +1354,14 @@ class FunctionsStudio {
                         res1.className = 'hypothesis-result-box success';
                         res1.innerHTML = '🎉 <b>Hipótese 1 Confirmada com Rigor Científico!</b><br>Como (1/2)ˣ = 2⁻ˣ, a curva de decaimento é a reflexão exata de 2ˣ sobre o eixo vertical Y (+100 XP)!';
                         res1.classList.remove('hidden');
-                        if (this.gameMgr) this.gameMgr.addXp(100);
+
+                        if (!this.solvedHypotheses.has('exp_hyp1')) {
+                            this.solvedHypotheses.add('exp_hyp1');
+                            btnVal1.disabled = true;
+                            btnVal1.classList.add('btn-solved');
+                            btnVal1.textContent = '✓ Validada (+100 XP)';
+                            this.awardXP(100, 'Hipótese de decaimento validada!');
+                        }
                         if (window.sounds) window.sounds.playSuccess();
                     }
                 });
@@ -1191,13 +1379,23 @@ class FunctionsStudio {
                         res2.className = 'hypothesis-result-box success';
                         res2.innerHTML = '🎉 <b>Hipótese 2 Confirmada!</b><br>Mesmo para x = -10, 2⁻¹⁰ = 1/1024 ≈ 0,000976 > 0. O valor aproxima-se infinitamente de zero mas jamais o atinge (+100 XP)!';
                         res2.classList.remove('hidden');
-                        if (this.gameMgr) this.gameMgr.addXp(100);
+
+                        if (!this.solvedHypotheses.has('exp_hyp2')) {
+                            this.solvedHypotheses.add('exp_hyp2');
+                            btnVal2.disabled = true;
+                            btnVal2.classList.add('btn-solved');
+                            btnVal2.textContent = '✓ Validada (+100 XP)';
+                            this.awardXP(100, 'Hipótese de assíntota validada!');
+                        }
                         if (window.sounds) window.sounds.playSuccess();
                     }
                 });
             }
         } else {
             // Hipóteses do Módulo Logarítmico
+            const hypLog1Done = this.solvedHypotheses.has('log_hyp1');
+            const hypLog2Done = this.solvedHypotheses.has('log_hyp2');
+
             container.innerHTML = `
                 <div class="hypothesis-card-item">
                     <div class="hypothesis-title">🔬 Hipótese 1: A Simetria Especular Inversa (y = x)</div>
@@ -1206,9 +1404,13 @@ class FunctionsStudio {
                     </div>
                     <div style="display:flex; gap:6px; margin-top:6px;">
                         <button class="btn-hypothesis-action" id="btnTestHypLogMirror">Exibir Espelho y = x</button>
-                        <button class="btn-hypothesis-validate" id="btnValidateHypLog">✓ Validar Hipótese</button>
+                        <button class="btn-hypothesis-validate ${hypLog1Done ? 'btn-solved' : ''}" id="btnValidateHypLog" ${hypLog1Done ? 'disabled' : ''}>
+                            ${hypLog1Done ? '✓ Validada (+100 XP)' : '✓ Validar Hipótese'}
+                        </button>
                     </div>
-                    <div class="hypothesis-result-box hidden" id="resHypLog1"></div>
+                    <div class="hypothesis-result-box ${hypLog1Done ? 'success' : 'hidden'}" id="resHypLog1">
+                        ${hypLog1Done ? '🎉 <b>Hipótese Confirmada com Maestria!</b><br>Ao trocar as coordenadas (x, y) por (y, x), todo ponto (a, b) da exponencial corresponde exatamente a (b, a) no logaritmo (+100 XP)!' : ''}
+                    </div>
                 </div>
 
                 <div class="hypothesis-card-item" style="margin-top:10px;">
@@ -1218,9 +1420,13 @@ class FunctionsStudio {
                     </div>
                     <div style="display:flex; gap:6px; margin-top:6px;">
                         <button class="btn-hypothesis-action" id="btnTestHypLogLimit">Aproximar de x = 0</button>
-                        <button class="btn-hypothesis-validate" id="btnValidateHypLog2">✓ Validar Hipótese</button>
+                        <button class="btn-hypothesis-validate ${hypLog2Done ? 'btn-solved' : ''}" id="btnValidateHypLog2" ${hypLog2Done ? 'disabled' : ''}>
+                            ${hypLog2Done ? '✓ Validada (+100 XP)' : '✓ Validar Hipótese'}
+                        </button>
                     </div>
-                    <div class="hypothesis-result-box hidden" id="resHypLog2"></div>
+                    <div class="hypothesis-result-box ${hypLog2Done ? 'success' : 'hidden'}" id="resHypLog2">
+                        ${hypLog2Done ? '🎉 <b>Hipótese Confirmada!</b><br>Conforme x se aproxima de zero pela direita, log₂(x) despenca para -∞, sem nunca poder avaliar x ≤ 0 (+100 XP)!' : ''}
+                    </div>
                 </div>
             `;
 
@@ -1241,7 +1447,14 @@ class FunctionsStudio {
                         resLog1.className = 'hypothesis-result-box success';
                         resLog1.innerHTML = '🎉 <b>Hipótese Confirmada com Maestria!</b><br>Ao trocar as coordenadas (x, y) por (y, x), todo ponto (a, b) da exponencial corresponde exatamente a (b, a) no logaritmo (+100 XP)!';
                         resLog1.classList.remove('hidden');
-                        if (this.gameMgr) this.gameMgr.addXp(100);
+
+                        if (!this.solvedHypotheses.has('log_hyp1')) {
+                            this.solvedHypotheses.add('log_hyp1');
+                            btnValLog1.disabled = true;
+                            btnValLog1.classList.add('btn-solved');
+                            btnValLog1.textContent = '✓ Validada (+100 XP)';
+                            this.awardXP(100, 'Hipótese de simetria inversa validada!');
+                        }
                         if (window.sounds) window.sounds.playSuccess();
                     }
                 });
@@ -1264,7 +1477,14 @@ class FunctionsStudio {
                         resLog2.className = 'hypothesis-result-box success';
                         resLog2.innerHTML = '🎉 <b>Hipótese Confirmada!</b><br>Conforme x se aproxima de zero pela direita, log₂(x) despenca para -∞, sem nunca poder avaliar x ≤ 0 (+100 XP)!';
                         resLog2.classList.remove('hidden');
-                        if (this.gameMgr) this.gameMgr.addXp(100);
+
+                        if (!this.solvedHypotheses.has('log_hyp2')) {
+                            this.solvedHypotheses.add('log_hyp2');
+                            btnValLog2.disabled = true;
+                            btnValLog2.classList.add('btn-solved');
+                            btnValLog2.textContent = '✓ Validada (+100 XP)';
+                            this.awardXP(100, 'Hipótese de existência validada!');
+                        }
                         if (window.sounds) window.sounds.playSuccess();
                     }
                 });
