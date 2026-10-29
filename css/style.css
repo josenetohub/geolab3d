@@ -3559,7 +3559,11 @@ body.mode-log_func .canvas-hint,
 body.mode-exp_func .didactic-xray-toolbar,
 body.mode-log_func .didactic-xray-toolbar,
 body.mode-exp_func #didacticXRayToolbar,
-body.mode-log_func #didacticXRayToolbar {
+body.mode-log_func #didacticXRayToolbar,
+body.mode-exp_func .math-summary-accordion,
+body.mode-log_func .math-summary-accordion,
+body.mode-exp_func #extraMeasuresContainer,
+body.mode-log_func #extraMeasuresContainer {
     display: none !important;
 }
 

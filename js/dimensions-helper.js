@@ -129,7 +129,17 @@ class DimensionsHelper {
         this.group.add(sprite);
     }
 
+    update(solidId, params) {
+        const sId = solidId || this.currentSolidId;
+        const p = params || this.currentParams;
+        if (sId && p) {
+            this.buildDimensions(sId, p);
+        }
+    }
+
     buildDimensions(solidId, params) {
+        this.currentSolidId = solidId;
+        this.currentParams = params;
         this.clear();
 
         const p = params;

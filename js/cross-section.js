@@ -38,7 +38,7 @@ class CrossSectionAnalyzer {
             if (this.ctx && this.canvas) {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             }
-            if (window.dimensionsHelper) {
+            if (window.dimensionsHelper && typeof window.dimensionsHelper.update === 'function') {
                 window.dimensionsHelper.update(this.currentSolidId, this.currentParams);
             }
         }
