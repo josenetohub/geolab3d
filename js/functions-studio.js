@@ -44,6 +44,11 @@ class FunctionsStudio {
         // Progresso e gamificação de exercícios e hipóteses
         this.solvedExercises = new Set();
         this.solvedHypotheses = new Set();
+        this.completedMissions = new Set(JSON.parse(localStorage.getItem('geolab_completed_notebook_missions') || '[]'));
+        this.currentMissionFilter = 'all';
+        this.mindMapZoom = 1.0;
+
+        this.initNotebookMissionsData();
 
         // Limites dos eixos cartesianos
         this.viewBounds = {
@@ -218,6 +223,43 @@ class FunctionsStudio {
                 if (window.sounds) window.sounds.playClick();
             });
         }
+
+        // Botões para abrir as Missões do Caderno
+        const btnMissionsLeft = document.getElementById('btnFuncOpenMissions');
+        if (btnMissionsLeft) {
+            btnMissionsLeft.addEventListener('click', () => {
+                this.openMissionsModal();
+                if (window.sounds) window.sounds.playClick();
+            });
+        }
+        const btnGraphMissions = document.getElementById('btnGraphMissions');
+        if (btnGraphMissions) {
+            btnGraphMissions.addEventListener('click', () => {
+                this.openMissionsModal();
+                if (window.sounds) window.sounds.playClick();
+            });
+        }
+
+        // Botões para abrir o Mapa Mental
+        const btnMindMapLeft = document.getElementById('btnFuncOpenMindMap');
+        if (btnMindMapLeft) {
+            btnMindMapLeft.addEventListener('click', () => {
+                this.openMindMapModal();
+                if (window.sounds) window.sounds.playClick();
+            });
+        }
+        const btnGraphMindMap = document.getElementById('btnGraphMindMap');
+        if (btnGraphMindMap) {
+            btnGraphMindMap.addEventListener('click', () => {
+                this.openMindMapModal();
+                if (window.sounds) window.sounds.playClick();
+            });
+        }
+
+        // Inicializa Janela Draggable, Modal de Missões e Modal de Mapa Mental
+        this.setupDraggableOverlay();
+        this.setupMissionsModal();
+        this.setupMindMapModal();
     }
 
     setupCanvasEvents() {
@@ -297,6 +339,25 @@ class FunctionsStudio {
             if (window.switchSolidGlobal) {
                 window.switchSolidGlobal('cylinder', { r: 2.0, h: 6.0 });
             }
+            if (this.liquidSim) {
+                this.liquidSim.setSolid('cylinder', { r: 2.0, h: 6.0 });
+            }
+            if (this.sceneMgr && this.sceneMgr.faucetGroup) {
+                this.sceneMgr.faucetGroup.visible = true;
+            }
+            // Deixa o cilindro translúcido (Raio-X Didático) para enxergar perfeitamente o líquido subindo
+            if (this.sceneMgr && this.sceneMgr.solidGroup) {
+                this.sceneMgr.solidGroup.visible = true;
+                this.sceneMgr.solidGroup.scale.set(1, 1, 1);
+                this.sceneMgr.solidGroup.traverse(child => {
+                    if (child.isMesh && child.material) {
+                        child.material.transparent = true;
+                        child.material.opacity = 0.25;
+                        child.material.depthWrite = false;
+                        child.material.needsUpdate = true;
+                    }
+                });
+            }
         } else {
             if (window.switchSolidGlobal) {
                 window.switchSolidGlobal('rectangular_prism', { a: 6.0, b: 5.0, c: 8.0 });
@@ -305,9 +366,9 @@ class FunctionsStudio {
                     this.buildingStudio.buildBuilding({ a: 6.0, b: 5.0, c: 8.0 });
                 }
             }
-        }
-        if (this.sceneMgr && this.sceneMgr.solidGroup) {
-            this.sceneMgr.solidGroup.visible = true;
+            if (this.sceneMgr && this.sceneMgr.solidGroup) {
+                this.sceneMgr.solidGroup.visible = true;
+            }
         }
     }
 
@@ -995,18 +1056,18 @@ class FunctionsStudio {
         const exercises = isExp ? [
             {
                 id: 'exp_ex1',
-                question: '1. Dada a função <b>f(x) = 2ˣ</b>, qual é o valor da imagem para <b>x = 3</b>?',
+                question: '1. Dada a função <b>f(x) = 2ˣ</b>, qual é o valor de <b>f(3)</b>? <i>(ou seja: 2 × 2 × 2)</i>',
                 expected: 8
             },
             {
                 id: 'exp_ex2',
-                question: '2. Para <b>f(x) = 3ˣ - 4</b>, qual é o valor de <b>y</b> da assíntota horizontal quando x tende a -∞?',
-                expected: -4
+                question: '2. Para a função <b>f(x) = 2ˣ</b>, qual é o valor de <b>f(0)</b>? <i>(Lembre-se: todo número não nulo elevado a 0 vale...)</i>',
+                expected: 1
             },
             {
                 id: 'exp_ex3',
-                question: '3. Se a base for <b>b = 0.5</b> (meia-vida), f(2) vale quanto? (Ex: 0.25)',
-                expected: 0.25
+                question: '3. Para a função <b>f(x) = 2ˣ</b>, calcule o valor de <b>f(2)</b>: <i>(ou seja: 2² = 2 × 2)</i>',
+                expected: 4
             }
         ] : [
             {
@@ -1157,6 +1218,14 @@ class FunctionsStudio {
             const volVal = document.getElementById('realityExpVolVal');
             const capVal = document.getElementById('realityExpCapVal');
 
+            const ensureCylinderReady = () => {
+                if (!this.isSplit3D) {
+                    this.toggleSplit3D();
+                } else {
+                    this.setupRealitySolid();
+                }
+            };
+
             const updateBiomass = (t) => {
                 const vol = 125 * Math.pow(2, t);
                 const percent = (vol / 1000) * 100;
@@ -1164,10 +1233,16 @@ class FunctionsStudio {
                 if (volVal) volVal.textContent = `${vol.toFixed(0)} Litros`;
                 if (capVal) capVal.textContent = `${percent.toFixed(0)}% (${(vol / 1000).toFixed(2)} m³)`;
 
-                // Sincroniza Three.js cilindro
-                const scaleY = Math.min(1.8, Math.max(0.15, vol / 600));
+                // Sincroniza o nível de água no cilindro tridimensional
+                if (this.liquidSim) {
+                    const maxH = (this.liquidSim && this.liquidSim.maxHeight) ? this.liquidSim.maxHeight : 6.0;
+                    const hLevel = Math.max(0.05, (vol / 1000) * maxH);
+                    this.liquidSim.setHeight(hLevel);
+                }
+
+                // Sincroniza visibilidade do modelo 3D
                 if (this.sceneMgr && this.sceneMgr.solidGroup) {
-                    this.sceneMgr.solidGroup.scale.set(1, scaleY, 1);
+                    this.sceneMgr.solidGroup.visible = true;
                 }
 
                 // Sincroniza com o gráfico cartesiano
@@ -1176,30 +1251,50 @@ class FunctionsStudio {
             };
 
             if (slider) {
-                slider.addEventListener('input', (e) => updateBiomass(parseFloat(e.target.value)));
+                slider.addEventListener('input', (e) => {
+                    ensureCylinderReady();
+                    updateBiomass(parseFloat(e.target.value));
+                });
             }
 
             const btnSim = document.getElementById('btnSimulateFilling');
             if (btnSim) {
                 btnSim.addEventListener('click', () => {
+                    ensureCylinderReady();
+                    btnSim.disabled = true;
+                    btnSim.textContent = '⏳ Enchendo Reservatório...';
+
                     let curT = 0;
-                    if (window.sounds) window.sounds.playWater();
+                    if (this.liquidSim) this.liquidSim.empty();
+                    if (this.sceneMgr) {
+                        this.sceneMgr.faucetGroup.visible = true;
+                        this.sceneMgr.setWaterStream(true);
+                    }
+                    if (window.sounds) window.sounds.startWater();
+
                     const interval = setInterval(() => {
-                        curT += 0.1;
-                        if (slider) slider.value = curT;
+                        curT += 0.05;
+                        if (slider) slider.value = curT.toFixed(2);
                         updateBiomass(curT);
+
                         if (curT >= 3.0) {
                             clearInterval(interval);
-                            if (window.sounds) window.sounds.stopWater();
-                            if (window.sounds) window.sounds.playSuccess();
-                            if (this.engineerGuide) {
-                                this.engineerGuide.showMessage({
-                                    title: 'Tanque 100% Cheio!',
-                                    text: 'Com t = 3 horas, 125 × 2³ = 1.000 Litros! O crescimento exponencial preencheu todo o volume de 1m³.'
-                                });
+                            btnSim.disabled = false;
+                            btnSim.textContent = '▶ Simular Novamente no 3D';
+
+                            if (this.sceneMgr) this.sceneMgr.setWaterStream(false);
+                            if (window.sounds) {
+                                window.sounds.stopWater();
+                                window.sounds.playSuccess();
+                            }
+                            if (this.engineerGuide && typeof this.engineerGuide.speak === 'function') {
+                                this.engineerGuide.speak(
+                                    '💧 <b>Tanque 100% Cheio!</b><br>Em <b>t = 3 horas</b>, a produção microbiana atingiu exatamente <b>125 × 2³ = 1.000 Litros (1 m³)</b>!<br>O volume exponencial preencheu perfeitamente a capacidade do reservatório cilíndrico!',
+                                    { icon: '💧', duration: 8000 }
+                                );
                             }
                         }
-                    }, 80);
+                    }, 50);
                 });
             }
         } else {
@@ -1522,5 +1617,535 @@ class FunctionsStudio {
                 });
             }
         }
+    }
+
+    // =========================================================================
+    // JANELA DO GRÁFICO CARTESIANO ARRASTÁVEL E MÓVEL
+    // =========================================================================
+    setupDraggableOverlay() {
+        const overlay = document.getElementById('functionGraphOverlay');
+        const header = overlay ? overlay.querySelector('.graph-overlay-header') : null;
+        if (!overlay || !header) return;
+
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let initialLeft = 0;
+        let initialTop = 0;
+
+        const onPointerDown = (e) => {
+            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('a')) return;
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const rect = overlay.getBoundingClientRect();
+            const parent = overlay.parentElement;
+            const parentRect = parent ? parent.getBoundingClientRect() : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+
+            isDragging = true;
+            startX = clientX;
+            startY = clientY;
+
+            initialLeft = rect.left - parentRect.left;
+            initialTop = rect.top - parentRect.top;
+
+            overlay.style.width = `${rect.width}px`;
+            overlay.style.height = `${rect.height}px`;
+            overlay.style.inset = 'auto';
+            overlay.style.left = `${initialLeft}px`;
+            overlay.style.top = `${initialTop}px`;
+            overlay.style.right = 'auto';
+            overlay.style.bottom = 'auto';
+            overlay.classList.add('is-dragging');
+
+            if (e.type === 'mousedown') {
+                e.preventDefault();
+            }
+        };
+
+        const onPointerMove = (e) => {
+            if (!isDragging) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const deltaX = clientX - startX;
+            const deltaY = clientY - startY;
+
+            const parent = overlay.parentElement;
+            const parentWidth = parent ? parent.clientWidth : window.innerWidth;
+            const parentHeight = parent ? parent.clientHeight : window.innerHeight;
+            const overlayWidth = overlay.offsetWidth;
+            const overlayHeight = overlay.offsetHeight;
+
+            let newLeft = Math.max(0, Math.min(parentWidth - overlayWidth, initialLeft + deltaX));
+            let newTop = Math.max(0, Math.min(parentHeight - overlayHeight, initialTop + deltaY));
+
+            overlay.style.left = `${newLeft}px`;
+            overlay.style.top = `${newTop}px`;
+        };
+
+        const onPointerUp = () => {
+            if (isDragging) {
+                isDragging = false;
+                overlay.classList.remove('is-dragging');
+            }
+        };
+
+        header.addEventListener('mousedown', onPointerDown);
+        window.addEventListener('mousemove', onPointerMove);
+        window.addEventListener('mouseup', onPointerUp);
+
+        header.addEventListener('touchstart', onPointerDown, { passive: false });
+        window.addEventListener('touchmove', onPointerMove, { passive: false });
+        window.addEventListener('touchend', onPointerUp);
+
+        header.addEventListener('dblclick', (e) => {
+            if (e.target.closest('button')) return;
+            this.resetOverlayPosition();
+        });
+    }
+
+    resetOverlayPosition() {
+        const overlay = document.getElementById('functionGraphOverlay');
+        if (!overlay) return;
+        overlay.style.inset = '';
+        overlay.style.left = '';
+        overlay.style.top = '';
+        overlay.style.width = '';
+        overlay.style.height = '';
+        overlay.style.right = '';
+        overlay.style.bottom = '';
+        setTimeout(() => {
+            this.resizeCanvas();
+            this.renderGraph();
+        }, 50);
+    }
+
+    // =========================================================================
+    // BANCO DE DADOS DIDÁTICO: MISSÕES DE CADERNO
+    // =========================================================================
+    initNotebookMissionsData() {
+        this.notebookMissions = [
+            {
+                id: 'mission_exp_table',
+                category: 'exp',
+                icon: '📈',
+                badge: 'Missão 1 · Função Exponencial',
+                title: 'Tabela de Potências e Esboço do Gráfico no Caderno',
+                targetSystem: 'No GeoLab 3D, defina a base para b = 2.0 e a = 1.0. Arraste o ponto P pela curva observando os valores de x e y na barra inferior.',
+                notebookInstructions: [
+                    'Desenhe no caderno uma tabela com duas colunas: "x" e "y = f(x)".',
+                    'Calcule no caderno as potências para os 6 valores: x = -2, -1, 0, 1, 2 e 3.',
+                    'Mostre as contas completas: 2⁻² = 1/4 = 0,25 | 2⁻¹ = 1/2 = 0,5 | 2⁰ = 1 | 2¹ = 2 | 2² = 4 | 2³ = 8.',
+                    'Com uma régua, desenhe os eixos cartesianos X e Y no caderno, marque os 6 pontos e trace a curva suave.',
+                    'Responda no caderno: Por que a curva nunca toca o eixo horizontal (assíntota y = 0)?'
+                ],
+                engineerTip: 'Lembre-se da regra de ouro: todo número não nulo elevado a 0 é igual a 1! Por isso a curva corta o eixo Y em (0, 1).'
+            },
+            {
+                id: 'mission_exp_decay',
+                category: 'exp',
+                icon: '📉',
+                badge: 'Missão 2 · Função Exponencial',
+                title: 'O Mistério da Meia-Vida & Base Menor que 1 (Decaimento)',
+                targetSystem: 'No painel esquerdo, altere o slider da base para b = 0.5 (ou clique no preset "Decaimento"). Observe a nova inclinação da curva.',
+                notebookInstructions: [
+                    'Anote no caderno a lei de formação do decaimento: f(x) = (0,5)ˣ ou f(x) = (1/2)ˣ.',
+                    'Calcule no caderno: f(1) = 0,5 | f(2) = 0,25 | f(3) = 0,125.',
+                    'No mesmo plano cartesiano da Missão 1, desenhe com outra cor essa nova curva decrescente.',
+                    'Responda no caderno: Qual a diferença fundamental no comportamento gráfico entre b > 1 e 0 < b < 1? Onde essa curva corta o eixo Y?'
+                ],
+                engineerTip: 'Aplicações no mundo real: essa fórmula calcula como medicamentos perdem concentração no sangue e como fósseis perdem Carbono-14 ao longo de milhares de anos!'
+            },
+            {
+                id: 'mission_exp_biomass_3d',
+                category: 'solid3d',
+                icon: '💧',
+                badge: 'Missão 3 · Conexão com Sólido 3D',
+                title: 'Usina de Biomassa: Enchimento Exponencial do Tanque Cilíndrico de 1.000 L',
+                targetSystem: 'Acesse a aba "3. Realidade 3D" no painel esquerdo. Clique em "▶ Simular Abastecimento Exponencial no 3D" e observe a água encher o cilindro transparente.',
+                notebookInstructions: [
+                    'Copie no caderno a fórmula da usina: V(t) = 125 · 2ᵗ Litros (onde t é o tempo em horas).',
+                    'Calcule no caderno o volume de biocombustível em cada etapa:',
+                    '• Instante inicial (t = 0): V(0) = 125 · 2⁰ = 125 Litros.',
+                    '• Após 1 hora (t = 1): V(1) = 125 · 2¹ = 250 Litros.',
+                    '• Após 2 horas (t = 2): V(2) = 125 · 2² = 500 Litros.',
+                    '• Após 3 horas (t = 3): V(3) = 125 · 2³ = 1.000 Litros (exatamente 1 m³ de líquido!).',
+                    'Responda no caderno: Quantas horas foram necessárias para o tanque passar de metade da capacidade (500 L) para totalmente cheio (1.000 L)? Compare isso com uma torneira linear comum.'
+                ],
+                engineerTip: 'No crescimento exponencial, o último passo dobra TODO o acumulado anterior! Isso é vital para engenheiros controlarem reatores industriais.'
+            },
+            {
+                id: 'mission_log_inverse',
+                category: 'log',
+                icon: '🪞',
+                badge: 'Missão 4 · Função Logarítmica',
+                title: 'A Inversa Perfeita e a Reflexão na Reta y = x',
+                targetSystem: 'Mude para a Função Logarítmica e clique no botão "🪞 Inversa (y=x)" na barra do gráfico. Veja o espelhamento das duas curvas.',
+                notebookInstructions: [
+                    'Desenhe no caderno a reta diagonal y = x (a bissetriz dos quadrantes ímpares).',
+                    'Esboce a curva exponencial y = 2ˣ e a curva logarítmica y = log₂(x).',
+                    'Construa no caderno uma tabela comparando os pares ordenados invertidos:',
+                    '• Na exponencial temos (0, 1), (1, 2) e (2, 4).',
+                    '• No logaritmo temos (1, 0), (2, 1) e (4, 2).',
+                    'Responda no caderno: Por que o logaritmo tem assíntota vertical x = 0 enquanto a exponencial tem assíntota horizontal y = 0?'
+                ],
+                engineerTip: 'A função logarítmica "desfaz" o que a exponencial faz! Ela descobre o expoente a partir da resposta.'
+            },
+            {
+                id: 'mission_log_richter_3d',
+                category: 'solid3d',
+                icon: '🏢',
+                badge: 'Missão 5 · Conexão com Sólido 3D',
+                title: 'Engenharia Sísmica & Escala Richter no Edifício 3D',
+                targetSystem: 'Na aba "3. Realidade 3D" do Logaritmo, teste as energias de 10.000 MJ e 100.000 MJ e clique em "⚡ Disparar Tremor Sísmico no Prédio 3D".',
+                notebookInstructions: [
+                    'Anote no caderno a fórmula de Gutenberg-Richter: M = ⅔ · [log₁₀(E / 1000) + 1].',
+                    'Calcule no caderno: se a energia E for multiplicada por 10 (de 10.000 para 100.000 MJ), qual é o aumento na magnitude M?',
+                    'Mostre que log₁₀(10) = 1, logo o aumento é de exatamente ⅔ ≈ 0,67 graus na Escala Richter!',
+                    'Explique no caderno por que cientistas e engenheiros civis usam logaritmo em vez de uma escala comum para medir terremotos.'
+                ],
+                engineerTip: 'Sem logaritmos, um gráfico de terremotos precisaria de uma folha de papel com quilômetros de comprimento para desenhar abalos fortes!'
+            },
+            {
+                id: 'mission_synthesis_coefficients',
+                category: 'all',
+                icon: '🧠',
+                badge: 'Missão 6 · Síntese Teórica',
+                title: 'Quadro Geral dos Coeficientes e Domínios',
+                targetSystem: 'Consulte o Mapa Mental e o briefing do Engenheiro Leo para revisar todos os parâmetros.',
+                notebookInstructions: [
+                    'Copie no seu caderno um quadro comparativo com 4 linhas:',
+                    '1. Base (b): O que acontece quando b > 1? E quando 0 < b < 1? Por que b não pode ser 1 nem negativo?',
+                    '2. Multiplicador (a): O que acontece quando a é positivo? E quando a é negativo?',
+                    '3. Assíntotas: Compare a horizontal (y = c) da exponencial com a vertical (x = h) do logaritmo.',
+                    '4. Condição de Existência: Por que não existe logaritmo de zero nem de números negativos nos reais (x > h)?'
+                ],
+                engineerTip: 'Com este quadro no caderno, você terá um guia completo de consulta rápida para provas escolares e o ENEM!'
+            }
+        ];
+    }
+
+    // =========================================================================
+    // MODAL DE MISSÕES DO CADERNO
+    // =========================================================================
+    setupMissionsModal() {
+        const btnClose = document.getElementById('btnCloseMissionsModal');
+        const btnCloseFooter = document.getElementById('btnCloseMissionsModalFooter');
+        if (btnClose) btnClose.addEventListener('click', () => this.closeMissionsModal());
+        if (btnCloseFooter) btnCloseFooter.addEventListener('click', () => this.closeMissionsModal());
+
+        const btnCopyAll = document.getElementById('btnCopyAllMissions');
+        if (btnCopyAll) {
+            btnCopyAll.addEventListener('click', () => {
+                this.copyMissionsText();
+                btnCopyAll.textContent = '✓ Roteiro Copiado!';
+                setTimeout(() => { btnCopyAll.textContent = '📋 Copiar Todas as Missões'; }, 2500);
+            });
+        }
+
+        document.querySelectorAll('.missions-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.missions-filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.currentMissionFilter = btn.dataset.category;
+                this.renderMissions(this.currentMissionFilter);
+                if (window.sounds) window.sounds.playClick();
+            });
+        });
+    }
+
+    openMissionsModal() {
+        const modal = document.getElementById('notebookMissionsModal');
+        if (!modal) return;
+        this.renderMissions(this.currentMissionFilter || 'all');
+        modal.classList.remove('hidden');
+    }
+
+    closeMissionsModal() {
+        const modal = document.getElementById('notebookMissionsModal');
+        if (modal) modal.classList.add('hidden');
+        if (window.sounds) window.sounds.playClick();
+    }
+
+    renderMissions(category = 'all') {
+        const container = document.getElementById('notebookMissionsBody');
+        const progressText = document.getElementById('missionsProgressText');
+        const progressXP = document.getElementById('missionsProgressXP');
+        if (!container) return;
+
+        const filtered = category === 'all' 
+            ? this.notebookMissions 
+            : this.notebookMissions.filter(m => m.category === category || (category === 'solid3d' && m.category === 'solid3d'));
+
+        const totalCompleted = this.notebookMissions.filter(m => this.completedMissions.has(m.id)).length;
+        if (progressText) {
+            progressText.textContent = `🏆 ${totalCompleted} de ${this.notebookMissions.length} Missões Concluídas no Caderno`;
+        }
+        if (progressXP) {
+            progressXP.textContent = `+${totalCompleted * 50} XP`;
+        }
+
+        container.innerHTML = filtered.map(m => {
+            const isDone = this.completedMissions.has(m.id);
+            return `
+                <div class="mission-notebook-card ${isDone ? 'mission-completed' : ''}" data-mission-id="${m.id}">
+                    <div class="mission-card-header">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="mission-icon">${m.icon}</span>
+                            <div>
+                                <span class="mission-badge">${m.badge}</span>
+                                <h3 class="mission-card-title">${m.title}</h3>
+                            </div>
+                        </div>
+                        <button class="btn-copy-single-mission" data-id="${m.id}" title="Copiar roteiro desta atividade">
+                            📋 Copiar
+                        </button>
+                    </div>
+
+                    <div class="mission-section-box target-system">
+                        <div class="mission-section-label">🎯 O QUE FAZER NO GEOLAB 3D:</div>
+                        <div class="mission-section-text">${m.targetSystem}</div>
+                    </div>
+
+                    <div class="mission-section-box notebook-target">
+                        <div class="mission-section-label">✍️ O QUE ANOTAR E RESOLVER NO CADERNO:</div>
+                        <ol class="mission-steps-list">
+                            ${m.notebookInstructions.map(step => `<li>${step}</li>`).join('')}
+                        </ol>
+                    </div>
+
+                    <div class="mission-engineer-tip">
+                        <b>💡 Dica do Engenheiro Leo:</b> ${m.engineerTip}
+                    </div>
+
+                    <div class="mission-card-footer">
+                        <label class="mission-check-label">
+                            <input type="checkbox" class="chk-mission-complete" data-id="${m.id}" ${isDone ? 'checked' : ''}>
+                            <span class="chk-custom-box"></span>
+                            <span class="chk-label-text">
+                                ${isDone ? '✓ Missão Concluída no Caderno (+50 XP)' : 'Marcar como Feito no Caderno (+50 XP)'}
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Listeners nos checkboxes
+        container.querySelectorAll('.chk-mission-complete').forEach(chk => {
+            chk.addEventListener('change', (e) => {
+                const id = e.target.dataset.id;
+                this.toggleMissionComplete(id, e.target.checked);
+            });
+        });
+
+        // Listeners no botão copiar missão individual
+        container.querySelectorAll('.btn-copy-single-mission').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                this.copySingleMissionText(id);
+                btn.textContent = '✓ Copiado!';
+                setTimeout(() => { btn.textContent = '📋 Copiar'; }, 2000);
+            });
+        });
+    }
+
+    toggleMissionComplete(missionId, isChecked) {
+        if (isChecked) {
+            this.completedMissions.add(missionId);
+            this.awardXP(50, 'Missão registrada no caderno escolar!');
+            if (window.sounds) window.sounds.playSuccess();
+        } else {
+            this.completedMissions.delete(missionId);
+        }
+        localStorage.setItem('geolab_completed_notebook_missions', JSON.stringify([...this.completedMissions]));
+        this.renderMissions(this.currentMissionFilter);
+    }
+
+    copySingleMissionText(missionId) {
+        const m = this.notebookMissions.find(item => item.id === missionId);
+        if (!m) return;
+        const text = `
+=============================================================
+GEOLAB 3D · ATIVIDADE PARA O CADERNO
+${m.badge} - ${m.title}
+=============================================================
+
+1. O QUE FAZER NO SISTEMA GEOLAB:
+${m.targetSystem}
+
+2. O QUE FAZER NO SEU CADERNO:
+${m.notebookInstructions.map((inst, i) => `[ ] ${i + 1}. ${inst}`).join('\n')}
+
+3. DICA DO ENGENHEIRO LEO:
+${m.engineerTip}
+=============================================================
+        `.trim();
+        navigator.clipboard.writeText(text).catch(() => {});
+    }
+
+    copyMissionsText() {
+        const text = this.notebookMissions.map((m, idx) => `
+ATIVIDADE ${idx + 1}: ${m.title}
+• No GeoLab 3D: ${m.targetSystem}
+• No Caderno:
+${m.notebookInstructions.map(inst => `  - ${inst}`).join('\n')}
+• Dica do Engenheiro: ${m.engineerTip}
+        `).join('\n-------------------------------------------------------------\n');
+
+        const fullDocument = `
+=============================================================================
+GEOLAB 3D · GUIA DE ATIVIDADES E INVESTIGAÇÃO PARA O CADERNO
+Funções Matemáticas (Exponencial e Logarítmica) & Sólidos 3D
+=============================================================================
+
+${text}
+=============================================================================
+        `.trim();
+        navigator.clipboard.writeText(fullDocument).catch(() => {});
+    }
+
+    // =========================================================================
+    // MODAL DE MAPA MENTAL
+    // =========================================================================
+    setupMindMapModal() {
+        const btnClose = document.getElementById('btnCloseMindMapModal');
+        if (btnClose) btnClose.addEventListener('click', () => this.closeMindMapModal());
+
+        const imgEl = document.getElementById('mindMapImage');
+
+        const btnZoomIn = document.getElementById('btnZoomInMindMap');
+        if (btnZoomIn) {
+            btnZoomIn.addEventListener('click', () => {
+                this.mindMapZoom = Math.min(2.5, this.mindMapZoom + 0.25);
+                if (imgEl) imgEl.style.transform = `scale(${this.mindMapZoom})`;
+            });
+        }
+
+        const btnZoomOut = document.getElementById('btnZoomOutMindMap');
+        if (btnZoomOut) {
+            btnZoomOut.addEventListener('click', () => {
+                this.mindMapZoom = Math.max(0.7, this.mindMapZoom - 0.25);
+                if (imgEl) imgEl.style.transform = `scale(${this.mindMapZoom})`;
+            });
+        }
+
+        const btnZoomReset = document.getElementById('btnZoomResetMindMap');
+        if (btnZoomReset) {
+            btnZoomReset.addEventListener('click', () => {
+                this.mindMapZoom = 1.0;
+                if (imgEl) imgEl.style.transform = `scale(1.0)`;
+            });
+        }
+
+        // Alternador de visualização (Imagem vs Resumo Interativo em Cards)
+        document.querySelectorAll('.mindmap-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mindmap-tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const view = btn.dataset.view;
+
+                const imgView = document.getElementById('mindMapImageViewer');
+                const interView = document.getElementById('mindMapInteractiveViewer');
+
+                if (view === 'image') {
+                    if (imgView) imgView.classList.remove('hidden');
+                    if (interView) interView.classList.add('hidden');
+                } else {
+                    if (imgView) imgView.classList.add('hidden');
+                    if (interView) {
+                        interView.classList.remove('hidden');
+                        this.renderInteractiveMindMap();
+                    }
+                }
+                if (window.sounds) window.sounds.playClick();
+            });
+        });
+    }
+
+    openMindMapModal() {
+        const modal = document.getElementById('mindMapModal');
+        if (!modal) return;
+        this.mindMapZoom = 1.0;
+        const imgEl = document.getElementById('mindMapImage');
+        if (imgEl) imgEl.style.transform = 'scale(1.0)';
+        modal.classList.remove('hidden');
+    }
+
+    closeMindMapModal() {
+        const modal = document.getElementById('mindMapModal');
+        if (modal) modal.classList.add('hidden');
+        if (window.sounds) window.sounds.playClick();
+    }
+
+    renderInteractiveMindMap() {
+        const container = document.getElementById('mindMapInteractiveViewer');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="interactive-mindmap-grid">
+                <!-- RAMO 1: FUNÇÃO EXPONENCIAL -->
+                <div class="mindmap-branch-card exp">
+                    <div class="branch-card-header">
+                        <span style="font-size:1.4rem;">📈</span>
+                        <div>
+                            <div class="branch-card-title">Função Exponencial</div>
+                            <div class="branch-card-formula">f(x) = a · bˣ + c</div>
+                        </div>
+                    </div>
+                    
+                    <div class="branch-section-box">
+                        <div class="branch-section-title">⚙️ Efeito dos Coeficientes:</div>
+                        <ul class="branch-items-list">
+                            <li><b>Base b &gt; 1:</b> Crescimento acelerado (curva decola para cima).</li>
+                            <li><b>Base 0 &lt; b &lt; 1:</b> Decaimento exponencial suave (curva desce para o limiar).</li>
+                            <li><b>Multiplicador a:</b> Se c = 0, define o ponto onde corta o eixo Y em (0, a). Se a &lt; 0, inverte o gráfico para baixo.</li>
+                            <li><b>Assíntota y = c:</b> Linha horizontal limite. A curva se aproxima infinitamente mas nunca toca!</li>
+                        </ul>
+                    </div>
+
+                    <div class="branch-section-box real-world">
+                        <div class="branch-section-title">🌍 Casos Reais & Sólidos 3D:</div>
+                        <ul class="branch-items-list">
+                            <li><b>💧 Tanques Cilíndricos 3D:</b> Proliferação microbiana de biocombustível V(t) = 125 · 2ᵗ L preenchendo o reservatório de 1.000 L (1 m³).</li>
+                            <li><b>💰 Finanças:</b> Juros compostos M = C · (1 + i)ᵗ.</li>
+                            <li><b>🧪 Farmacologia:</b> Meia-vida de antibióticos e datação de fósseis por Carbono-14.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- RAMO 2: FUNÇÃO LOGARÍTMICA -->
+                <div class="mindmap-branch-card log">
+                    <div class="branch-card-header">
+                        <span style="font-size:1.4rem;">📉</span>
+                        <div>
+                            <div class="branch-card-title">Função Logarítmica</div>
+                            <div class="branch-card-formula">f(x) = a · log_b(x - h) + c</div>
+                        </div>
+                    </div>
+                    
+                    <div class="branch-section-box">
+                        <div class="branch-section-title">⚙️ Efeito dos Coeficientes & Regras:</div>
+                        <ul class="branch-items-list">
+                            <li><b>Inversa da Potência:</b> Simetria e espelhamento perfeito em torno da bissetriz diagonal y = x.</li>
+                            <li><b>Base b:</b> Bases mais usadas: decimal (10) e natural (e ≈ 2,718). Quanto maior a base, mais lenta a subida.</li>
+                            <li><b>Assíntota x = h:</b> Linha vertical limite intransponível na esquerda.</li>
+                            <li><b>Condição Obrigatória:</b> x &gt; h. Não existe logaritmo de zero nem de números negativos nos reais!</li>
+                        </ul>
+                    </div>
+
+                    <div class="branch-section-box real-world">
+                        <div class="branch-section-title">🌍 Casos Reais & Sólidos 3D:</div>
+                        <ul class="branch-items-list">
+                            <li><b>🏢 Edifício 3D & Sismologia:</b> Escala Richter M = ⅔ · log₁₀(E / 10³). Cada 1 grau a mais libera 31,6x mais energia de tremor!</li>
+                            <li><b>🔊 Acústica:</b> Decibéis de intensidade sonora comprimindo trilhões de vibrações em 0 a 120 dB.</li>
+                            <li><b>💧 Química:</b> Escala de acidez da água (pH = -log₁₀[H⁺]).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 }

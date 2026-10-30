@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GeoLab 3D - Estúdio de Geometria Espacial & Design Arquitetônico</title>
-    <link rel="stylesheet" href="css/style.css?v=4.6">
+    <link rel="stylesheet" href="css/style.css?v=4.7">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📐</text></svg>">
 </head>
 <body>
@@ -411,6 +411,18 @@
                     <span class="hero-callout-arrow">👉</span>
                 </button>
 
+                <!-- ATIVIDADES DE CADERNO E MAPA MENTAL -->
+                <div class="functions-quick-actions-row">
+                    <button class="btn-func-quick-action" id="btnFuncOpenMissions" title="Abrir missões e atividades para fazer no caderno">
+                        <span>📝</span>
+                        <b>Missões do Caderno</b>
+                    </button>
+                    <button class="btn-func-quick-action" id="btnFuncOpenMindMap" title="Ver Mapa Mental resumo das funções">
+                        <span>🗺️</span>
+                        <b>Mapa Mental</b>
+                    </button>
+                </div>
+
                 <!-- NAVEGADOR DE ETAPAS DIDÁTICAS (1 A 4) -->
                 <div class="functions-step-nav" id="functionsStepNav">
                     <button class="func-step-btn active" data-step="1">
@@ -715,6 +727,10 @@
             <div id="functionGraphOverlay" class="function-graph-overlay hidden">
                 <div class="graph-overlay-header">
                     <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="graph-drag-pill" title="Clique e arraste para mover a janela pelo espaço 3D (Duplo clique para resetar)">
+                            <span class="drag-grip-icon">⋮⋮</span>
+                            <span class="drag-grip-text">Mover</span>
+                        </div>
                         <span id="graphFunctionIcon" style="font-size:1.25rem;">📈</span>
                         <div>
                             <div id="graphFunctionTitle" class="graph-function-title">Gráfico Cartesiano Interativo</div>
@@ -722,6 +738,8 @@
                         </div>
                     </div>
                     <div class="graph-header-actions">
+                        <button class="btn-graph-tool highlight-missions" id="btnGraphMissions" title="Atividades para investigar no GeoLab e resolver no caderno">📝 Missões</button>
+                        <button class="btn-graph-tool highlight-map" id="btnGraphMindMap" title="Ver Mapa Mental resumo das funções">🗺️ Mapa Mental</button>
                         <button class="btn-graph-tool highlight-engineer" id="btnGraphEngineerHelp" title="Explicação didática do Engenheiro Leo">👷 Explicação</button>
                         <button class="btn-graph-tool" id="btnToggleSplit3D" title="Alternar visualização dividida com o Sólido 3D">👁️ Sólido 3D</button>
                         <button class="btn-graph-tool active" id="btnToggleGraphZoomReset" title="Resetar eixos para visão padrão (1:1)">🎯 Eixos</button>
@@ -1385,6 +1403,91 @@
         </div>
     </div>
 
+    <!-- ==========================================================================
+         MODAL DE MISSÕES DO CADERNO (ATIVIDADES GUIADAS PARA REGISTRO ESCOLAR)
+         ========================================================================== -->
+    <div id="notebookMissionsModal" class="modal-backdrop hidden">
+        <div class="modal-dialog notebook-missions-dialog">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.5rem;">📝</span>
+                    <div>
+                        <div class="modal-title-bold">Missões de Caderno · Laboratório Guiado</div>
+                        <div class="modal-subtitle-text">Atividades práticas para investigar no GeoLab 3D e registrar no seu caderno escolar</div>
+                    </div>
+                </div>
+                <button class="btn-close-modal" id="btnCloseMissionsModal" title="Fechar">✕</button>
+            </div>
+
+            <!-- FILTRO DE CATEGORIAS DAS MISSÕES -->
+            <div class="missions-filter-bar">
+                <button class="missions-filter-btn active" data-category="all">Todas as Missões</button>
+                <button class="missions-filter-btn" data-category="exp">📈 Função Exponencial</button>
+                <button class="missions-filter-btn" data-category="log">📉 Função Logarítmica</button>
+                <button class="missions-filter-btn" data-category="solid3d">💧 Conexão com Sólidos 3D</button>
+            </div>
+
+            <div class="modal-content-body notebook-missions-body" id="notebookMissionsBody">
+                <!-- Gerado dinamicamente com as missões completas -->
+            </div>
+
+            <div class="modal-footer notebook-missions-footer">
+                <div class="missions-progress-summary">
+                    <span id="missionsProgressText">🏆 0 de 6 Missões Concluídas no Caderno</span>
+                    <span class="missions-xp-badge" id="missionsProgressXP">+0 XP</span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-action-secondary" id="btnCopyAllMissions">📋 Copiar Todas as Missões</button>
+                    <button class="btn-action-primary" id="btnCloseMissionsModalFooter">Voltar ao Laboratório 🚀</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL DE MAPA MENTAL DAS FUNÇÕES & MUNDO REAL
+         ========================================================================== -->
+    <div id="mindMapModal" class="modal-backdrop hidden">
+        <div class="modal-dialog mindmap-modal-dialog">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.5rem;">🗺️</span>
+                    <div>
+                        <div class="modal-title-bold">Mapa Mental: Funções & Aplicações no Mundo Real</div>
+                        <div class="modal-subtitle-text">Resumo ilustrado: como os coeficientes moldam o gráfico e conexões com sólidos 3D</div>
+                    </div>
+                </div>
+                <button class="btn-close-modal" id="btnCloseMindMapModal" title="Fechar">✕</button>
+            </div>
+
+            <!-- CONTROLES DO MAPA MENTAL -->
+            <div class="mindmap-toolbar">
+                <div class="mindmap-tabs">
+                    <button class="mindmap-tab-btn active" data-view="image">🖼️ Imagem do Mapa Mental</button>
+                    <button class="mindmap-tab-btn" data-view="interactive">📐 Resumo Interativo em Cards</button>
+                </div>
+                <div class="mindmap-actions">
+                    <a href="img/mapa_mental_funcoes.jpg" download="GeoLab3D_Mapa_Mental_Funcoes.jpg" class="btn-graph-tool highlight-map" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                        💾 Baixar Imagem HD
+                    </a>
+                    <button class="btn-graph-tool" id="btnZoomInMindMap" title="Aumentar zoom">🔍 +</button>
+                    <button class="btn-graph-tool" id="btnZoomOutMindMap" title="Diminuir zoom">🔍 -</button>
+                    <button class="btn-graph-tool" id="btnZoomResetMindMap" title="Resetar zoom">🎯 100%</button>
+                </div>
+            </div>
+
+            <div class="modal-content-body mindmap-body" id="mindMapModalBody">
+                <div id="mindMapImageViewer" class="mindmap-image-wrapper">
+                    <img src="img/mapa_mental_funcoes.jpg" alt="Mapa Mental: Funções Exponencial e Logarítmica - GeoLab 3D" id="mindMapImage" class="mindmap-img">
+                </div>
+
+                <div id="mindMapInteractiveViewer" class="mindmap-interactive-wrapper hidden">
+                    <!-- Cards interativos gerados dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPTS MODULARES -->
     <script src="js/three.min.js"></script>
     <script src="js/OrbitControls.js"></script>
@@ -1402,13 +1505,13 @@
     <script src="js/liquid-simulation.js?v=4.3"></script>
     <script src="js/cross-section.js?v=4.5"></script>
     <script src="js/unfolding.js?v=4.3"></script>
-    <script src="js/engineer-guide.js?v=4.6"></script>
+    <script src="js/engineer-guide.js?v=4.7"></script>
     <script src="js/interactive-blackboard.js?v=4.3"></script>
     <script src="js/didactic-xray.js?v=4.3"></script>
     <script src="js/game-mode.js?v=4.4"></script>
     <script src="js/game-design-studio.js?v=4.3"></script>
-    <script src="js/functions-studio.js?v=4.6"></script>
-    <script src="js/main.js?v=4.6"></script>
+    <script src="js/functions-studio.js?v=4.7"></script>
+    <script src="js/main.js?v=4.7"></script>
 
 </body>
 </html>
